@@ -1,0 +1,6 @@
+{
+	"/test/connection": {
+		"method": "post",
+		"controller": "exampleController"
+	}
+}

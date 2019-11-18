@@ -1,0 +1,54 @@
+{
+  "name": "ayapingping",
+  "version": "1.0.0",
+  "description": "Aya Ping Ping Framework makes Backend being fun to do.",
+  "main": "app.js",
+  "author": "Dali Kewara",
+  "license": "MIT",
+  "engines": {
+    "node": ">=8.10.0"
+  },
+  "scripts": {
+    "dev": "nodemon -L ./app.js",
+    "start": "node ./app.js",
+    "check": "eslint --ignore-path .gitignore .; exit 0",
+    "lint": "eslint --fix --ignore-path .gitignore .; exit 0"
+  },
+  "lint-staged": {
+    "*.{js,jsx}": [
+      "eslint --fix",
+      "git add"
+    ],
+    "*.{json,md,scss,yaml,yml}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "dependencies": {
+    "async": "^3.1.0",
+    "body-parser": "^1.18.2",
+    "env2": "^2.2.2",
+    "express": "^4.16.3",
+    "ip": "^1.1.5",
+    "moment": "^2.22.1",
+    "mongoose": "^5.7.6",
+    "morgan": "^1.9.1",
+    "mysql2": "^1.5.3",
+    "sequelize": "^5.21.1",
+    "trycatch": "^1.5.21"
+  },
+  "devDependencies": {
+    "eslint": "^6.5.1",
+    "eslint-config-prettier": "^6.4.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "husky": "^3.0.9",
+    "lint-staged": "^9.4.2",
+    "nodemon": "^1.19.4",
+    "prettier": "^1.18.2"
+  }
+}
