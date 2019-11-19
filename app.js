@@ -386,11 +386,15 @@ async.series(
       app[routes[endpoint].method](endpoint, (req, res) => {
         trycatch(
           () => {
-            require('./controllers/' + routes[endpoint].controller + '.js')(APP, req, (err, result) => {
-              if (err) return resOutput(APP, req, res, err, 'err');
+            require('./controllers/' + routes[endpoint].controller + '.js')[routes[endpoint].function](
+              APP,
+              req,
+              (err, result) => {
+                if (err) return resOutput(APP, req, res, err, 'err');
 
-              return resOutput(APP, req, res, result, 'ok');
-            });
+                return resOutput(APP, req, res, result, 'ok');
+              }
+            );
           },
           err => {
             console.log(err); //Debugging Purpose

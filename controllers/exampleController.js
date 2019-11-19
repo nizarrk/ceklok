@@ -1,6 +1,8 @@
 'use strict';
 
-module.exports = function(APP, req, callback) {
+exports.test = function(APP, req, callback) {
+  console.log(APP.validation.password(req.body.text));
+
   /**
    * YOUR APPLICATION LOGIC HERE...
    */

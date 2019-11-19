@@ -1,6 +1,17 @@
 {
-	"/test/connection": {
-		"method": "post",
-		"controller": "exampleController"
-	}
+  "/test/connection": {
+    "method": "post",
+    "controller": "exampleController",
+    "function": "test"
+  },
+  "/user/register": {
+    "method": "post",
+    "controller": "userController",
+    "function": "register"
+  },
+  "/user/login": {
+    "method": "post",
+    "controller": "userController",
+    "function": "login"
+  }
 }
