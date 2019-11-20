@@ -7,12 +7,12 @@ key.importKey(keyString.key);
 
 exports.encrypt = text => {
   const encrypted = key.encrypt(text, 'base64');
-  console.log('encrypted: ', encrypted);
+  //console.log('encrypted: ', encrypted);
   return encrypted;
 };
 
 exports.decrypt = text => {
   const decrypted = key.decrypt(text, 'utf8');
-  console.log('decrypted: ', decrypted);
+  //console.log('decrypted: ', decrypted);
   return decrypted;
 };

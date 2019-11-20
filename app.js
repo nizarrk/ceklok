@@ -383,6 +383,9 @@ async.series(
     let n = 0;
 
     keys.map(endpoint => {
+      if (routes[endpoint].auth) {
+        app.use(endpoint, require('./functions/verifyToken'));
+      }
       app[routes[endpoint].method](endpoint, (req, res) => {
         trycatch(
           () => {

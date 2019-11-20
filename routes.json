@@ -2,16 +2,25 @@
   "/test/connection": {
     "method": "post",
     "controller": "exampleController",
-    "function": "test"
+    "function": "test",
+    "auth": true
   },
   "/user/register": {
     "method": "post",
     "controller": "userController",
-    "function": "register"
+    "function": "register",
+    "auth": false
   },
   "/user/login": {
     "method": "post",
     "controller": "userController",
-    "function": "login"
+    "function": "login",
+    "auth": false
+  },
+  "/user/logout": {
+    "method": "post",
+    "controller": "userController",
+    "function": "logout",
+    "auth": false
   }
 }
