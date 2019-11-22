@@ -9,7 +9,8 @@ if (process.env.MONGO === 'true') {
   const name = process.env.MONGO_NAME;
   let mongoOptions = {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    useFindAndModify: false
   };
 
   mongoose.connect('mongodb://' + host + '/' + name, mongoOptions);

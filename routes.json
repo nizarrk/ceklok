@@ -3,7 +3,13 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": true
+    "auth": false
+  },
+  "/admin/register": {
+    "method": "post",
+    "controller": "adminController",
+    "function": "register",
+    "auth": false
   },
   "/user/register": {
     "method": "post",

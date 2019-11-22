@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'users',
+    'karyawan',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -10,6 +10,9 @@ module.exports = function(sequelize, Sequelize) {
         primaryKey: true,
         allowNull: false,
         unique: true
+      },
+      code_company: {
+        type: Sequelize.STRING(45)
       },
       nama: {
         type: Sequelize.STRING(45)

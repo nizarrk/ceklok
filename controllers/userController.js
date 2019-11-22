@@ -4,9 +4,91 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
-const trycatch = require('trycatch');
+
+exports.checkExistingTelp = (APP, req, callback) => {
+  APP.models.mysql.karyawan
+    .findAll({
+      where: {
+        telp: req.body.telp
+      }
+    })
+    .then(res => {
+      callback(null, {
+        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        data: {
+          row: res && res.length > 0 ? APP.rsa.encrypt(res) : []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'telp'
+        }
+      });
+    })
+    .catch(err => {
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.checkExistingEmail = (APP, req, callback) => {
+  APP.models.mysql.karyawan
+    .findAll({
+      where: {
+        email: req.body.email
+      }
+    })
+    .then(res => {
+      callback(null, {
+        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        data: {
+          row: res && res.length > 0 ? APP.rsa.encrypt(res) : []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'email'
+        }
+      });
+    })
+    .catch(err => {
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.checkExistingUsername = (APP, req, callback) => {
+  APP.models.mysql.karyawan
+    .findAll({
+      where: {
+        username: req.body.username
+      }
+    })
+    .then(res => {
+      callback(null, {
+        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        data: {
+          row: res && res.length > 0 ? APP.rsa.encrypt(res) : []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'username'
+        }
+      });
+    })
+    .catch(err => {
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
 
 exports.register = (APP, req, callback) => {
+  console.log(req.body);
+
   async.waterfall(
     [
       function encryptPassword(callback) {
@@ -25,10 +107,12 @@ exports.register = (APP, req, callback) => {
         let username = APP.validation.username(req.body.username);
 
         if (email == true && username == true) {
-          APP.models.mysql.user
+          console.log(req.body);
+          APP.models.mysql.karyawan
             .build({
               nama: req.body.nama,
               email: req.body.email,
+              code_company: req.body.company,
               username: req.body.username,
               telp: req.body.telp,
               password: hashed
@@ -38,10 +122,12 @@ exports.register = (APP, req, callback) => {
               let params = 'Insert Success'; //This is only example, Object can also be used
               return callback(null, {
                 code: 'INSERT_SUCCESS',
-                data: APP.nodeRSA.encrypt(result.dataValues || params)
+                data: APP.rsa.encrypt(result.dataValues || params)
               });
             })
             .catch(err => {
+              console.log(err);
+
               if (err.original && err.original.code === 'ER_DUP_ENTRY') {
                 let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
                 return callback({
@@ -114,7 +200,7 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.mysql.user
+        APP.models.mysql.karyawan
           .findAll({
             where: {
               username: req.body.username
@@ -191,7 +277,7 @@ exports.login = (APP, req, callback) => {
                   return callback(null, {
                     code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
                     data: {
-                      row: APP.nodeRSA.encrypt(rows[0]),
+                      row: APP.rsa.encrypt(rows[0].dataValues),
                       token
                     },
                     info: {
@@ -221,7 +307,7 @@ exports.login = (APP, req, callback) => {
                   return callback(null, {
                     code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
                     data: {
-                      row: APP.nodeRSA.encrypt(rows[0]),
+                      row: APP.rsa.encrypt(rows[0]),
                       token
                     },
                     info: {
@@ -256,7 +342,7 @@ exports.logout = (APP, req, callback) => {
       callback(null, {
         code: 'FOUND',
         data: {
-          row: APP.nodeRSA.encrypt(res)
+          row: APP.rsa.encrypt(res)
         },
         info: {
           dataCount: res.length
