@@ -28,5 +28,23 @@
     "controller": "userController",
     "function": "logout",
     "auth": false
+  },
+  "/auth/forgotpassword": {
+    "method": "post",
+    "controller": "userController",
+    "function": "forgotPassword",
+    "auth": false
+  },
+  "/auth/checkotp": {
+    "method": "post",
+    "controller": "userController",
+    "function": "checkOTP",
+    "auth": false
+  },
+  "/auth/resetpassword": {
+    "method": "post",
+    "controller": "userController",
+    "function": "resetPassword",
+    "auth": false
   }
 }

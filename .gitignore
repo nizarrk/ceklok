@@ -31,6 +31,5 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
-jwt-key.json
-
-.pem
+# Config key
+config/

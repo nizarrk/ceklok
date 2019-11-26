@@ -156,8 +156,6 @@ exports.register = (APP, req, callback) => {
       }
     ],
     (err, result) => {
-      console.log('oi');
-
       if (err) return callback(err);
 
       callback(null, result);
@@ -275,7 +273,7 @@ exports.login = (APP, req, callback) => {
                 })
                 .then(res => {
                   return callback(null, {
-                    code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
+                    code: 'UPDATE_SUCCESS',
                     data: {
                       row: APP.rsa.encrypt(rows[0].dataValues),
                       token
@@ -322,6 +320,207 @@ exports.login = (APP, req, callback) => {
                   });
                 });
             }
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.forgotPassword = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkEmail(callback) {
+        APP.models.mysql.karyawan
+          .findAll({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            if (res.length <= 0) {
+              return callback({
+                code: 'NOT_FOUND',
+                info: {
+                  parameter: 'No records found'
+                }
+              });
+            }
+            callback(null, true);
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function createOTP(result, callback) {
+        let otp = APP.otp.generateOTP();
+
+        APP.models.mongo.otp
+          .findOne({
+            email: req.body.email
+          })
+          .then(res => {
+            if (res != null) {
+              APP.models.mongo.otp
+                .findByIdAndUpdate(res._id, {
+                  otp: otp,
+                  count: res.count + 1,
+                  date: req.customDate,
+                  time: req.customTime,
+                  elapsed_time: req.elapsedTime || '0'
+                })
+                .then(result => {
+                  callback(null, {
+                    code: 'UPDATE_SUCCESS',
+                    data: {
+                      row: result
+                    },
+                    info: {
+                      dataCount: result.length
+                    }
+                  });
+                });
+            } else {
+              APP.models.mongo.otp
+                .create({
+                  email: req.body.email,
+                  otp: APP.otp.generateOTP(),
+                  count: 1,
+                  endpoint: req.originalUrl,
+                  date: req.customDate,
+                  time: req.customTime,
+                  elapsed_time: req.elapsedTime || '0'
+                })
+                .then(res => {
+                  callback(null, {
+                    code: 'INSERT_SUCCESS',
+                    data: {
+                      row: res
+                    },
+                    info: {
+                      dataCount: res.length
+                    }
+                  });
+                });
+            }
+            //send to email
+            APP.mailer.sendMail(req.body.email, otp);
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.checkOTP = (APP, req, callback) => {
+  APP.models.mongo.otp
+    .findOne({
+      otp: req.body.otp
+    })
+    .then(res => {
+      callback(null, {
+        code: res != null ? 'FOUND' : 'NOT_FOUND',
+        data: {
+          row: res != null ? res : []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'otp'
+        }
+      });
+    })
+    .catch(err => {
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.resetPassword = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        let password = APP.validation.password(req.body.pass);
+        let konfirm = APP.validation.password(req.body.konf);
+
+        if (password != true) {
+          return callback(password);
+        }
+
+        if (konfirm != true) {
+          console.log('konfirm');
+
+          return callback(konfirm);
+        }
+
+        if (req.body.konf !== req.body.pass) {
+          callback({
+            code: 'NOT_MATCH',
+            info: {
+              parameter: 'konfirmasi password'
+            }
+          });
+        }
+        callback(null, true);
+      },
+
+      function encryptPassword(result, callback) {
+        let pass = APP.validation.password(req.body.pass);
+        if (pass === true) {
+          bcrypt.hash(req.body.pass, 10).then(hashed => {
+            callback(null, hashed);
+          });
+        } else {
+          callback(pass);
+        }
+      },
+
+      function updatePassword(result, callback) {
+        APP.models.mysql.karyawan
+          .findOne({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                data: {
+                  row: []
+                }
+              });
+            }
+            res
+              .update({
+                password: result,
+                updated_at: new Date()
+              })
+              .then(res => {
+                callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: res
+                });
+              });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
           });
       }
     ],

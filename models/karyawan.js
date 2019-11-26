@@ -17,13 +17,22 @@ module.exports = function(sequelize, Sequelize) {
       nama: {
         type: Sequelize.STRING(45)
       },
+      jenis_kelamin: {
+        type: Sequelize.STRING(45)
+      },
+      umur: {
+        type: Sequelize.STRING(45)
+      },
+      alamat: {
+        type: Sequelize.STRING(45)
+      },
+      telp: {
+        type: Sequelize.STRING(45)
+      },
       email: {
         type: Sequelize.STRING(45)
       },
       username: {
-        type: Sequelize.STRING(45)
-      },
-      telp: {
         type: Sequelize.STRING(45)
       },
       password: {
