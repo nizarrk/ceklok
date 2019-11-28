@@ -2,41 +2,29 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'admin',
+    'company',
     {
       id: {
         type: Sequelize.INTEGER(11),
         autoIncrement: true,
         primaryKey: true,
         allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
         unique: true
       },
-      id_pricing: {
+      id_admin: {
+        type: Sequelize.STRING(45)
+      },
+      nama: {
+        type: Sequelize.STRING(45)
+      },
+      alamat: {
+        type: Sequelize.STRING(45)
+      },
+      pricing: {
         type: Sequelize.INTEGER(11)
       },
-      code_company: {
-        type: Sequelize.STRING(45),
-        unique: true
-      },
-      nama_company: {
-        type: Sequelize.STRING(45)
-      },
-      alamat_company: {
-        type: Sequelize.STRING(45)
-      },
-      telp_company: {
-        type: Sequelize.STRING(45)
-      },
-      email_company: {
-        type: Sequelize.STRING(45)
-      },
-      username: {
-        type: Sequelize.STRING(45)
-      },
-      password: {
-        type: Sequelize.STRING(45)
-      },
-      status_payment: {
+      payment: {
         type: Sequelize.STRING(45)
       },
       created_at: {

@@ -122,7 +122,7 @@ exports.register = (APP, req, callback) => {
               let params = 'Insert Success'; //This is only example, Object can also be used
               return callback(null, {
                 code: 'INSERT_SUCCESS',
-                data: APP.rsa.encrypt(result.dataValues || params)
+                data: result.dataValues || params
               });
             })
             .catch(err => {
@@ -194,6 +194,15 @@ exports.login = (APP, req, callback) => {
             }
           });
 
+        if (req.body.platform != 'Web' && req.body.platform != 'Mobile')
+          return callback({
+            code: 'INVALID_KEY',
+            data: req.body,
+            info: {
+              invalidParameter: 'platform'
+            }
+          });
+
         callback(null, true);
       },
 
@@ -213,6 +222,16 @@ exports.login = (APP, req, callback) => {
                 }
               });
             }
+
+            if (rows[0].status == null) {
+              return callback({
+                code: 'VERIFICATION_NEEDED',
+                info: {
+                  parameter: 'User have to wait for admin to verify their account first.'
+                }
+              });
+            }
+
             callback(null, rows);
           })
           .catch(err => {
@@ -275,7 +294,7 @@ exports.login = (APP, req, callback) => {
                   return callback(null, {
                     code: 'UPDATE_SUCCESS',
                     data: {
-                      row: APP.rsa.encrypt(rows[0].dataValues),
+                      row: rows[0].dataValues,
                       token
                     },
                     info: {
@@ -305,7 +324,7 @@ exports.login = (APP, req, callback) => {
                   return callback(null, {
                     code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
                     data: {
-                      row: APP.rsa.encrypt(rows[0]),
+                      row: rows[0].dataValues,
                       token
                     },
                     info: {
@@ -392,7 +411,7 @@ exports.forgotPassword = (APP, req, callback) => {
               APP.models.mongo.otp
                 .create({
                   email: req.body.email,
-                  otp: APP.otp.generateOTP(),
+                  otp: otp,
                   count: 1,
                   endpoint: req.originalUrl,
                   date: req.customDate,
@@ -412,7 +431,15 @@ exports.forgotPassword = (APP, req, callback) => {
                 });
             }
             //send to email
-            APP.mailer.sendMail(req.body.email, otp);
+            console.log('zzzzzzzzzzzzzzzzzzzz');
+
+            console.log(otp);
+
+            APP.mailer.sendMail({
+              subject: 'Reset Password',
+              to: req.body.email,
+              text: `this is your otp: ${otp}`
+            });
           });
       }
     ],
@@ -513,6 +540,12 @@ exports.resetPassword = (APP, req, callback) => {
                 callback(null, {
                   code: 'UPDATE_SUCCESS',
                   data: res
+                });
+              })
+              .catch(err => {
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
                 });
               });
           })

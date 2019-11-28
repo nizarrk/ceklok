@@ -11,6 +11,24 @@
     "function": "register",
     "auth": false
   },
+  "/admin/login": {
+    "method": "post",
+    "controller": "adminController",
+    "function": "login",
+    "auth": false
+  },
+  "/admin/savecompany": {
+    "method": "post",
+    "controller": "adminController",
+    "function": "saveCompany",
+    "auth": true
+  },
+  "/admin/verifyuser": {
+    "method": "post",
+    "controller": "adminController",
+    "function": "verifikasiKaryawan",
+    "auth": true
+  },
   "/user/register": {
     "method": "post",
     "controller": "userController",
@@ -45,6 +63,54 @@
     "method": "post",
     "controller": "userController",
     "function": "resetPassword",
+    "auth": false
+  },
+  "/pricing/get": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "get",
+    "auth": false
+  },
+  "/pricing/insert": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "insert",
+    "auth": false
+  },
+  "/pricing/update": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "update",
+    "auth": false
+  },
+  "/pricing/delete": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "delete",
+    "auth": false
+  },
+  "/paymentMethod/get": {
+    "method": "post",
+    "controller": "paymentMethodController",
+    "function": "get",
+    "auth": false
+  },
+  "/paymentMethod/insert": {
+    "method": "post",
+    "controller": "paymentMethodController",
+    "function": "insert",
+    "auth": false
+  },
+  "/paymentMethod/update": {
+    "method": "post",
+    "controller": "paymentMethodController",
+    "function": "update",
+    "auth": false
+  },
+  "/paymentMethod/delete": {
+    "method": "post",
+    "controller": "paymentMethodController",
+    "function": "delete",
     "auth": false
   }
 }

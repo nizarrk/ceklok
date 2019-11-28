@@ -1,8 +1,7 @@
 'use strict';
 const nodemailer = require('nodemailer');
 
-// async..await is not allowed in global scope, must use a wrapper
-exports.sendMail = (to, otp) => {
+exports.sendMail = data => {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -12,10 +11,10 @@ exports.sendMail = (to, otp) => {
   });
 
   let mailOptions = {
-    from: 'CEKLOK.ID',
-    to: to,
-    subject: 'Sending Email using Node.js',
-    text: `That was easy! This is your OTP: ${otp}`
+    from: '"CEKLOK.ID 👻" <ayofutsalmalang@gmail.com>',
+    to: data.to,
+    subject: data.subject,
+    text: data.text
   };
 
   transporter.sendMail(mailOptions, function(error, info) {

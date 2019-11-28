@@ -38,6 +38,15 @@ module.exports = function(sequelize, Sequelize) {
       password: {
         type: Sequelize.STRING(45)
       },
+      role: {
+        type: Sequelize.STRING(45)
+      },
+      grade: {
+        type: Sequelize.STRING(45)
+      },
+      status: {
+        type: Sequelize.STRING(45)
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,
