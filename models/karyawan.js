@@ -11,6 +11,11 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      id_karyawan: {
+        type: Sequelize.INTEGER(11),
+        allowNull: false,
+        unique: true
+      },
       code_company: {
         type: Sequelize.STRING(45)
       },

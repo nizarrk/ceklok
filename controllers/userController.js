@@ -87,8 +87,6 @@ exports.checkExistingUsername = (APP, req, callback) => {
 };
 
 exports.register = (APP, req, callback) => {
-  console.log(req.body);
-
   async.waterfall(
     [
       function encryptPassword(callback) {
@@ -106,7 +104,21 @@ exports.register = (APP, req, callback) => {
         let email = APP.validation.email(req.body.email);
         let username = APP.validation.username(req.body.username);
 
-        if (email == true && username == true) {
+        let tgl = new Date().getDate().toString();
+        let month = new Date().getMonth().toString();
+        let year = new Date()
+          .getFullYear()
+          .toString()
+          .slice(2, 4);
+        let time = year + month + tgl;
+
+        let str = '' + 1;
+        let pad = '0000';
+        let ans = pad.substring(0, pad.length - str.length) + str;
+
+        let kode = req.body.company + '-' + time + '-';
+
+        if (email && username) {
           console.log(req.body);
           APP.models.mysql.karyawan
             .build({
@@ -431,10 +443,6 @@ exports.forgotPassword = (APP, req, callback) => {
                 });
             }
             //send to email
-            console.log('zzzzzzzzzzzzzzzzzzzz');
-
-            console.log(otp);
-
             APP.mailer.sendMail({
               subject: 'Reset Password',
               to: req.body.email,

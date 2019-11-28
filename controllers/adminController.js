@@ -6,7 +6,7 @@ const key = require('../config/jwt-key.json');
 const async = require('async');
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.mysql.admin
+  APP.models.mysql.company
     .findAll({
       where: {
         email_company: req.body.email
@@ -33,7 +33,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.mysql.admin
+  APP.models.mysql.company
     .findAll({
       where: {
         username: req.body.username
@@ -63,9 +63,9 @@ exports.register = (APP, req, callback) => {
   async.waterfall(
     [
       function encryptPassword(callback) {
-        let pass = APP.validation.password(req.body.pass);
+        let pass = APP.validation.password(req.body.company.pass);
         if (pass === true) {
-          bcrypt.hash(req.body.pass, 10).then(hashed => {
+          bcrypt.hash(req.body.company.pass, 10).then(hashed => {
             return callback(null, hashed);
           });
         } else {
@@ -74,26 +74,24 @@ exports.register = (APP, req, callback) => {
       },
 
       function registerUser(hashed, callback) {
-        let email = APP.validation.email(req.body.email);
-        let username = APP.validation.username(req.body.username);
+        let email = APP.validation.email(req.body.company.email);
+        let username = APP.validation.username(req.body.company.username);
 
         if (email && username) {
-          APP.models.mysql.admin
+          APP.models.mysql.company
             .build({
-              nama_company: req.body.nama,
-              alamat_company: req.body.alamat,
-              telp_company: req.body.telp,
-              email_company: req.body.email,
-              username: req.body.username,
-              password: hashed
+              id_pricing: req.body.company.pricing,
+              nama_company: req.body.company.nama,
+              alamat_company: req.body.company.alamat,
+              telp_company: req.body.company.telp,
+              email_company: req.body.company.email,
+              username: req.body.company.username,
+              password: hashed,
+              payment_status: 'Pending'
             })
             .save()
             .then(result => {
-              let params = 'Insert Success'; //This is only example, Object can also be used
-              return callback(null, {
-                code: 'INSERT_SUCCESS',
-                data: result.dataValues || params
-              });
+              callback(null, result);
             })
             .catch(err => {
               if (err.original && err.original.code === 'ER_DUP_ENTRY') {
@@ -121,6 +119,33 @@ exports.register = (APP, req, callback) => {
           if (email !== true) return callback(email);
           if (username !== true) return callback(username);
         }
+      },
+
+      function paymentUser(result, callback) {
+        APP.models.mysql.payment
+          .create({
+            id_payment_method: req.body.payment.method,
+            id_company: result.id,
+            nama_rek: req.body.payment.nama,
+            no_rek: req.body.payment.no,
+            bukti: req.body.payment.bukti,
+            status: 'Waiting'
+          })
+          .then(res => {
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              data: {
+                company: result.dataValues,
+                payment: res.dataValues
+              }
+            });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
       }
     ],
     (err, result) => {
@@ -175,7 +200,7 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.mysql.admin
+        APP.models.mysql.company
           .findAll({
             where: {
               username: req.body.username
@@ -351,7 +376,7 @@ exports.verifikasiKaryawan = (APP, req, callback) => {
 exports.saveCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .create({
-      id_admin: req.body.admin,
+      id_admin: req.body.company,
       nama: req.body.nama,
       alamat: req.body.alamat,
       pricing: req.body.price,

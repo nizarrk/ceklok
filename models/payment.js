@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'admin',
+    'payment',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,32 +11,22 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      id_pricing: {
+      id_payment_method: {
         type: Sequelize.INTEGER(11)
       },
-      code_company: {
-        type: Sequelize.STRING(45),
-        unique: true
+      id_company: {
+        type: Sequelize.INTEGER(11)
       },
-      nama_company: {
+      nama_rek: {
         type: Sequelize.STRING(45)
       },
-      alamat_company: {
+      no_rek: {
         type: Sequelize.STRING(45)
       },
-      telp_company: {
+      bukti: {
         type: Sequelize.STRING(45)
       },
-      email_company: {
-        type: Sequelize.STRING(45)
-      },
-      username: {
-        type: Sequelize.STRING(45)
-      },
-      password: {
-        type: Sequelize.STRING(45)
-      },
-      status_payment: {
+      status: {
         type: Sequelize.STRING(45)
       },
       created_at: {

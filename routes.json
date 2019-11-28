@@ -112,5 +112,11 @@
     "controller": "paymentMethodController",
     "function": "delete",
     "auth": false
+  },
+  "/superadmin/verifycompany": {
+    "method": "post",
+    "controller": "superAdminController",
+    "function": "verifyCompany",
+    "auth": false
   }
 }
