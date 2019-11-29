@@ -1,8 +1,6 @@
 'use strict';
 
 exports.test = function(APP, req, callback) {
-  console.log(req.body.admin);
-
   /**
    * YOUR APPLICATION LOGIC HERE...
    */

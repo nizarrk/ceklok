@@ -35,6 +35,21 @@ if (process.env.MYSQL === 'true') {
     evict: Number(process.env.MYSQL_POOL_EVICT),
     handleDisconnects: true
   };
+
+  const operatorsAliases = {
+    $between: Sequelize.Op.between,
+    $and: Sequelize.Op.and,
+    $or: Sequelize.Op.or,
+    $eq: Sequelize.Op.eq,
+    $ne: Sequelize.Op.ne,
+    $gte: Sequelize.Op.gte,
+    $gt: Sequelize.Op.gt,
+    $lt: Sequelize.Op.lt,
+    $lte: Sequelize.Op.lte,
+    $like: Sequelize.Op.like,
+    $in: Sequelize.Op.in
+  };
+
   const define = {
     timestamps: false,
     paranoid: true,
@@ -53,6 +68,7 @@ if (process.env.MYSQL === 'true') {
           pool: mysqlPool,
           dialectOptions: mysqlDialectOptions,
           define: define,
+          operatorsAliases: operatorsAliases,
           logging: false // Disable logging in production.
         }
       : {
@@ -61,7 +77,8 @@ if (process.env.MYSQL === 'true') {
           dialect: mysqlDialect,
           pool: mysqlPool,
           dialectOptions: mysqlDialectOptions,
-          define: define
+          define: define,
+          operatorsAliases: operatorsAliases
         };
   const sequelize = new Sequelize(process.env.MYSQL_NAME, process.env.MYSQL_USER, process.env.MYSQL_PASS, options);
 

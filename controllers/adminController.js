@@ -13,14 +13,26 @@ exports.checkExistingEmail = (APP, req, callback) => {
       }
     })
     .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate email!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'email'
+          }
+        });
+      }
       callback(null, {
-        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        code: 'NOT_FOUND',
         data: {
-          row: res && res.length > 0 ? res : []
+          row: []
         },
         info: {
           dataCount: res.length,
-          parameter: 'email_company'
+          parameter: 'email'
         }
       });
     })
@@ -40,10 +52,22 @@ exports.checkExistingUsername = (APP, req, callback) => {
       }
     })
     .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate username!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'username'
+          }
+        });
+      }
       callback(null, {
-        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        code: 'NOT_FOUND',
         data: {
-          row: res && res.length > 0 ? res : []
+          row: []
         },
         info: {
           dataCount: res.length,
@@ -59,15 +83,74 @@ exports.checkExistingUsername = (APP, req, callback) => {
     });
 };
 
+exports.checkExistingTelp = (APP, req, callback) => {
+  APP.models.mysql.company
+    .findAll({
+      where: {
+        telp_company: req.body.telp
+      }
+    })
+    .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate telp!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'telp'
+          }
+        });
+      }
+      callback(null, {
+        code: 'NOT_FOUND',
+        data: {
+          row: []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'telp'
+        }
+      });
+    })
+    .catch(err => {
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
 exports.register = (APP, req, callback) => {
   async.waterfall(
     [
-      function encryptPassword(callback) {
+      function checkUsername(callback) {
+        module.exports.checkExistingUsername(APP, req, callback);
+      },
+
+      function checkEmaill(result, callback) {
+        module.exports.checkExistingEmail(APP, req, callback);
+      },
+
+      function checkTelp(result, callback) {
+        module.exports.checkExistingTelp(APP, req, callback);
+      },
+
+      function encryptPassword(result, callback) {
         let pass = APP.validation.password(req.body.company.pass);
         if (pass === true) {
-          bcrypt.hash(req.body.company.pass, 10).then(hashed => {
-            return callback(null, hashed);
-          });
+          bcrypt
+            .hash(req.body.company.pass, 10)
+            .then(hashed => {
+              return callback(null, hashed);
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_DATABASE',
+                data: JSON.stringify(err)
+              });
+            });
         } else {
           return callback(pass);
         }

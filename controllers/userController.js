@@ -13,10 +13,22 @@ exports.checkExistingTelp = (APP, req, callback) => {
       }
     })
     .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate telp!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'telp'
+          }
+        });
+      }
       callback(null, {
-        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        code: 'NOT_FOUND',
         data: {
-          row: res && res.length > 0 ? APP.rsa.encrypt(res) : []
+          row: []
         },
         info: {
           dataCount: res.length,
@@ -40,10 +52,22 @@ exports.checkExistingEmail = (APP, req, callback) => {
       }
     })
     .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate Email!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'email'
+          }
+        });
+      }
       callback(null, {
-        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        code: 'NOT_FOUND',
         data: {
-          row: res && res.length > 0 ? APP.rsa.encrypt(res) : []
+          row: []
         },
         info: {
           dataCount: res.length,
@@ -63,14 +87,27 @@ exports.checkExistingUsername = (APP, req, callback) => {
   APP.models.mysql.karyawan
     .findAll({
       where: {
+        code_company: req.body.company,
         username: req.body.username
       }
     })
     .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate Username!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'username'
+          }
+        });
+      }
       callback(null, {
-        code: res && res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        code: 'NOT_FOUND',
         data: {
-          row: res && res.length > 0 ? APP.rsa.encrypt(res) : []
+          row: []
         },
         info: {
           dataCount: res.length,
@@ -79,6 +116,8 @@ exports.checkExistingUsername = (APP, req, callback) => {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
+
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -89,21 +128,19 @@ exports.checkExistingUsername = (APP, req, callback) => {
 exports.register = (APP, req, callback) => {
   async.waterfall(
     [
-      function encryptPassword(callback) {
-        let pass = APP.validation.password(req.body.pass);
-        if (pass === true) {
-          bcrypt.hash(req.body.pass, 10).then(hashed => {
-            return callback(null, hashed);
-          });
-        } else {
-          return callback(pass);
-        }
+      function checkUsername(callback) {
+        module.exports.checkExistingUsername(APP, req, callback);
       },
 
-      function registerUser(hashed, callback) {
-        let email = APP.validation.email(req.body.email);
-        let username = APP.validation.username(req.body.username);
+      function checkEmaill(result, callback) {
+        module.exports.checkExistingEmail(APP, req, callback);
+      },
 
+      function checkTelp(result, callback) {
+        module.exports.checkExistingTelp(APP, req, callback);
+      },
+
+      function generateKaryawanCode(result, callback) {
         let tgl = new Date().getDate().toString();
         let month = new Date().getMonth().toString();
         let year = new Date()
@@ -111,23 +148,88 @@ exports.register = (APP, req, callback) => {
           .toString()
           .slice(2, 4);
         let time = year + month + tgl;
+        let pad = '0000';
+
+        APP.models.mysql.karyawan
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            if (res.length == 0) {
+              console.log('kosong');
+              let str = '' + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            } else {
+              console.log('ada');
+              let lastID = res[0].dataValues.id_karyawan;
+              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
+
+              let str = '' + parseInt(replace) + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function encryptPassword(result, callback) {
+        let pass = APP.validation.password(req.body.pass);
+        if (pass === true) {
+          bcrypt
+            .hash(req.body.pass, 10)
+            .then(hashed => {
+              return callback(null, {
+                result,
+                hashed
+              });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_BCRYPT',
+                data: JSON.stringify(err)
+              });
+            });
+        } else {
+          return callback(pass);
+        }
+      },
+
+      function registerUser(data, callback) {
+        let email = APP.validation.email(req.body.email);
+        let username = APP.validation.username(req.body.username);
 
         let str = '' + 1;
         let pad = '0000';
         let ans = pad.substring(0, pad.length - str.length) + str;
 
-        let kode = req.body.company + '-' + time + '-';
-
         if (email && username) {
           console.log(req.body);
           APP.models.mysql.karyawan
             .build({
+              id_karyawan: data.result,
               nama: req.body.nama,
+              jenis_kelamin: req.body.jk,
+              umur: req.body.umur,
+              alamat: req.body.alamat,
               email: req.body.email,
               code_company: req.body.company,
               username: req.body.username,
               telp: req.body.telp,
-              password: hashed
+              password: data.hashed
             })
             .save()
             .then(result => {
@@ -179,6 +281,15 @@ exports.login = (APP, req, callback) => {
   async.waterfall(
     [
       function checkBody(callback) {
+        if (!req.body.company)
+          return callback({
+            code: 'MISSING_KEY',
+            data: req.body,
+            info: {
+              missingParameter: 'company'
+            }
+          });
+
         if (!req.body.username)
           return callback({
             code: 'MISSING_KEY',
@@ -222,7 +333,8 @@ exports.login = (APP, req, callback) => {
         APP.models.mysql.karyawan
           .findAll({
             where: {
-              username: req.body.username
+              username: req.body.username,
+              code_company: req.body.company
             }
           })
           .then(rows => {

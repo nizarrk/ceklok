@@ -9,7 +9,7 @@ exports.verifyCompany = (APP, req, callback) => {
       function updatePaymentStatus(callback) {
         APP.models.mysql.payment
           .findOne({
-            id: req.body.id
+            where: { id: req.body.id }
           })
           .then(res => {
             res
@@ -34,7 +34,7 @@ exports.verifyCompany = (APP, req, callback) => {
           });
       },
 
-      function updateCompany(result, callback) {
+      function generateCompanyCode(result, callback) {
         let tgl = new Date().getDate().toString();
         let month = new Date().getMonth().toString();
         let year = new Date()
@@ -45,21 +45,63 @@ exports.verifyCompany = (APP, req, callback) => {
 
         APP.models.mysql.company
           .findOne({
-            id: result.id_company
+            where: {
+              id: result.id_company
+            }
           })
           .then(res => {
-            let array = res.dataValues.nama_company.split(' ');
+            let array = res.nama_company.split(' ');
             let code = '';
 
-            array.map((res, index, arr) => {
+            array.map(res => {
               code += res[0].toUpperCase();
             });
 
-            let companyCode = code + time;
+            let companyCode = code + time + '0'; // 0 is numbering index
+            APP.models.mysql.company
+              .findAll({
+                where: {
+                  code_company: {
+                    $like: `${code + time}%`
+                  }
+                },
+                limit: 1,
+                order: [['id', 'DESC']]
+              })
+              .then(res => {
+                if (res.length == 0) {
+                  callback(null, {
+                    result,
+                    companyCode
+                  });
+                } else {
+                  let lastID = res[0].code_company;
+                  let replace = lastID.replace(code + time, '');
+                  let num = parseInt(replace) + 1;
 
+                  companyCode = code + time + num;
+
+                  callback(null, {
+                    result,
+                    companyCode
+                  });
+                }
+              })
+              .catch(err => console.log(err));
+          });
+      },
+
+      function updateCompany(data, callback) {
+        APP.models.mysql.company
+          .findOne({
+            where: {
+              id: data.result.id_company
+            }
+          })
+          .then(res => {
             res
               .update({
-                code_company: companyCode,
+                code_company: data.companyCode,
                 payment_status: 'Paid'
               })
               .then(result => {
