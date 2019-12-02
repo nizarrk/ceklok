@@ -194,7 +194,10 @@ function resOutput(APP, req, res, params, status) {
 
         if (messages[params.code]) message.company = messages[params.code];
 
+        output.name = params.name || message.company.name;
         output.code = message.company.code || params.code;
+        output.status = params.status || message.company.status;
+        output.error = params.error || message.company.error;
         output.message = params.message || message.company.message;
         output.data = params.data || message.company.data;
         output.debug = undefined;

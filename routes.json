@@ -47,6 +47,18 @@
     "function": "logout",
     "auth": false
   },
+  "/user/checkcompany": {
+    "method": "post",
+    "controller": "userController",
+    "function": "checkExistingCompany",
+    "auth": false
+  },
+  "/user/checkcredentials": {
+    "method": "post",
+    "controller": "userController",
+    "function": "checkExistingCredentials",
+    "auth": false
+  },
   "/auth/forgotpassword": {
     "method": "post",
     "controller": "userController",

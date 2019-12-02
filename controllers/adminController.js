@@ -9,7 +9,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        email_company: req.body.email
+        email_company: req.body.company.email
       }
     })
     .then(res => {
@@ -37,6 +37,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -48,7 +49,7 @@ exports.checkExistingUsername = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        username: req.body.username
+        username: req.body.company.username
       }
     })
     .then(res => {
@@ -76,6 +77,7 @@ exports.checkExistingUsername = (APP, req, callback) => {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -87,7 +89,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        telp_company: req.body.telp
+        telp_company: req.body.company.telp
       }
     })
     .then(res => {
@@ -115,6 +117,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)

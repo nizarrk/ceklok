@@ -16,6 +16,12 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      id_grade: {
+        type: Sequelize.STRING(45)
+      },
+      id_role: {
+        type: Sequelize.STRING(45)
+      },
       code_company: {
         type: Sequelize.STRING(45)
       },
@@ -41,12 +47,6 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.STRING(45)
       },
       password: {
-        type: Sequelize.STRING(45)
-      },
-      role: {
-        type: Sequelize.STRING(45)
-      },
-      grade: {
         type: Sequelize.STRING(45)
       },
       status: {

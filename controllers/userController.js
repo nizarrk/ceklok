@@ -37,6 +37,8 @@ exports.checkExistingTelp = (APP, req, callback) => {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
+
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -76,6 +78,8 @@ exports.checkExistingEmail = (APP, req, callback) => {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
+
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -125,19 +129,74 @@ exports.checkExistingUsername = (APP, req, callback) => {
     });
 };
 
-exports.register = (APP, req, callback) => {
+exports.checkExistingCompany = (APP, req, callback) => {
+  APP.models.mysql.company
+    .findAll({
+      where: {
+        code_company: req.body.company
+      }
+    })
+    .then(res => {
+      if (res && res.length > 0) {
+        return callback(null, {
+          code: 'FOUND',
+          data: {
+            row: res
+          },
+          info: {
+            dataCount: res.length
+          }
+        });
+      }
+      callback({
+        code: 'NOT_FOUND',
+        data: {
+          row: []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'email'
+        }
+      });
+    })
+    .catch(err => {
+      console.log('iki error', err);
+
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.checkExistingCredentials = (APP, req, callback) => {
   async.waterfall(
     [
       function checkUsername(callback) {
         module.exports.checkExistingUsername(APP, req, callback);
       },
 
-      function checkEmaill(result, callback) {
-        module.exports.checkExistingEmail(APP, req, callback);
-      },
-
       function checkTelp(result, callback) {
         module.exports.checkExistingTelp(APP, req, callback);
+      },
+
+      function checkEmail(result, callback) {
+        module.exports.checkExistingEmail(APP, req, callback);
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.register = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkCredentials(callback) {
+        module.exports.checkExistingUsername(APP, req, callback);
       },
 
       function generateKaryawanCode(result, callback) {

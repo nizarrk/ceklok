@@ -1,22 +1,112 @@
 {
-	"OK": {
-		"error": false,
-		"code": "00",
-		"name": "OK_NAME",
-		"status": 200,
-		"from": "",
-		"info": {},
-		"message": "Sample success response.",
-		"data": {}
-	},
-	"ERR": {
-		"error": true,
-		"code": "-01",
-		"name": "ERR_NAME",
-		"status": 200,
-		"from": "",
-		"info": {},
-		"message": "Sample error response!",
-		"data": {}
-	}
+  "OK": {
+    "error": false,
+    "code": "00",
+    "name": "OK_NAME",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Success!",
+    "data": {}
+  },
+  "INSERT_SUCCESS": {
+    "error": false,
+    "code": "00",
+    "name": "INSERT_SUCCESS",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Insert Success!",
+    "data": {}
+  },
+  "UPDATE_SUCCESS": {
+    "error": false,
+    "code": "00",
+    "name": "UPDATE_SUCCESS",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Update Success!",
+    "data": {}
+  },
+  "DELETE_SUCCESS": {
+    "error": false,
+    "code": "00",
+    "name": "DELETE_SUCCESS",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Delete Success!",
+    "data": {}
+  },
+  "FOUND": {
+    "error": false,
+    "code": "00",
+    "name": "FOUND",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Data Found!",
+    "data": {}
+  },
+  "NOT_FOUND": {
+    "error": false,
+    "code": "00",
+    "name": "NOT_FOUND",
+    "status": 404,
+    "from": "",
+    "info": {},
+    "message": "No Record Found!",
+    "data": {}
+  },
+  "DUPLICATE": {
+    "error": true,
+    "code": "00",
+    "name": "DUPLICATE",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Duplicate  Entry!",
+    "data": {}
+  },
+  "UPDATE_NONE": {
+    "error": false,
+    "code": "00",
+    "name": "UPDATE_NONE",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Empty Query!",
+    "data": {}
+  },
+  "DELETE_NONE": {
+    "error": false,
+    "code": "00",
+    "name": "DELETE_NONE",
+    "status": 200,
+    "from": "",
+    "info": {},
+    "message": "Empty Query!",
+    "data": {}
+  },
+  "ERR": {
+    "error": true,
+    "code": "-01",
+    "name": "ERR",
+    "status": 500,
+    "from": "",
+    "info": {},
+    "message": "Error!",
+    "data": {}
+  },
+  "ERR_DATABASE": {
+    "error": true,
+    "code": "-01",
+    "name": "ERR_DATABASE",
+    "status": 500,
+    "from": "",
+    "info": {},
+    "message": "Database Error Found!",
+    "data": {}
+  }
 }
