@@ -71,7 +71,7 @@ exports.verifyCompany = (APP, req, callback) => {
               .then(res => {
                 if (res.length == 0) {
                   callback(null, {
-                    result,
+                    payment: result,
                     companyCode
                   });
                 } else {
@@ -82,7 +82,7 @@ exports.verifyCompany = (APP, req, callback) => {
                   companyCode = code + time + num;
 
                   callback(null, {
-                    result,
+                    payment: result,
                     companyCode
                   });
                 }
@@ -95,7 +95,7 @@ exports.verifyCompany = (APP, req, callback) => {
         APP.models.mysql.company
           .findOne({
             where: {
-              id: data.result.id_company
+              id: data.payment.id_company
             }
           })
           .then(res => {
@@ -105,9 +105,48 @@ exports.verifyCompany = (APP, req, callback) => {
                 payment_status: 'Paid'
               })
               .then(result => {
+                callback(null, { payment: data.payment, company: data.companyCode });
+              })
+              .catch(err => {
+                console.log('1', err);
+
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
+                });
+              });
+          })
+          .catch(err => {
+            console.log('2', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function updateAdmin(data, callback) {
+        APP.models.mysql.admin
+          .findOne({
+            where: {
+              id: data.payment.company_code // waiting migrasi ke db baru
+            }
+          })
+          .then(res => {
+            res
+              .update({
+                code_company: data.company,
+                payment_status: 'Paid'
+              })
+              .then(result => {
                 callback(null, {
                   code: 'UPDATE_SUCCESS',
-                  data: result.dataValues
+                  data: {
+                    payment: data.payment,
+                    company: data.company,
+                    admin: result
+                  }
                 });
               })
               .catch(err => {

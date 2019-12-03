@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'company',
+    'grade',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,45 +11,14 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      pricing_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      company_code: {
-        type: Sequelize.STRING(45),
-        unique: true
-      },
       name: {
         type: Sequelize.STRING(45)
       },
-      address: {
+      description: {
         type: Sequelize.STRING(45)
       },
-      kelurahan: {
-        type: Sequelize.STRING(45)
-      },
-      kecamatan: {
-        type: Sequelize.STRING(45)
-      },
-      city: {
-        type: Sequelize.STRING(45)
-      },
-      province: {
-        type: Sequelize.STRING(45)
-      },
-      zipcode: {
-        type: Sequelize.STRING(45)
-      },
-      msisdn: {
-        type: Sequelize.STRING(45)
-      },
-      tlp: {
-        type: Sequelize.STRING(45)
-      },
-      email: {
-        type: Sequelize.STRING(45)
-      },
-      payment_status: {
-        type: Sequelize.INTEGER(1), //0 = pending, 1 = paid
+      status: {
+        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
         defaultValue: 0
       },

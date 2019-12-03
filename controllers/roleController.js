@@ -35,7 +35,8 @@ exports.get = function(APP, req, callback) {
 exports.insert = function(APP, req, callback) {
   APP.models.mysql.role
     .build({
-      nama_role: req.body.role
+      nama_role: req.body.role,
+      deskripsi: req.body.desk
     })
     .save()
     .then(result => {
@@ -79,7 +80,8 @@ exports.update = function(APP, req, callback) {
   APP.models.mysql.role
     .update(
       {
-        nama_role: req.body.role
+        nama_role: req.body.role,
+        deskripsi: req.body.desk
       },
       {
         where: {
@@ -103,6 +105,8 @@ exports.update = function(APP, req, callback) {
       });
     })
     .catch(err => {
+      console.log('iki error', err);
+
       if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
         let params = 'Error! Empty Query'; //This is only example, Object can also be used
         return callback({

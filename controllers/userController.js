@@ -196,7 +196,7 @@ exports.register = (APP, req, callback) => {
   async.waterfall(
     [
       function checkCredentials(callback) {
-        module.exports.checkExistingUsername(APP, req, callback);
+        module.exports.checkExistingCredentials(APP, req, callback);
       },
 
       function generateKaryawanCode(result, callback) {

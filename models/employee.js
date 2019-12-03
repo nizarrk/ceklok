@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'karyawan',
+    'employee',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,46 +11,64 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      id_karyawan: {
-        type: Sequelize.INTEGER(11),
-        allowNull: false,
-        unique: true
-      },
-      id_grade: {
+      role_id: {
         type: Sequelize.STRING(45)
       },
-      id_role: {
+      grade_id: {
         type: Sequelize.STRING(45)
       },
-      code_company: {
+      company_code: {
         type: Sequelize.STRING(45)
       },
-      nama: {
-        type: Sequelize.STRING(45)
-      },
-      jenis_kelamin: {
-        type: Sequelize.STRING(45)
-      },
-      umur: {
-        type: Sequelize.STRING(45)
-      },
-      alamat: {
-        type: Sequelize.STRING(45)
-      },
-      telp: {
-        type: Sequelize.STRING(45)
-      },
-      email: {
-        type: Sequelize.STRING(45)
-      },
-      username: {
+      user_name: {
         type: Sequelize.STRING(45)
       },
       password: {
         type: Sequelize.STRING(45)
       },
-      status: {
+      name: {
         type: Sequelize.STRING(45)
+      },
+      gender: {
+        type: Sequelize.INTEGER(11) //1 = Male, 2 = Female, 3 = Other
+      },
+      pob: {
+        type: Sequelize.STRING(45)
+      },
+      dob: {
+        type: Sequelize.DATE
+      },
+      address: {
+        type: Sequelize.STRING(45)
+      },
+      kelurahan: {
+        type: Sequelize.STRING(45)
+      },
+      kecamatan: {
+        type: Sequelize.STRING(45)
+      },
+      city: {
+        type: Sequelize.STRING(45)
+      },
+      province: {
+        type: Sequelize.STRING(45)
+      },
+      zipcode: {
+        type: Sequelize.STRING(45)
+      },
+      msisdn: {
+        type: Sequelize.STRING(45)
+      },
+      tlp: {
+        type: Sequelize.STRING(45)
+      },
+      email: {
+        type: Sequelize.STRING(45)
+      },
+      status: {
+        type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
+        allowNull: false,
+        defaultValue: 0
       },
       created_at: {
         allowNull: false,
@@ -61,6 +79,15 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
+      },
+      action_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      ip_address: {
+        type: Sequelize.STRING(45),
+        allowNull: false
       }
     },
     {}

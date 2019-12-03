@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
 
-exports.checkExistingEmail = (APP, req, callback) => {
+exports.checkExistingEmailCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
@@ -37,7 +37,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
       });
     })
     .catch(err => {
-      console.log('iki error', err);
+      console.log('iki error email company', err);
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -45,47 +45,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
     });
 };
 
-exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.mysql.company
-    .findAll({
-      where: {
-        username: req.body.company.username
-      }
-    })
-    .then(res => {
-      if (res && res.length > 0) {
-        callback({
-          code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate username!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'username'
-          }
-        });
-      }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'username'
-        }
-      });
-    })
-    .catch(err => {
-      console.log('iki error', err);
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
-
-exports.checkExistingTelp = (APP, req, callback) => {
+exports.checkExistingTelpCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
@@ -117,7 +77,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
       });
     })
     .catch(err => {
-      console.log('iki error', err);
+      console.log('iki error telp company', err);
       callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -125,26 +85,184 @@ exports.checkExistingTelp = (APP, req, callback) => {
     });
 };
 
-exports.register = (APP, req, callback) => {
+exports.checkExistingEmailAdmin = (APP, req, callback) => {
+  APP.models.mysql.admin
+    .findAll({
+      where: {
+        email: req.body.admin.email
+      }
+    })
+    .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate email!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'email admin'
+          }
+        });
+      }
+      callback(null, {
+        code: 'NOT_FOUND',
+        data: {
+          row: []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'email admin'
+        }
+      });
+    })
+    .catch(err => {
+      console.log('iki error email admin', err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.checkExistingTelpAdmin = (APP, req, callback) => {
+  APP.models.mysql.admin
+    .findAll({
+      where: {
+        telp: req.body.admin.telp
+      }
+    })
+    .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate telp!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'telp admin'
+          }
+        });
+      }
+      callback(null, {
+        code: 'NOT_FOUND',
+        data: {
+          row: []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'telp admin'
+        }
+      });
+    })
+    .catch(err => {
+      console.log('iki error telp admin', err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.checkExistingUsername = (APP, req, callback) => {
+  APP.models.mysql.admin
+    .findAll({
+      where: {
+        username: req.body.admin.username
+      }
+    })
+    .then(res => {
+      if (res && res.length > 0) {
+        callback({
+          code: 'DUPLICATE',
+          data: {
+            row: 'Error! Duplicate username!'
+          },
+          info: {
+            dataCount: res.length,
+            parameter: 'username'
+          }
+        });
+      }
+      callback(null, {
+        code: 'NOT_FOUND',
+        data: {
+          row: []
+        },
+        info: {
+          dataCount: res.length,
+          parameter: 'username'
+        }
+      });
+    })
+    .catch(err => {
+      console.log('iki error username', err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.checkExistingCredentialsCompany = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkTelp(callback) {
+        module.exports.checkExistingTelpCompany(APP, req, callback);
+      },
+
+      function checkEmail(result, callback) {
+        module.exports.checkExistingEmailCompany(APP, req, callback);
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.checkExistingCredentialsAdmin = (APP, req, callback) => {
   async.waterfall(
     [
       function checkUsername(callback) {
         module.exports.checkExistingUsername(APP, req, callback);
       },
 
-      function checkEmaill(result, callback) {
-        module.exports.checkExistingEmail(APP, req, callback);
+      function checkTelp(result, callback) {
+        module.exports.checkExistingTelpAdmin(APP, req, callback);
       },
 
-      function checkTelp(result, callback) {
-        module.exports.checkExistingTelp(APP, req, callback);
+      function checkEmail(result, callback) {
+        module.exports.checkExistingEmailAdmin(APP, req, callback);
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.register = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkCredentialsAdmin(callback) {
+        module.exports.checkExistingCredentialsAdmin(APP, req, callback);
+      },
+
+      function checkCredentialsCompany(result, callback) {
+        module.exports.checkExistingCredentialsCompany(APP, req, callback);
       },
 
       function encryptPassword(result, callback) {
-        let pass = APP.validation.password(req.body.company.pass);
+        let pass = APP.validation.password(req.body.admin.pass);
         if (pass === true) {
           bcrypt
-            .hash(req.body.company.pass, 10)
+            .hash(req.body.admin.pass, 10)
             .then(hashed => {
               return callback(null, hashed);
             })
@@ -159,21 +277,22 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function registerUser(hashed, callback) {
-        let email = APP.validation.email(req.body.company.email);
-        let username = APP.validation.username(req.body.company.username);
+      function registerAdmin(hashed, callback) {
+        let email = APP.validation.email(req.body.admin.email);
+        let username = APP.validation.username(req.body.admin.username);
 
         if (email && username) {
-          APP.models.mysql.company
+          APP.models.mysql.admin
             .build({
-              id_pricing: req.body.company.pricing,
-              nama_company: req.body.company.nama,
-              alamat_company: req.body.company.alamat,
-              telp_company: req.body.company.telp,
-              email_company: req.body.company.email,
-              username: req.body.company.username,
+              nama: req.body.admin.nama,
+              jenis_kelamin: req.body.admin.jk,
+              umur: req.body.admin.umur,
+              alamat: req.body.admin.alamat,
+              telp: req.body.admin.telp,
+              email: req.body.admin.email,
+              username: req.body.admin.username,
               password: hashed,
-              payment_status: 'Pending'
+              status: 'Pending'
             })
             .save()
             .then(result => {
@@ -207,11 +326,49 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function paymentUser(result, callback) {
+      function registerCompany(result, callback) {
+        APP.models.mysql.company
+          .build({
+            id_pricing: req.body.company.pricing,
+            nama_company: req.body.company.nama,
+            alamat_company: req.body.company.alamat,
+            telp_company: req.body.company.telp,
+            email_company: req.body.company.email,
+            payment_status: 'Pending'
+          })
+          .save()
+          .then(res => {
+            callback(null, { admin: result, company: res });
+          })
+          .catch(err => {
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+              return callback({
+                code: 'DUPLICATE',
+                data: params
+              });
+            }
+
+            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
+              return callback({
+                code: 'UPDATE_NONE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function paymentUser(data, callback) {
         APP.models.mysql.payment
           .create({
             id_payment_method: req.body.payment.method,
-            id_company: result.id,
+            id_company: data.company.id,
             nama_rek: req.body.payment.nama,
             no_rek: req.body.payment.no,
             bukti: req.body.payment.bukti,
@@ -221,7 +378,8 @@ exports.register = (APP, req, callback) => {
             callback(null, {
               code: 'INSERT_SUCCESS',
               data: {
-                company: result.dataValues,
+                admin: data.admin.dataValues,
+                company: data.company.dataValues,
                 payment: res.dataValues
               }
             });

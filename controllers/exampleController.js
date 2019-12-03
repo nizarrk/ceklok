@@ -1,6 +1,8 @@
 'use strict';
 
 exports.test = function(APP, req, callback) {
+  console.log('halooo', req.connection.remoteAddress);
+
   /**
    * YOUR APPLICATION LOGIC HERE...
    */

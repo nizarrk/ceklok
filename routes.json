@@ -1,6 +1,6 @@
 {
   "/test/connection": {
-    "method": "post",
+    "method": "get",
     "controller": "exampleController",
     "function": "test",
     "auth": false
@@ -122,6 +122,54 @@
   "/paymentMethod/delete": {
     "method": "post",
     "controller": "paymentMethodController",
+    "function": "delete",
+    "auth": false
+  },
+  "/role/get": {
+    "method": "post",
+    "controller": "roleController",
+    "function": "get",
+    "auth": false
+  },
+  "/role/insert": {
+    "method": "post",
+    "controller": "roleController",
+    "function": "insert",
+    "auth": false
+  },
+  "/role/update": {
+    "method": "post",
+    "controller": "roleController",
+    "function": "update",
+    "auth": false
+  },
+  "/role/delete": {
+    "method": "post",
+    "controller": "roleController",
+    "function": "delete",
+    "auth": false
+  },
+  "/grade/get": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "get",
+    "auth": false
+  },
+  "/grade/insert": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "insert",
+    "auth": false
+  },
+  "/grade/update": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "update",
+    "auth": false
+  },
+  "/grade/delete": {
+    "method": "post",
+    "controller": "gradeController",
     "function": "delete",
     "auth": false
   },
