@@ -12,7 +12,7 @@ exports.get = function(APP, req, callback) {
     .then(rows => {
       return callback(null, {
         code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
-        data: rows,
+        data: rows && rows.length > 0 ? rows : null,
         info: {
           dataCount: rows.length
         }
@@ -35,8 +35,8 @@ exports.get = function(APP, req, callback) {
 exports.insert = function(APP, req, callback) {
   APP.models.mysql.payment_method
     .build({
-      nama: req.body.nama,
-      deskripsi: req.body.desk
+      name: req.body.name,
+      description: req.body.desc
     })
     .save()
     .then(result => {
@@ -80,8 +80,8 @@ exports.update = function(APP, req, callback) {
   APP.models.mysql.payment_method
     .update(
       {
-        nama: req.body.nama,
-        deskripsi: req.body.desk
+        name: req.body.name,
+        description: req.body.desc
       },
       {
         where: {

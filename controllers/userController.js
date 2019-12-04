@@ -6,10 +6,10 @@ const key = require('../config/jwt-key.json');
 const async = require('async');
 
 exports.checkExistingTelp = (APP, req, callback) => {
-  APP.models.mysql.karyawan
+  APP.models.mysql.employee
     .findAll({
       where: {
-        telp: req.body.telp
+        tlp: req.body.telp
       }
     })
     .then(res => {
@@ -37,7 +37,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
       });
     })
     .catch(err => {
-      console.log('iki error', err);
+      console.log('iki error telp', err);
 
       callback({
         code: 'ERR_DATABASE',
@@ -47,7 +47,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
 };
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.mysql.karyawan
+  APP.models.mysql.employee
     .findAll({
       where: {
         email: req.body.email
@@ -78,7 +78,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
       });
     })
     .catch(err => {
-      console.log('iki error', err);
+      console.log('iki error email', err);
 
       callback({
         code: 'ERR_DATABASE',
@@ -88,11 +88,11 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.mysql.karyawan
+  APP.models.mysql.employee
     .findAll({
       where: {
-        code_company: req.body.company,
-        username: req.body.username
+        company_code: req.body.company,
+        user_name: req.body.username
       }
     })
     .then(res => {
@@ -120,7 +120,7 @@ exports.checkExistingUsername = (APP, req, callback) => {
       });
     })
     .catch(err => {
-      console.log('iki error', err);
+      console.log('iki error username', err);
 
       callback({
         code: 'ERR_DATABASE',
@@ -133,7 +133,7 @@ exports.checkExistingCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        code_company: req.body.company
+        company_code: req.body.company
       }
     })
     .then(res => {
@@ -150,9 +150,7 @@ exports.checkExistingCompany = (APP, req, callback) => {
       }
       callback({
         code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
+        data: null,
         info: {
           dataCount: res.length,
           parameter: 'email'
@@ -160,7 +158,7 @@ exports.checkExistingCompany = (APP, req, callback) => {
       });
     })
     .catch(err => {
-      console.log('iki error', err);
+      console.log('iki error company', err);
 
       callback({
         code: 'ERR_DATABASE',
@@ -199,62 +197,13 @@ exports.register = (APP, req, callback) => {
         module.exports.checkExistingCredentials(APP, req, callback);
       },
 
-      function generateKaryawanCode(result, callback) {
-        let tgl = new Date().getDate().toString();
-        let month = new Date().getMonth().toString();
-        let year = new Date()
-          .getFullYear()
-          .toString()
-          .slice(2, 4);
-        let time = year + month + tgl;
-        let pad = '0000';
-
-        APP.models.mysql.karyawan
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
-          })
-          .then(res => {
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              let ans = pad.substring(0, pad.length - str.length) + str;
-
-              let kode = req.body.company + '-' + time + '-' + ans;
-
-              callback(null, kode);
-            } else {
-              console.log('ada');
-              let lastID = res[0].dataValues.id_karyawan;
-              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
-
-              let str = '' + parseInt(replace) + 1;
-              let ans = pad.substring(0, pad.length - str.length) + str;
-
-              let kode = req.body.company + '-' + time + '-' + ans;
-
-              callback(null, kode);
-            }
-          })
-          .catch(err => {
-            console.log(err);
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
       function encryptPassword(result, callback) {
         let pass = APP.validation.password(req.body.pass);
         if (pass === true) {
           bcrypt
             .hash(req.body.pass, 10)
             .then(hashed => {
-              return callback(null, {
-                result,
-                hashed
-              });
+              return callback(null, hashed);
             })
             .catch(err => {
               callback({
@@ -267,28 +216,29 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function registerUser(data, callback) {
+      function registerUser(result, callback) {
         let email = APP.validation.email(req.body.email);
         let username = APP.validation.username(req.body.username);
 
-        let str = '' + 1;
-        let pad = '0000';
-        let ans = pad.substring(0, pad.length - str.length) + str;
-
         if (email && username) {
-          console.log(req.body);
-          APP.models.mysql.karyawan
+          APP.models.mysql.employee
             .build({
-              id_karyawan: data.result,
-              nama: req.body.nama,
-              jenis_kelamin: req.body.jk,
-              umur: req.body.umur,
-              alamat: req.body.alamat,
+              company_code: req.body.company,
+              name: req.body.name,
+              gender: req.body.gender,
+              pob: req.body.pob,
+              dob: req.body.dob,
+              address: req.body.address,
+              kelurahan: req.body.kel,
+              kecamatan: req.body.kec,
+              city: req.body.city,
+              province: req.body.prov,
+              zipcode: req.body.zip,
+              msisdn: 'default',
+              tlp: req.body.telp,
               email: req.body.email,
-              code_company: req.body.company,
-              username: req.body.username,
-              telp: req.body.telp,
-              password: data.hashed
+              user_name: req.body.username,
+              password: result
             })
             .save()
             .then(result => {
@@ -389,11 +339,11 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.mysql.karyawan
+        APP.models.mysql.employee
           .findAll({
             where: {
-              username: req.body.username,
-              code_company: req.body.company
+              user_name: req.body.username,
+              company_code: req.body.company
             }
           })
           .then(rows => {
@@ -406,7 +356,7 @@ exports.login = (APP, req, callback) => {
               });
             }
 
-            if (rows[0].status == null) {
+            if (rows[0].status == 0) {
               return callback({
                 code: 'VERIFICATION_NEEDED',
                 info: {
@@ -440,7 +390,7 @@ exports.login = (APP, req, callback) => {
           })
           .catch(err => {
             callback({
-              code: 'ERR_BCRYPT',
+              code: 'ERR',
               data: JSON.stringify(err)
             });
           });
@@ -506,10 +456,13 @@ exports.login = (APP, req, callback) => {
                 .then(result => {
                   return callback(null, {
                     code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
-                    data: {
-                      row: rows[0].dataValues,
-                      token
-                    },
+                    data:
+                      rows && rows.length > 0
+                        ? {
+                            row: rows[0].dataValues,
+                            token
+                          }
+                        : null,
                     info: {
                       dataCount: rows.length
                     }
@@ -537,7 +490,7 @@ exports.forgotPassword = (APP, req, callback) => {
   async.waterfall(
     [
       function checkEmail(callback) {
-        APP.models.mysql.karyawan
+        APP.models.mysql.employee
           .findAll({
             where: {
               email: req.body.email
@@ -638,9 +591,12 @@ exports.checkOTP = (APP, req, callback) => {
     .then(res => {
       callback(null, {
         code: res != null ? 'FOUND' : 'NOT_FOUND',
-        data: {
-          row: res != null ? res : []
-        },
+        data:
+          res != null
+            ? {
+                row: res
+              }
+            : null,
         info: {
           dataCount: res.length,
           parameter: 'otp'
@@ -695,7 +651,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function updatePassword(result, callback) {
-        APP.models.mysql.karyawan
+        APP.models.mysql.employee
           .findOne({
             where: {
               email: req.body.email
@@ -705,9 +661,7 @@ exports.resetPassword = (APP, req, callback) => {
             if (res == null) {
               callback({
                 code: 'NOT_FOUND',
-                data: {
-                  row: []
-                }
+                data: null
               });
             }
             res
@@ -751,10 +705,13 @@ exports.logout = (APP, req, callback) => {
     })
     .then(res => {
       callback(null, {
-        code: 'FOUND',
-        data: {
-          row: APP.rsa.encrypt(res)
-        },
+        code: res != null ? 'FOUND' : 'NOT_FOUND',
+        data:
+          res != null
+            ? {
+                row: res
+              }
+            : null,
         info: {
           dataCount: res.length
         }
@@ -762,7 +719,7 @@ exports.logout = (APP, req, callback) => {
     })
     .catch(err => {
       callback({
-        code: 'NOT_FOUND',
+        code: 'ERR_DATABASE',
         data: JSON.stringify(err)
       });
     });

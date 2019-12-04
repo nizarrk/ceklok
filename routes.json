@@ -26,8 +26,8 @@
   "/admin/verifyuser": {
     "method": "post",
     "controller": "adminController",
-    "function": "verifikasiKaryawan",
-    "auth": true
+    "function": "verifyEmployee",
+    "auth": false
   },
   "/user/register": {
     "method": "post",

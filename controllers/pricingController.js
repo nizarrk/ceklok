@@ -35,10 +35,11 @@ exports.get = function(APP, req, callback) {
 exports.insert = function(APP, req, callback) {
   APP.models.mysql.pricing
     .build({
-      judul: req.body.judul,
-      deskripsi: req.body.desk,
+      name: req.body.name,
+      description: req.body.desc,
       fitur: req.body.fitur,
-      harga: req.body.harga
+      price: req.body.price,
+      status: req.body.status
     })
     .save()
     .then(result => {
@@ -82,10 +83,11 @@ exports.update = function(APP, req, callback) {
   APP.models.mysql.pricing
     .update(
       {
-        judul: req.body.judul,
-        deskripsi: req.body.desk,
+        name: req.body.name,
+        description: req.body.desc,
         fitur: req.body.fitur,
-        harga: req.body.harga
+        price: req.body.price,
+        status: req.body.status
       },
       {
         where: {

@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      company_id: {
+        type: Sequelize.INTEGER(11)
+      },
       company_code: {
         type: Sequelize.STRING(45)
       },
@@ -81,7 +84,8 @@ module.exports = function(sequelize, Sequelize) {
       },
       ip_address: {
         type: Sequelize.STRING(45),
-        allowNull: false
+        allowNull: false,
+        defaultValue: '127.0.0.1'
       }
     },
     {}

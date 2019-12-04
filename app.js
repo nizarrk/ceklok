@@ -17,6 +17,7 @@ const trycatch = require('trycatch');
 const path = require('path');
 const moment = require('moment');
 const ip = require('ip');
+const msisdn = require('express-msisdn');
 
 // Your Database configurations.
 const db = require('./db.js');
@@ -39,6 +40,10 @@ trycatch(
 const app = express();
 let APP = {};
 APP.db = db;
+APP.ip = ip;
+
+// add msisdn middleware
+app.use(msisdn());
 
 /**
  * ExpressJS basic middlewares.
@@ -426,7 +431,8 @@ async.series(
             res,
             {
               code: '-1',
-              message: 'Service not found!'
+              message: 'Service not found!',
+              status: 404
             },
             'err'
           );

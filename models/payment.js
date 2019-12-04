@@ -11,23 +11,23 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      id_payment_method: {
+      payment_method_id: {
         type: Sequelize.INTEGER(11)
       },
-      id_company: {
+      company_id: {
         type: Sequelize.INTEGER(11)
       },
-      nama_rek: {
+      rek_name: {
         type: Sequelize.STRING(45)
       },
-      no_rek: {
+      rek_no: {
         type: Sequelize.STRING(45)
       },
-      bukti: {
-        type: Sequelize.STRING(45)
+      image: {
+        type: Sequelize.STRING(45) // foto bukti pembayaran
       },
       status: {
-        type: Sequelize.STRING(45)
+        type: Sequelize.INTEGER(1) // 0 = open, 1 = close
       },
       created_at: {
         allowNull: false,
@@ -38,6 +38,16 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
+      },
+      action_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      ip_address: {
+        type: Sequelize.STRING(45),
+        allowNull: false,
+        defaultValue: '127.0.0.1'
       }
     },
     {}

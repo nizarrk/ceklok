@@ -11,16 +11,16 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      id_payment: {
+      payment_id: {
         type: Sequelize.STRING(45)
       },
-      invoie: {
+      invoice: {
         type: Sequelize.STRING(45)
       },
       payment_status: {
         type: Sequelize.STRING(45)
       },
-      nominal: {
+      price: {
         type: Sequelize.INTEGER(45)
       },
       created_at: {

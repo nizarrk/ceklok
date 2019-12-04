@@ -1,7 +1,11 @@
 'use strict';
 
 exports.test = function(APP, req, callback) {
-  console.log('halooo', req.connection.remoteAddress);
+  let tgl = new Date().getDate().toString();
+  if (tgl.length == 1) {
+    tgl = '0' + new Date().getDate().toString();
+  }
+  console.log(tgl);
 
   /**
    * YOUR APPLICATION LOGIC HERE...

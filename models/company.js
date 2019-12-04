@@ -70,7 +70,8 @@ module.exports = function(sequelize, Sequelize) {
       },
       ip_address: {
         type: Sequelize.STRING(45),
-        allowNull: false
+        allowNull: false,
+        defaultValue: '127.0.0.1'
       }
     },
     {}

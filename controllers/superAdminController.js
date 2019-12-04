@@ -14,7 +14,7 @@ exports.verifyCompany = (APP, req, callback) => {
           .then(res => {
             res
               .update({
-                status: 'Verified'
+                status: 1
               })
               .then(result => {
                 callback(null, result.dataValues);
@@ -36,6 +36,9 @@ exports.verifyCompany = (APP, req, callback) => {
 
       function generateCompanyCode(result, callback) {
         let tgl = new Date().getDate().toString();
+        if (tgl.length == 1) {
+          tgl = '0' + new Date().getDate().toString();
+        }
         let month = new Date().getMonth().toString();
         let year = new Date()
           .getFullYear()
@@ -46,11 +49,11 @@ exports.verifyCompany = (APP, req, callback) => {
         APP.models.mysql.company
           .findOne({
             where: {
-              id: result.id_company
+              id: result.company_id
             }
           })
           .then(res => {
-            let array = res.nama_company.split(' ');
+            let array = res.name.split(' ');
             let code = '';
 
             array.map(res => {
@@ -61,7 +64,7 @@ exports.verifyCompany = (APP, req, callback) => {
             APP.models.mysql.company
               .findAll({
                 where: {
-                  code_company: {
+                  company_code: {
                     $like: `${code + time}%`
                   }
                 },
@@ -95,17 +98,17 @@ exports.verifyCompany = (APP, req, callback) => {
         APP.models.mysql.company
           .findOne({
             where: {
-              id: data.payment.id_company
+              id: data.payment.company_id
             }
           })
           .then(res => {
             res
               .update({
-                code_company: data.companyCode,
-                payment_status: 'Paid'
+                company_code: data.companyCode,
+                status: 1
               })
               .then(result => {
-                callback(null, { payment: data.payment, company: data.companyCode });
+                callback(null, { payment: data.payment, company: result, code: data.companyCode });
               })
               .catch(err => {
                 console.log('1', err);
@@ -130,14 +133,13 @@ exports.verifyCompany = (APP, req, callback) => {
         APP.models.mysql.admin
           .findOne({
             where: {
-              id: data.payment.company_code // waiting migrasi ke db baru
+              company_id: data.payment.company_id
             }
           })
           .then(res => {
             res
               .update({
-                code_company: data.company,
-                payment_status: 'Paid'
+                company_code: data.code
               })
               .then(result => {
                 callback(null, {

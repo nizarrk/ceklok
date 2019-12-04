@@ -35,8 +35,8 @@ exports.get = function(APP, req, callback) {
 exports.insert = function(APP, req, callback) {
   APP.models.mysql.grade
     .build({
-      nama_grade: req.body.grade,
-      deskripsi: req.body.desk
+      name: req.body.name,
+      description: req.body.desc
     })
     .save()
     .then(result => {
@@ -80,8 +80,8 @@ exports.update = function(APP, req, callback) {
   APP.models.mysql.grade
     .update(
       {
-        nama_grade: req.body.grade,
-        deskripsi: req.body.desk
+        name: req.body.name,
+        description: req.body.desc
       },
       {
         where: {

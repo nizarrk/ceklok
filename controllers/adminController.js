@@ -9,36 +9,34 @@ exports.checkExistingEmailCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        email_company: req.body.company.email
+        email: req.body.company.email
       }
     })
     .then(res => {
       if (res && res.length > 0) {
-        callback({
+        return callback({
           code: 'DUPLICATE',
           data: {
             row: 'Error! Duplicate email!'
           },
           info: {
             dataCount: res.length,
-            parameter: 'email'
+            parameter: 'email company'
           }
         });
       }
-      callback(null, {
+      return callback(null, {
         code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
+        data: null,
         info: {
           dataCount: res.length,
-          parameter: 'email'
+          parameter: 'email company'
         }
       });
     })
     .catch(err => {
       console.log('iki error email company', err);
-      callback({
+      return callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
       });
@@ -49,36 +47,36 @@ exports.checkExistingTelpCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        telp_company: req.body.company.telp
+        tlp: req.body.company.telp
       }
     })
     .then(res => {
+      console.log(res);
+
       if (res && res.length > 0) {
-        callback({
+        return callback({
           code: 'DUPLICATE',
           data: {
             row: 'Error! Duplicate telp!'
           },
           info: {
             dataCount: res.length,
-            parameter: 'telp'
+            parameter: 'telp company'
           }
         });
       }
-      callback(null, {
+      return callback(null, {
         code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
+        data: null,
         info: {
           dataCount: res.length,
-          parameter: 'telp'
+          parameter: 'telp company'
         }
       });
     })
     .catch(err => {
       console.log('iki error telp company', err);
-      callback({
+      return callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
       });
@@ -94,7 +92,7 @@ exports.checkExistingEmailAdmin = (APP, req, callback) => {
     })
     .then(res => {
       if (res && res.length > 0) {
-        callback({
+        return callback({
           code: 'DUPLICATE',
           data: {
             row: 'Error! Duplicate email!'
@@ -105,11 +103,9 @@ exports.checkExistingEmailAdmin = (APP, req, callback) => {
           }
         });
       }
-      callback(null, {
+      return callback(null, {
         code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
+        data: null,
         info: {
           dataCount: res.length,
           parameter: 'email admin'
@@ -118,7 +114,7 @@ exports.checkExistingEmailAdmin = (APP, req, callback) => {
     })
     .catch(err => {
       console.log('iki error email admin', err);
-      callback({
+      return callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
       });
@@ -129,12 +125,12 @@ exports.checkExistingTelpAdmin = (APP, req, callback) => {
   APP.models.mysql.admin
     .findAll({
       where: {
-        telp: req.body.admin.telp
+        tlp: req.body.admin.telp
       }
     })
     .then(res => {
       if (res && res.length > 0) {
-        callback({
+        return callback({
           code: 'DUPLICATE',
           data: {
             row: 'Error! Duplicate telp!'
@@ -145,11 +141,9 @@ exports.checkExistingTelpAdmin = (APP, req, callback) => {
           }
         });
       }
-      callback(null, {
+      return callback(null, {
         code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
+        data: null,
         info: {
           dataCount: res.length,
           parameter: 'telp admin'
@@ -169,36 +163,34 @@ exports.checkExistingUsername = (APP, req, callback) => {
   APP.models.mysql.admin
     .findAll({
       where: {
-        username: req.body.admin.username
+        user_name: req.body.admin.username
       }
     })
     .then(res => {
       if (res && res.length > 0) {
-        callback({
+        return callback({
           code: 'DUPLICATE',
           data: {
             row: 'Error! Duplicate username!'
           },
           info: {
             dataCount: res.length,
-            parameter: 'username'
+            parameter: 'username admin'
           }
         });
       }
-      callback(null, {
+      return callback(null, {
         code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
+        data: null,
         info: {
           dataCount: res.length,
-          parameter: 'username'
+          parameter: 'username admin'
         }
       });
     })
     .catch(err => {
       console.log('iki error username', err);
-      callback({
+      return callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
       });
@@ -267,6 +259,8 @@ exports.register = (APP, req, callback) => {
               return callback(null, hashed);
             })
             .catch(err => {
+              console.log('iki error bcrypt', err);
+
               callback({
                 code: 'ERR_DATABASE',
                 data: JSON.stringify(err)
@@ -277,26 +271,83 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function registerAdmin(hashed, callback) {
+      function registerCompany(result, callback) {
+        APP.models.mysql.company
+          .build({
+            pricing_id: req.body.company.pricing,
+            name: req.body.company.name,
+            address: req.body.company.address,
+            kelurahan: req.body.company.kel,
+            kecamatan: req.body.company.kec,
+            city: req.body.company.city,
+            province: req.body.company.prov,
+            zipcode: req.body.company.zip,
+            msisdn: 'default',
+            tlp: req.body.company.telp,
+            email: req.body.company.email,
+            payment_status: 0
+          })
+          .save()
+          .then(res => {
+            callback(null, {
+              pass: result,
+              company: res
+            });
+          })
+          .catch(err => {
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+              return callback({
+                code: 'DUPLICATE',
+                data: params
+              });
+            }
+
+            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
+              return callback({
+                code: 'UPDATE_NONE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function registerAdmin(data, callback) {
         let email = APP.validation.email(req.body.admin.email);
         let username = APP.validation.username(req.body.admin.username);
 
         if (email && username) {
           APP.models.mysql.admin
             .build({
-              nama: req.body.admin.nama,
-              jenis_kelamin: req.body.admin.jk,
-              umur: req.body.admin.umur,
-              alamat: req.body.admin.alamat,
-              telp: req.body.admin.telp,
+              company_id: data.company.id,
+              name: req.body.admin.name,
+              gender: req.body.admin.gender,
+              pob: req.body.admin.pob,
+              dob: req.body.admin.dob,
+              address: req.body.admin.address,
+              kelurahan: req.body.admin.kel,
+              kecamatan: req.body.admin.kec,
+              city: req.body.admin.city,
+              province: req.body.admin.prov,
+              zipcode: req.body.admin.zip,
+              msisdn: 'default',
+              tlp: req.body.admin.telp,
               email: req.body.admin.email,
-              username: req.body.admin.username,
-              password: hashed,
-              status: 'Pending'
+              user_name: req.body.admin.username,
+              password: data.pass
             })
             .save()
-            .then(result => {
-              callback(null, result);
+            .then(res => {
+              callback(null, {
+                admin: res,
+                company: data.company
+              });
             })
             .catch(err => {
               if (err.original && err.original.code === 'ER_DUP_ENTRY') {
@@ -326,53 +377,15 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function registerCompany(result, callback) {
-        APP.models.mysql.company
-          .build({
-            id_pricing: req.body.company.pricing,
-            nama_company: req.body.company.nama,
-            alamat_company: req.body.company.alamat,
-            telp_company: req.body.company.telp,
-            email_company: req.body.company.email,
-            payment_status: 'Pending'
-          })
-          .save()
-          .then(res => {
-            callback(null, { admin: result, company: res });
-          })
-          .catch(err => {
-            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-              return callback({
-                code: 'DUPLICATE',
-                data: params
-              });
-            }
-
-            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-              let params = 'Error! Empty Query'; //This is only example, Object can also be used
-              return callback({
-                code: 'UPDATE_NONE',
-                data: params
-              });
-            }
-
-            return callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
       function paymentUser(data, callback) {
         APP.models.mysql.payment
           .create({
-            id_payment_method: req.body.payment.method,
-            id_company: data.company.id,
-            nama_rek: req.body.payment.nama,
-            no_rek: req.body.payment.no,
-            bukti: req.body.payment.bukti,
-            status: 'Waiting'
+            payment_method_id: req.body.payment.method,
+            company_id: data.company.id,
+            rek_name: req.body.payment.name,
+            rek_no: req.body.payment.no,
+            image: req.body.payment.iamge,
+            status: 0
           })
           .then(res => {
             callback(null, {
@@ -444,10 +457,10 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.mysql.company
+        APP.models.mysql.admin
           .findAll({
             where: {
-              username: req.body.username
+              user_name: req.body.username
             }
           })
           .then(rows => {
@@ -577,62 +590,102 @@ exports.login = (APP, req, callback) => {
   );
 };
 
-exports.verifikasiKaryawan = (APP, req, callback) => {
-  APP.models.mysql.karyawan
-    .findOne({
-      where: {
-        email: req.body.email
-      }
-    })
-    .then(res => {
-      res
-        .update({
-          role: req.body.role,
-          grade: req.body.grade,
-          status: 'Aktif'
-        })
-        .then(result => {
-          APP.mailer.sendMail({
-            subject: 'Verify Account',
-            to: req.body.email,
-            text: `Your account has been verrified. You're assigned as ${req.body.role} at ${req.body.grade}`
-          });
-          callback(null, {
-            code: 'UPDATE_SUCCESS',
-            data: result
-          });
-        })
-        .catch(err => {
-          callback({
-            code: 'ERR_DATABASE',
-            data: JSON.stringify(err)
-          });
-        });
-    })
-    .catch(err => {
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
+exports.verifyEmployee = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function generateEmployeeCode(callback) {
+        let tgl = new Date().getDate().toString();
+        let month = new Date().getMonth().toString();
+        let year = new Date()
+          .getFullYear()
+          .toString()
+          .slice(2, 4);
+        let time = year + month + tgl;
+        let pad = '0000';
 
-exports.saveCompany = (APP, req, callback) => {
-  APP.models.mysql.company
-    .create({
-      id_admin: req.body.company,
-      nama: req.body.nama,
-      alamat: req.body.alamat,
-      pricing: req.body.price,
-      payment: req.body.payment
-    })
-    .then(res => {
-      callback(null, res);
-    })
-    .catch(err => {
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
+        APP.models.mysql.employee
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            console.log(res);
+
+            if (res.length == 0) {
+              console.log('kosong');
+              let str = '' + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            } else {
+              console.log('ada');
+              let lastID = res[0].dataValues.id_karyawan;
+              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
+
+              let str = '' + parseInt(replace) + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function updateEmployee(result, callback) {
+        APP.models.mysql.employee
+          .findOne({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            res
+              .update({
+                employee_code: result,
+                role_id: req.body.role,
+                grade_id: req.body.grade,
+                status: req.body.status
+              })
+              .then(result => {
+                APP.mailer.sendMail({
+                  subject: 'Account Verified',
+                  to: req.body.email,
+                  text: `Your account has been verrified. You're assigned as ${req.body.role} at ${req.body.grade}`
+                });
+                callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: result
+                });
+              })
+              .catch(err => {
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
+                });
+              });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
