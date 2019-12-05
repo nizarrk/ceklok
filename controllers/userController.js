@@ -197,13 +197,62 @@ exports.register = (APP, req, callback) => {
         module.exports.checkExistingCredentials(APP, req, callback);
       },
 
+      function generateEmployeeCode(result, callback) {
+        let tgl = new Date().getDate().toString();
+        let month = new Date().getMonth().toString();
+        let year = new Date()
+          .getFullYear()
+          .toString()
+          .slice(2, 4);
+        let time = year + month + tgl;
+        let pad = '0000';
+
+        APP.models.mysql.employee
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            if (res.length == 0) {
+              console.log('kosong');
+              let str = '' + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            } else {
+              console.log('ada');
+              let lastID = res[0].employee_code;
+              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
+
+              let str = '' + parseInt(replace) + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
       function encryptPassword(result, callback) {
         let pass = APP.validation.password(req.body.pass);
         if (pass === true) {
           bcrypt
             .hash(req.body.pass, 10)
             .then(hashed => {
-              return callback(null, hashed);
+              return callback(null, {
+                kode: result,
+                pass: hashed
+              });
             })
             .catch(err => {
               callback({
@@ -216,13 +265,14 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function registerUser(result, callback) {
+      function registerUser(data, callback) {
         let email = APP.validation.email(req.body.email);
         let username = APP.validation.username(req.body.username);
 
         if (email && username) {
           APP.models.mysql.employee
             .build({
+              employee_code: data.kode,
               company_code: req.body.company,
               name: req.body.name,
               gender: req.body.gender,
@@ -238,7 +288,7 @@ exports.register = (APP, req, callback) => {
               tlp: req.body.telp,
               email: req.body.email,
               user_name: req.body.username,
-              password: result
+              password: data.pass
             })
             .save()
             .then(result => {
@@ -347,6 +397,8 @@ exports.login = (APP, req, callback) => {
             }
           })
           .then(rows => {
+            console.log(rows);
+
             if (rows.length <= 0) {
               return callback({
                 code: 'NOT_FOUND',

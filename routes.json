@@ -173,6 +173,54 @@
     "function": "delete",
     "auth": false
   },
+  "/department/get": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "get",
+    "auth": false
+  },
+  "/department/insert": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "insert",
+    "auth": false
+  },
+  "/department/update": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "update",
+    "auth": false
+  },
+  "/department/delete": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "delete",
+    "auth": false
+  },
+  "/priviledge/get": {
+    "method": "post",
+    "controller": "priviledgeController",
+    "function": "get",
+    "auth": false
+  },
+  "/priviledge/insert": {
+    "method": "post",
+    "controller": "priviledgeController",
+    "function": "insert",
+    "auth": false
+  },
+  "/priviledge/update": {
+    "method": "post",
+    "controller": "priviledgeController",
+    "function": "update",
+    "auth": false
+  },
+  "/priviledge/delete": {
+    "method": "post",
+    "controller": "priviledgeController",
+    "function": "delete",
+    "auth": false
+  },
   "/superadmin/verifycompany": {
     "method": "post",
     "controller": "superAdminController",

@@ -39,7 +39,7 @@ exports.verifyCompany = (APP, req, callback) => {
         if (tgl.length == 1) {
           tgl = '0' + new Date().getDate().toString();
         }
-        let month = new Date().getMonth().toString();
+        let month = new Date().getMonth() + 1;
         let year = new Date()
           .getFullYear()
           .toString()
@@ -78,7 +78,7 @@ exports.verifyCompany = (APP, req, callback) => {
                     companyCode
                   });
                 } else {
-                  let lastID = res[0].code_company;
+                  let lastID = res[0].company_code;
                   let replace = lastID.replace(code + time, '');
                   let num = parseInt(replace) + 1;
 
@@ -105,7 +105,7 @@ exports.verifyCompany = (APP, req, callback) => {
             res
               .update({
                 company_code: data.companyCode,
-                status: 1
+                payment_status: 1
               })
               .then(result => {
                 callback(null, { payment: data.payment, company: result, code: data.companyCode });
@@ -139,7 +139,8 @@ exports.verifyCompany = (APP, req, callback) => {
           .then(res => {
             res
               .update({
-                company_code: data.code
+                company_code: data.code,
+                status: 1
               })
               .then(result => {
                 callback(null, {

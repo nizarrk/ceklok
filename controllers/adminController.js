@@ -456,7 +456,7 @@ exports.login = (APP, req, callback) => {
         callback(null, true);
       },
 
-      function checkUser(index, callback) {
+      function checkAdmin(index, callback) {
         APP.models.mysql.admin
           .findAll({
             where: {
@@ -469,6 +469,15 @@ exports.login = (APP, req, callback) => {
                 code: 'NOT_FOUND',
                 info: {
                   parameter: 'No records found'
+                }
+              });
+            }
+
+            if (rows[0].status == 0) {
+              return callback({
+                code: 'VERIFICATION_NEEDED',
+                info: {
+                  parameter: 'User have to wait for admin to verify their account first.'
                 }
               });
             }
@@ -591,101 +600,53 @@ exports.login = (APP, req, callback) => {
 };
 
 exports.verifyEmployee = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function generateEmployeeCode(callback) {
-        let tgl = new Date().getDate().toString();
-        let month = new Date().getMonth().toString();
-        let year = new Date()
-          .getFullYear()
-          .toString()
-          .slice(2, 4);
-        let time = year + month + tgl;
-        let pad = '0000';
+  // add role and grade to employee
+  APP.models.mysql.employee.belongsTo(APP.models.mysql.role, { targetKey: 'id', foreignKey: 'role_id' });
+  APP.models.mysql.employee.belongsTo(APP.models.mysql.grade, { targetKey: 'id', foreignKey: 'grade_id' });
 
-        APP.models.mysql.employee
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
-          })
-          .then(res => {
-            console.log(res);
-
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              let ans = pad.substring(0, pad.length - str.length) + str;
-
-              let kode = req.body.company + '-' + time + '-' + ans;
-
-              callback(null, kode);
-            } else {
-              console.log('ada');
-              let lastID = res[0].dataValues.id_karyawan;
-              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
-
-              let str = '' + parseInt(replace) + 1;
-              let ans = pad.substring(0, pad.length - str.length) + str;
-
-              let kode = req.body.company + '-' + time + '-' + ans;
-
-              callback(null, kode);
-            }
-          })
-          .catch(err => {
-            console.log(err);
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
-      function updateEmployee(result, callback) {
-        APP.models.mysql.employee
-          .findOne({
-            where: {
-              email: req.body.email
-            }
-          })
-          .then(res => {
-            res
-              .update({
-                employee_code: result,
-                role_id: req.body.role,
-                grade_id: req.body.grade,
-                status: req.body.status
-              })
-              .then(result => {
-                APP.mailer.sendMail({
-                  subject: 'Account Verified',
-                  to: req.body.email,
-                  text: `Your account has been verrified. You're assigned as ${req.body.role} at ${req.body.grade}`
-                });
-                callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: result
-                });
-              })
-              .catch(err => {
-                callback({
-                  code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
-                });
-              });
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
+  APP.models.mysql.employee
+    .findOne({
+      include: [
+        {
+          model: APP.models.mysql.role
+        },
+        {
+          model: APP.models.mysql.grade
+        }
+      ],
+      where: {
+        email: req.body.email
       }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
-
-      callback(null, result);
-    }
-  );
+    })
+    .then(res => {
+      res
+        .update({
+          role_id: req.body.role,
+          grade_id: req.body.grade,
+          status: req.body.status
+        })
+        .then(result => {
+          APP.mailer.sendMail({
+            subject: 'Account Verified',
+            to: req.body.email,
+            text: `Your account has been verrified. You're assigned as ${res.role.name} at ${res.grade.name}`
+          });
+          callback(null, {
+            code: 'UPDATE_SUCCESS',
+            data: result
+          });
+        })
+        .catch(err => {
+          callback({
+            code: 'ERR_DATABASE',
+            data: JSON.stringify(err)
+          });
+        });
+    })
+    .catch(err => {
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
 };
