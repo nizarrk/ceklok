@@ -1,6 +1,8 @@
 'use strict';
 
 const async = require('async');
+const fs = require('fs');
+const path = require('path');
 const trycatch = require('trycatch');
 
 exports.verifyCompany = (APP, req, callback) => {
@@ -144,12 +146,9 @@ exports.verifyCompany = (APP, req, callback) => {
               })
               .then(result => {
                 callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: {
-                    payment: data.payment,
-                    company: data.company,
-                    admin: result
-                  }
+                  payment: data.payment,
+                  company: data.company,
+                  admin: result
                 });
               })
               .catch(err => {
@@ -169,6 +168,66 @@ exports.verifyCompany = (APP, req, callback) => {
               data: JSON.stringify(err)
             });
           });
+      },
+
+      function createCompanyDB(data, callback) {
+        let dbName = 'ceklok_' + data.company.company_code;
+
+        APP.db.sequelize
+          .query(`CREATE DATABASE ${dbName}`)
+          .then(() => {
+            callback(null, { dbName, data });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function createTable(data, callback) {
+        fs.readdir(path.join(__dirname, '../models/template'), (err, files) => {
+          if (err) return console.log(err);
+
+          let models = {};
+          let x = [];
+          let n = 1;
+          let len = files.length;
+
+          files.map(file => {
+            let tableName = file.replace('.js', '');
+            x.push(file);
+            APP.db.sequelize.query(`CREATE TABLE ${data.dbName}.${tableName} LIKE ceklok.${tableName}`).then(() => {
+              x.map(model => {
+                let Model = APP.db
+                  .customSequelize(data.dbName)
+                  .import(path.join(__dirname, '../models/template/', model));
+                let modelName = model.replace('.js', '');
+
+                models[modelName] = Model;
+
+                if (n === len) {
+                  let mysqls = {};
+
+                  Object.keys(models).forEach(val => {
+                    if (models[val].associate) models[val].associate(models);
+
+                    mysqls[val] = models[val];
+                  });
+                }
+
+                n++;
+              });
+            });
+          });
+        });
+        return callback(null, {
+          code: 'UPDATE_SUCCESS',
+          data: {
+            data
+          }
+        });
       }
     ],
     (err, result) => {

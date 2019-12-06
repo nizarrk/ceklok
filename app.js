@@ -80,7 +80,6 @@ function modelObj(db, callback) {
 
         fs.readdir(__dirname + '/models', (err, files) => {
           let x = [];
-
           files.map(model => {
             if (model.match('.js')) x.push(model);
           });
@@ -111,6 +110,55 @@ function modelObj(db, callback) {
             }
 
             n++;
+          });
+        });
+      },
+      function getSequelizeTemplateModel(callback) {
+        if (process.env.MYSQL !== 'true') return callback(null, {});
+
+        fs.readdir(__dirname + '/models/template', (err, files) => {
+          db.sequelize.query('SELECT * FROM company WHERE payment_status = 1').then(res => {
+            let models = {};
+            if (res[0].length > 0) {
+              res[0].map(result => {
+                let dbName = 'ceklok_' + result.company_code;
+                models[dbName] = { mysql: {} };
+
+                let x = [];
+                files.map(model => {
+                  if (model.match('.js')) x.push(model);
+                });
+
+                let len = x.length;
+
+                if (len < 1) return callback(null, {});
+
+                let n = 1;
+
+                x.map(model => {
+                  let Model = db.customSequelize(dbName).import('./models/template/' + model);
+                  let modelName = model.replace('.js', '');
+
+                  models[dbName].mysql[modelName] = Model;
+
+                  if (n === len) {
+                    let mysqls = {};
+
+                    Object.keys(models).forEach(val => {
+                      if (models[val].associate) models[val].associate(models);
+
+                      mysqls[val] = models[val];
+                    });
+
+                    callback(null, mysqls);
+                  }
+
+                  n++;
+                });
+              });
+            } else {
+              callback(null);
+            }
           });
         });
       },
@@ -149,7 +197,8 @@ function modelObj(db, callback) {
 
       let models = {};
       models.mysql = result[0];
-      models.mongo = result[1];
+      models.company = result[1];
+      models.mongo = result[2];
 
       return callback(null, models);
     }

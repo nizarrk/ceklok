@@ -82,6 +82,11 @@ if (process.env.MYSQL === 'true') {
         };
   const sequelize = new Sequelize(process.env.MYSQL_NAME, process.env.MYSQL_USER, process.env.MYSQL_PASS, options);
 
+  // generate db for each company
+  const customSequelize = dbname => {
+    return new Sequelize(dbname, process.env.MYSQL_USER, process.env.MYSQL_PASS, options);
+  };
+
   sequelize
     .authenticate()
     .then(() => {
@@ -93,4 +98,5 @@ if (process.env.MYSQL === 'true') {
 
   exports.sequelize = sequelize;
   exports.Sequelize = Sequelize;
+  exports.customSequelize = customSequelize;
 }
