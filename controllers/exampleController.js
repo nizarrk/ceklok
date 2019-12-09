@@ -1,6 +1,8 @@
 'use strict';
 
 exports.test = function(APP, req, callback) {
+  console.log(req.user);
+
   /**
    * YOUR APPLICATION LOGIC HERE...
    */

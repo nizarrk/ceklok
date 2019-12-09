@@ -14,6 +14,9 @@ module.exports = function(sequelize, Sequelize) {
       payment_method_id: {
         type: Sequelize.INTEGER(11)
       },
+      pricing_id: {
+        type: Sequelize.INTEGER(11)
+      },
       company_id: {
         type: Sequelize.INTEGER(11)
       },
@@ -25,6 +28,9 @@ module.exports = function(sequelize, Sequelize) {
       },
       image: {
         type: Sequelize.STRING(45) // foto bukti pembayaran
+      },
+      total: {
+        type: Sequelize.INTEGER(11)
       },
       status: {
         type: Sequelize.INTEGER(1) // 0 = open, 1 = close

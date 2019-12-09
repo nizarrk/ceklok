@@ -14,6 +14,12 @@ exports.verifyCompany = (APP, req, callback) => {
             where: { id: req.body.id }
           })
           .then(res => {
+            if (res.status === 1) {
+              return callback({
+                code: 'UPDATE_NONE'
+              });
+            }
+
             res
               .update({
                 status: 1
@@ -170,6 +176,83 @@ exports.verifyCompany = (APP, req, callback) => {
           });
       },
 
+      function createInvoice(data, callback) {
+        APP.models.mysql.invoice
+          .create({
+            payment_id: data.payment.id,
+            invoice: data.company.company_code + '-' + new Date().getTime(),
+            name: "Company's Payment",
+            description: 'Payment of Pricing that choosed by company',
+            from_rek_name: data.payment.rek_name,
+            from_rek_no: data.payment.rek_no,
+            to_rek_name: 'CEKLOK',
+            to_rek_no: '12345678'
+          })
+          .then(res => {
+            callback(null, {
+              payment: data.payment,
+              company: data.company,
+              admin: data.admin,
+              invoice: res
+            });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function sendInvoice(data, callback) {
+        // add payment_method and pricing to payment
+        APP.models.mysql.payment.belongsTo(APP.models.mysql.payment_method, {
+          targetKey: 'id',
+          foreignKey: 'payment_method_id'
+        });
+        APP.models.mysql.payment.belongsTo(APP.models.mysql.pricing, { targetKey: 'id', foreignKey: 'pricing_id' });
+
+        APP.models.mysql.payment
+          .findOne({
+            include: [
+              {
+                model: APP.models.mysql.payment_method
+              },
+              {
+                model: APP.models.mysql.pricing
+              }
+            ],
+            where: {
+              id: data.payment.id
+            }
+          })
+          .then(res => {
+            //send to email
+            APP.mailer.sendMail({
+              subject: 'Invoice',
+              to: data.company.email,
+              data: {
+                payment: res,
+                company: data.company,
+                invoice: data.invoice
+              },
+              file: 'invoice.html'
+            });
+
+            callback(null, {
+              payment: res,
+              company: data.company,
+              invoice: data.invoice
+            });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
       function createCompanyDB(data, callback) {
         let dbName = 'ceklok_' + data.company.company_code;
 
@@ -188,7 +271,13 @@ exports.verifyCompany = (APP, req, callback) => {
 
       function createTable(data, callback) {
         fs.readdir(path.join(__dirname, '../models/template'), (err, files) => {
-          if (err) return console.log(err);
+          if (err) {
+            console.log(err);
+            return callback({
+              code: 'ERR',
+              data: JSON.stringify(err)
+            });
+          }
 
           let models = {};
           let x = [];

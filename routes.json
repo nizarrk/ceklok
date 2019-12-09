@@ -3,7 +3,7 @@
     "method": "get",
     "controller": "exampleController",
     "function": "test",
-    "auth": false
+    "auth": true
   },
   "/admin/register": {
     "method": "post",
@@ -27,7 +27,7 @@
     "method": "post",
     "controller": "adminController",
     "function": "verifyEmployee",
-    "auth": false
+    "auth": true
   },
   "/user/register": {
     "method": "post",
@@ -129,97 +129,97 @@
     "method": "post",
     "controller": "roleController",
     "function": "get",
-    "auth": false
+    "auth": true
   },
   "/role/insert": {
     "method": "post",
     "controller": "roleController",
     "function": "insert",
-    "auth": false
+    "auth": true
   },
   "/role/update": {
     "method": "post",
     "controller": "roleController",
     "function": "update",
-    "auth": false
+    "auth": true
   },
   "/role/delete": {
     "method": "post",
     "controller": "roleController",
     "function": "delete",
-    "auth": false
+    "auth": true
   },
   "/grade/get": {
     "method": "post",
     "controller": "gradeController",
     "function": "get",
-    "auth": false
+    "auth": true
   },
   "/grade/insert": {
     "method": "post",
     "controller": "gradeController",
     "function": "insert",
-    "auth": false
+    "auth": true
   },
   "/grade/update": {
     "method": "post",
     "controller": "gradeController",
     "function": "update",
-    "auth": false
+    "auth": true
   },
   "/grade/delete": {
     "method": "post",
     "controller": "gradeController",
     "function": "delete",
-    "auth": false
+    "auth": true
   },
   "/department/get": {
     "method": "post",
     "controller": "departmentController",
     "function": "get",
-    "auth": false
+    "auth": true
   },
   "/department/insert": {
     "method": "post",
     "controller": "departmentController",
     "function": "insert",
-    "auth": false
+    "auth": true
   },
   "/department/update": {
     "method": "post",
     "controller": "departmentController",
     "function": "update",
-    "auth": false
+    "auth": true
   },
   "/department/delete": {
     "method": "post",
     "controller": "departmentController",
     "function": "delete",
-    "auth": false
+    "auth": true
   },
   "/priviledge/get": {
     "method": "post",
     "controller": "priviledgeController",
     "function": "get",
-    "auth": false
+    "auth": true
   },
   "/priviledge/insert": {
     "method": "post",
     "controller": "priviledgeController",
     "function": "insert",
-    "auth": false
+    "auth": true
   },
   "/priviledge/update": {
     "method": "post",
     "controller": "priviledgeController",
     "function": "update",
-    "auth": false
+    "auth": true
   },
   "/priviledge/delete": {
     "method": "post",
     "controller": "priviledgeController",
     "function": "delete",
-    "auth": false
+    "auth": true
   },
   "/superadmin/verifycompany": {
     "method": "post",

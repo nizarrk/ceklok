@@ -17,11 +17,28 @@ module.exports = function(sequelize, Sequelize) {
       invoice: {
         type: Sequelize.STRING(45)
       },
-      payment_status: {
+      name: {
         type: Sequelize.STRING(45)
       },
-      price: {
-        type: Sequelize.INTEGER(45)
+      description: {
+        type: Sequelize.STRING(45)
+      },
+      from_rek_name: {
+        type: Sequelize.STRING(45)
+      },
+      from_rek_no: {
+        type: Sequelize.STRING(45)
+      },
+      to_rek_name: {
+        type: Sequelize.STRING(45)
+      },
+      to_rek_no: {
+        type: Sequelize.STRING(45)
+      },
+      status: {
+        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
+        allowNull: false,
+        defaultValue: 1
       },
       created_at: {
         allowNull: false,
@@ -32,6 +49,16 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
+      },
+      action_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      ip_address: {
+        type: Sequelize.STRING(45),
+        allowNull: false,
+        defaultValue: '127.0.0.1'
       }
     },
     {}

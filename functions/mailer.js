@@ -1,27 +1,34 @@
 'use strict';
 const nodemailer = require('nodemailer');
+const mustache = require('mustache');
+const fs = require('fs');
+const path = require('path');
 
 exports.sendMail = data => {
-  let transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: 'ayofutsalmalang@gmail.com',
-      pass: 'ayofutsal123'
-    }
-  });
+  fs.readFile(path.join(__dirname, '../config/template/', data.file), 'utf8', (err, file) => {
+    if (err) throw err;
 
-  let mailOptions = {
-    from: '"CEKLOK.ID 👻" <ayofutsalmalang@gmail.com>',
-    to: data.to,
-    subject: data.subject,
-    text: data.text
-  };
+    let transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'ayofutsalmalang@gmail.com',
+        pass: 'ayofutsal123'
+      }
+    });
 
-  transporter.sendMail(mailOptions, function(error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
+    let mailOptions = {
+      from: '"CEKLOK.ID 👻" <ayofutsalmalang@gmail.com>',
+      to: data.to,
+      subject: data.subject,
+      html: mustache.to_html(file, data.data)
+    };
+
+    transporter.sendMail(mailOptions, function(error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log('Email sent: ' + info.response);
+      }
+    });
   });
 };

@@ -11,6 +11,12 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      department_id: {
+        type: Sequelize.STRING(45)
+      },
+      job_title_id: {
+        type: Sequelize.STRING(45)
+      },
       role_id: {
         type: Sequelize.STRING(45)
       },

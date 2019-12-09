@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
+const dbName = 'ceklok_VST1912090';
 
 exports.checkExistingEmailCompany = (APP, req, callback) => {
   APP.models.mysql.company
@@ -385,6 +386,7 @@ exports.register = (APP, req, callback) => {
             rek_name: req.body.payment.name,
             rek_no: req.body.payment.no,
             image: req.body.payment.iamge,
+            total: req.body.payment.total,
             status: 0
           })
           .then(res => {
@@ -515,7 +517,9 @@ exports.login = (APP, req, callback) => {
       function setToken(rows, callback) {
         let token = jwt.sign(
           {
-            id: rows[0].id
+            id: rows[0].id,
+            code: rows[0].company_code,
+            db: `ceklok_${rows[0].company_code}`
           },
           key.key,
           {
@@ -600,18 +604,32 @@ exports.login = (APP, req, callback) => {
 };
 
 exports.verifyEmployee = (APP, req, callback) => {
-  // add role and grade to employee
-  APP.models.mysql.employee.belongsTo(APP.models.mysql.role, { targetKey: 'id', foreignKey: 'role_id' });
-  APP.models.mysql.employee.belongsTo(APP.models.mysql.grade, { targetKey: 'id', foreignKey: 'grade_id' });
+  // add role, grade, department and job_title to employee
+  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.role, {
+    targetKey: 'id',
+    foreignKey: 'role_id'
+  });
+  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.grade, {
+    targetKey: 'id',
+    foreignKey: 'grade_id'
+  });
+  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.department, {
+    targetKey: 'id',
+    foreignKey: 'department_id'
+  });
+  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.job_title, {
+    targetKey: 'id',
+    foreignKey: 'job_title_id'
+  });
 
-  APP.models.mysql.employee
+  APP.models.company[req.user.db].mysql.employee
     .findOne({
       include: [
         {
-          model: APP.models.mysql.role
+          model: APP.models.company[req.user.db].mysql.role
         },
         {
-          model: APP.models.mysql.grade
+          model: APP.models.company[req.user.db].mysql.grade
         }
       ],
       where: {
@@ -623,13 +641,22 @@ exports.verifyEmployee = (APP, req, callback) => {
         .update({
           role_id: req.body.role,
           grade_id: req.body.grade,
+          department_id: req.body.department,
+          job_title_id: req.body.job,
           status: req.body.status
         })
         .then(result => {
+          //send to email
           APP.mailer.sendMail({
             subject: 'Account Verified',
             to: req.body.email,
-            text: `Your account has been verrified. You're assigned as ${res.role.name} at ${res.grade.name}`
+            data: {
+              role: res.role.name,
+              grade: res.grade.name,
+              depatement: res.department.name,
+              job: res.job_title.name
+            },
+            file: 'verify_employee.html'
           });
           callback(null, {
             code: 'UPDATE_SUCCESS',

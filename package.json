@@ -41,6 +41,7 @@
     "moment": "^2.22.1",
     "mongoose": "^5.7.6",
     "morgan": "^1.9.1",
+    "mustache": "^3.1.0",
     "mysql2": "^1.5.3",
     "node-rsa": "^1.0.6",
     "nodemailer": "^6.3.1",

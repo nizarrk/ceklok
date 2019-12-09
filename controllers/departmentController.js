@@ -9,7 +9,7 @@ const async = require('async');
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
-  APP.models.mysql.department
+  APP.models.company[req.user.db].mysql.department
     .findAll()
     .then(rows => {
       return callback(null, {
@@ -41,7 +41,7 @@ exports.insert = function(APP, req, callback) {
         let pad = 'DEP-000';
         let kode = '';
 
-        APP.models.mysql.department
+        APP.models.company[req.user.db].mysql.department
           .findAll({
             limit: 1,
             order: [['id', 'DESC']]
@@ -76,7 +76,7 @@ exports.insert = function(APP, req, callback) {
       },
 
       function insertDepartment(result, callback) {
-        APP.models.mysql.department
+        APP.models.company[req.user.db].mysql.department
           .build({
             department_code: result,
             name: req.body.name,
@@ -130,7 +130,7 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  APP.models.mysql.department
+  APP.models.company[req.user.db].mysql.department
     .update(
       {
         name: req.body.name,
@@ -196,7 +196,7 @@ exports.delete = function(APP, req, callback) {
       id: req.body.id
     }
   };
-  APP.models.mysql.department
+  APP.models.company[req.user.db].mysql.department
     .destroy(params)
     .then(deleted => {
       if (!deleted)

@@ -10,7 +10,8 @@ if (process.env.MONGO === 'true') {
   let mongoOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    useFindAndModify: false
+    useFindAndModify: false,
+    useCreateIndex: true
   };
 
   mongoose.connect('mongodb://' + host + '/' + name, mongoOptions);

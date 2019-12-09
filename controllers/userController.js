@@ -4,9 +4,10 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
+const dbName = 'ceklok_VST1912090';
 
 exports.checkExistingTelp = (APP, req, callback) => {
-  APP.models.company.ceklok_VST1912050.mysql.employee
+  APP.models.company[dbName].mysql.employee
     .findAll({
       where: {
         tlp: req.body.telp
@@ -47,7 +48,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
 };
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.company.ceklok_VST1912050.mysql.employee
+  APP.models.company[dbName].mysql.employee
     .findAll({
       where: {
         email: req.body.email
@@ -88,7 +89,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.company.ceklok_VST1912050.mysql.employee
+  APP.models.company[dbName].mysql.employee
     .findAll({
       where: {
         company_code: req.body.company,
@@ -207,7 +208,7 @@ exports.register = (APP, req, callback) => {
         let time = year + month + tgl;
         let pad = '0000';
 
-        APP.models.company.ceklok_VST1912050.mysql.employee
+        APP.models.company[dbName].mysql.employee
           .findAll({
             limit: 1,
             order: [['id', 'DESC']]
@@ -270,7 +271,7 @@ exports.register = (APP, req, callback) => {
         let username = APP.validation.username(req.body.username);
 
         if (email && username) {
-          APP.models.company.ceklok_VST1912050.mysql.employee
+          APP.models.company[dbName].mysql.employee
             .build({
               employee_code: data.kode,
               company_code: req.body.company,
@@ -389,7 +390,7 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.company.ceklok_VST1912050.mysql.employee
+        APP.models.company[dbName].mysql.employee
           .findAll({
             where: {
               user_name: req.body.username,
@@ -542,7 +543,7 @@ exports.forgotPassword = (APP, req, callback) => {
   async.waterfall(
     [
       function checkEmail(callback) {
-        APP.models.company.ceklok_VST1912050.mysql.employee
+        APP.models.company[dbName].mysql.employee
           .findAll({
             where: {
               email: req.body.email
@@ -622,7 +623,10 @@ exports.forgotPassword = (APP, req, callback) => {
             APP.mailer.sendMail({
               subject: 'Reset Password',
               to: req.body.email,
-              text: `this is your otp: ${otp}`
+              data: {
+                otp: otp
+              },
+              file: 'forgot_password.html'
             });
           });
       }
@@ -703,7 +707,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function updatePassword(result, callback) {
-        APP.models.company.ceklok_VST1912050.mysql.employee
+        APP.models.company[dbName].mysql.employee
           .findOne({
             where: {
               email: req.body.email
