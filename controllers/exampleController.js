@@ -1,7 +1,10 @@
 'use strict';
 
 exports.test = function(APP, req, callback) {
-  console.log(req.user);
+  let randomstring = Math.random()
+    .toString(36)
+    .slice(-8);
+  console.log(randomstring);
 
   /**
    * YOUR APPLICATION LOGIC HERE...

@@ -17,10 +17,10 @@
     "function": "login",
     "auth": false
   },
-  "/admin/savecompany": {
+  "/admin/addemployee": {
     "method": "post",
     "controller": "adminController",
-    "function": "saveCompany",
+    "function": "addEmployee",
     "auth": true
   },
   "/admin/verifyuser": {
@@ -216,6 +216,30 @@
     "auth": true
   },
   "/priviledge/delete": {
+    "method": "post",
+    "controller": "priviledgeController",
+    "function": "delete",
+    "auth": true
+  },
+  "/jobtitle/get": {
+    "method": "post",
+    "controller": "jobtitleController",
+    "function": "get",
+    "auth": true
+  },
+  "/jobtitle/insert": {
+    "method": "post",
+    "controller": "jobtitleController",
+    "function": "insert",
+    "auth": true
+  },
+  "/jobtitle/update": {
+    "method": "post",
+    "controller": "jobtitleController",
+    "function": "update",
+    "auth": true
+  },
+  "/jobtitle/delete": {
     "method": "post",
     "controller": "priviledgeController",
     "function": "delete",

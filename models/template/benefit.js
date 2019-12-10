@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'pricing',
+    'benefit',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,23 +11,16 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      modul_id: {
-        type: Sequelize.STRING(45)
-      },
       name: {
         type: Sequelize.STRING(45)
       },
       description: {
         type: Sequelize.STRING(45)
       },
-      fitur: {
-        type: Sequelize.STRING(45)
-      },
-      price: {
-        type: Sequelize.INTEGER(45)
-      },
       status: {
-        type: Sequelize.INTEGER(1) //0 = non aktif, 1 = aktif
+        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
+        allowNull: false,
+        defaultValue: 1
       },
       created_at: {
         allowNull: false,

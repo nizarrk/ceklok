@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'pricing',
+    'modul',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -10,9 +10,6 @@ module.exports = function(sequelize, Sequelize) {
         primaryKey: true,
         allowNull: false,
         unique: true
-      },
-      modul_id: {
-        type: Sequelize.STRING(45)
       },
       name: {
         type: Sequelize.STRING(45)

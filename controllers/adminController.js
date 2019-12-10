@@ -630,6 +630,12 @@ exports.verifyEmployee = (APP, req, callback) => {
         },
         {
           model: APP.models.company[req.user.db].mysql.grade
+        },
+        {
+          model: APP.models.company[req.user.db].mysql.department
+        },
+        {
+          model: APP.models.company[req.user.db].mysql.job_title
         }
       ],
       where: {
@@ -637,6 +643,11 @@ exports.verifyEmployee = (APP, req, callback) => {
       }
     })
     .then(res => {
+      if (res.status == 1) {
+        return callback({
+          code: 'UPDATE_NONE'
+        });
+      }
       res
         .update({
           role_id: req.body.role,
@@ -653,7 +664,7 @@ exports.verifyEmployee = (APP, req, callback) => {
             data: {
               role: res.role.name,
               grade: res.grade.name,
-              depatement: res.department.name,
+              department: res.department.name,
               job: res.job_title.name
             },
             file: 'verify_employee.html'
@@ -664,6 +675,8 @@ exports.verifyEmployee = (APP, req, callback) => {
           });
         })
         .catch(err => {
+          console.log(err);
+
           callback({
             code: 'ERR_DATABASE',
             data: JSON.stringify(err)
@@ -676,4 +689,289 @@ exports.verifyEmployee = (APP, req, callback) => {
         data: JSON.stringify(err)
       });
     });
+};
+
+exports.addEmployee = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkUsernameEmployee(callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findAll({
+            where: {
+              company_code: req.body.company,
+              user_name: req.body.username
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              callback({
+                code: 'DUPLICATE',
+                data: {
+                  row: 'Error! Duplicate Username!'
+                },
+                info: {
+                  dataCount: res.length,
+                  parameter: 'username'
+                }
+              });
+            }
+            callback(null, {
+              code: 'NOT_FOUND',
+              data: {
+                row: []
+              },
+              info: {
+                dataCount: res.length,
+                parameter: 'username'
+              }
+            });
+          })
+          .catch(err => {
+            console.log('iki error username', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function checkEmailEmployee(result, callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findAll({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              callback({
+                code: 'DUPLICATE',
+                data: {
+                  row: 'Error! Duplicate Email!'
+                },
+                info: {
+                  dataCount: res.length,
+                  parameter: 'email'
+                }
+              });
+            }
+            callback(null, {
+              code: 'NOT_FOUND',
+              data: {
+                row: []
+              },
+              info: {
+                dataCount: res.length,
+                parameter: 'email'
+              }
+            });
+          })
+          .catch(err => {
+            console.log('iki error email', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function checkTelpEmployee(result, callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findAll({
+            where: {
+              tlp: req.body.telp
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              callback({
+                code: 'DUPLICATE',
+                data: {
+                  row: 'Error! Duplicate telp!'
+                },
+                info: {
+                  dataCount: res.length,
+                  parameter: 'telp'
+                }
+              });
+            }
+            callback(null, {
+              code: 'NOT_FOUND',
+              data: {
+                row: []
+              },
+              info: {
+                dataCount: res.length,
+                parameter: 'telp'
+              }
+            });
+          })
+          .catch(err => {
+            console.log('iki error telp', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function generateEmployeeCode(result, callback) {
+        let tgl = new Date().getDate().toString();
+        let month = new Date().getMonth().toString();
+        let year = new Date()
+          .getFullYear()
+          .toString()
+          .slice(2, 4);
+        let time = year + month + tgl;
+        let pad = '0000';
+
+        APP.models.company[req.user.db].mysql.employee
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            if (res.length == 0) {
+              console.log('kosong');
+              let str = '' + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            } else {
+              console.log('ada');
+              let lastID = res[0].employee_code;
+              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
+
+              let str = '' + parseInt(replace) + 1;
+              let ans = pad.substring(0, pad.length - str.length) + str;
+
+              let kode = req.body.company + '-' + time + '-' + ans;
+
+              callback(null, kode);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function generatePassword(result, callback) {
+        let randomPass = Math.random()
+          .toString(36)
+          .slice(-8);
+        let pass = APP.validation.password(randomPass);
+        if (pass === true) {
+          bcrypt
+            .hash(randomPass, 10)
+            .then(hashed => {
+              return callback(null, {
+                kode: result,
+                pass: randomPass,
+                encryptedPass: hashed
+              });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_BCRYPT',
+                data: JSON.stringify(err)
+              });
+            });
+        } else {
+          return callback(pass);
+        }
+      },
+
+      function registerUser(data, callback) {
+        let email = APP.validation.email(req.body.email);
+        let username = APP.validation.username(req.body.username);
+
+        if (email && username) {
+          APP.models.company[req.user.db].mysql.employee
+            .build({
+              role_id: req.body.role,
+              grade_id: req.body.grade,
+              department_id: req.body.department,
+              job_title_id: req.body.job,
+              employee_code: data.kode,
+              company_code: req.body.company,
+              name: req.body.name,
+              gender: req.body.gender,
+              pob: req.body.pob,
+              dob: req.body.dob,
+              address: req.body.address,
+              kelurahan: req.body.kel,
+              kecamatan: req.body.kec,
+              city: req.body.city,
+              province: req.body.prov,
+              zipcode: req.body.zip,
+              msisdn: 'default',
+              tlp: req.body.telp,
+              email: req.body.email,
+              user_name: req.body.username,
+              password: data.encryptedPass,
+              status: 1
+            })
+            .save()
+            .then(result => {
+              // send to email
+              APP.mailer.sendMail({
+                subject: 'Account Created',
+                to: req.body.email,
+                data: {
+                  username: req.body.username,
+                  pass: data.pass
+                },
+                file: 'create_employee.html'
+              });
+              let params = 'Insert Success'; //This is only example, Object can also be used
+              return callback(null, {
+                code: 'INSERT_SUCCESS',
+                data: result.dataValues || params
+              });
+            })
+            .catch(err => {
+              console.log(err);
+
+              if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+                let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+                return callback({
+                  code: 'DUPLICATE',
+                  data: params
+                });
+              }
+
+              if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+                let params = 'Error! Empty Query'; //This is only example, Object can also be used
+                return callback({
+                  code: 'UPDATE_NONE',
+                  data: params
+                });
+              }
+
+              return callback({
+                code: 'ERR_DATABASE',
+                data: JSON.stringify(err)
+              });
+            });
+        } else {
+          if (email !== true) return callback(email);
+          if (username !== true) return callback(username);
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
