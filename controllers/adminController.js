@@ -382,24 +382,226 @@ exports.register = (APP, req, callback) => {
         APP.models.mysql.payment
           .create({
             payment_method_id: req.body.payment.method,
+            pricing_id: req.body.payment.pricing,
+            invoice: new Date().getTime(),
             company_id: data.company.id,
-            rek_name: req.body.payment.name,
-            rek_no: req.body.payment.no,
-            image: req.body.payment.iamge,
             total: req.body.payment.total,
             status: 0
           })
           .then(res => {
             callback(null, {
-              code: 'INSERT_SUCCESS',
-              data: {
-                admin: data.admin.dataValues,
-                company: data.company.dataValues,
-                payment: res.dataValues
-              }
+              admin: data.admin.dataValues,
+              company: data.company.dataValues,
+              payment: res.dataValues
             });
           })
           .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function getPaymentInfo(data, callback) {
+        // add payment_method to payment
+        APP.models.mysql.payment.belongsTo(APP.models.mysql.payment_method, {
+          targetKey: 'id',
+          foreignKey: 'payment_method_id'
+        });
+        // add pricing to payment
+        APP.models.mysql.payment.belongsTo(APP.models.mysql.pricing, {
+          targetKey: 'id',
+          foreignKey: 'pricing_id'
+        });
+        // add payment_type to payment_method
+        APP.models.mysql.payment_method.belongsTo(APP.models.mysql.payment_type, {
+          targetKey: 'id',
+          foreignKey: 'payment_type_id'
+        });
+
+        APP.models.mysql.payment
+          .findOne({
+            include: [
+              {
+                model: APP.models.mysql.payment_method
+              },
+              {
+                model: APP.models.mysql.pricing
+              }
+            ],
+            where: {
+              id: data.payment.id
+            }
+          })
+          .then(res => {
+            APP.models.mysql.payment_method
+              .findOne({
+                include: [
+                  {
+                    model: APP.models.mysql.payment_type
+                  }
+                ],
+                where: {
+                  id: res.payment_method_id
+                }
+              })
+              .then(result => {
+                // include payment type to res
+                res.payment_method.dataValues.payment_type = result.payment_type;
+                callback(null, {
+                  admin: data.admin,
+                  company: data.company,
+                  paymentInfo: res
+                });
+              })
+              .catch(err => {
+                console.log('1', err);
+              });
+          })
+          .catch(err => {
+            console.log('2', err);
+          });
+      },
+
+      function createInvoice(data, callback) {
+        console.log(data);
+        APP.models.mysql.invoice
+          .create({
+            payment_id: data.paymentInfo.id,
+            invoice: data.paymentInfo.invoice,
+            name: "Company's Invoice",
+            description: 'Invoice of Pricing that choosed by company',
+            to_rek_name: data.paymentInfo.payment_method.to_rek_name,
+            to_rek_no: data.paymentInfo.payment_method.to_rek_no
+          })
+          .then(res => {
+            callback(null, {
+              payment: data.paymentInfo,
+              company: data.company,
+              admin: data.admin,
+              invoice: res
+            });
+          })
+          .catch(err => {
+            console.log('3', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function sendInvoice(data, callback) {
+        //send to email
+        APP.mailer.sendMail({
+          subject: 'Invoice',
+          to: data.company.email,
+          data: {
+            payment: data.payment,
+            company: data.company,
+            invoice: data.invoice
+          },
+          file: 'invoice.html'
+        });
+
+        callback(null, {
+          code: 'INSERT SUCCESS',
+          data: data
+        });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.paymentCompany = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkPaymentStatus(callback) {
+        APP.models.mysql.payment
+          .findOne({
+            where: {
+              invoice: req.body.invoice
+            }
+          })
+          .then(res => {
+            console.log(res.image);
+            if (res.image == '') {
+              return callback(null, true);
+            } else {
+              callback({
+                code: 'ERR',
+                message: 'Already Paid!'
+              });
+            }
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function uploadBukti(result, callback) {
+        if (!req.files || Object.keys(req.files).length === 0) {
+          return callback({
+            code: 'ERR',
+            message: 'No files were uploaded.'
+          });
+        }
+
+        let fileName = '';
+        let path = '/uploads/';
+        // The name of the input field (i.e. "image") is used to retrieve the uploaded file
+        let image = req.files.image;
+        if (image.mimetype === 'image/jpeg') {
+          fileName = new Date().toISOString().replace(/:|\./g, '') + '.jpeg';
+        } else if (image.mimetype === 'image/png') {
+          fileName = new Date().toISOString().replace(/:|\./g, '') + '.png';
+        }
+
+        // Use the mv() method to place the file somewhere on your server
+        image.mv('.' + path + fileName, function(err) {
+          if (err)
+            return callback({
+              code: 'ERR'
+            });
+
+          callback(null, path + fileName);
+        });
+      },
+
+      function updatePaymentDetails(result, callback) {
+        APP.models.mysql.payment
+          .update(
+            {
+              from_bank_name: req.body.bank,
+              from_rek_name: req.body.name,
+              from_rek_no: req.body.no,
+              image: result
+            },
+            {
+              where: {
+                invoice: req.body.invoice
+              }
+            }
+          )
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log(err);
+
             callback({
               code: 'ERR_DATABASE',
               data: JSON.stringify(err)

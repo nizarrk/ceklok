@@ -210,7 +210,10 @@ exports.verifyCompany = (APP, req, callback) => {
           targetKey: 'id',
           foreignKey: 'payment_method_id'
         });
-        APP.models.mysql.payment.belongsTo(APP.models.mysql.pricing, { targetKey: 'id', foreignKey: 'pricing_id' });
+        APP.models.mysql.payment.belongsTo(APP.models.mysql.pricing, {
+          targetKey: 'id',
+          foreignKey: 'pricing_id'
+        });
 
         APP.models.mysql.payment
           .findOne({

@@ -11,16 +11,22 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      name: {
+      payment_type_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      to_bank_name: {
         type: Sequelize.STRING(45)
       },
-      description: {
+      to_rek_name: {
+        type: Sequelize.STRING(45)
+      },
+      to_rek_no: {
         type: Sequelize.STRING(45)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 1
       },
       created_at: {
         allowNull: false,

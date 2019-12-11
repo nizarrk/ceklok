@@ -1,10 +1,8 @@
 'use strict';
+const async = require('async');
 
 exports.test = function(APP, req, callback) {
-  let randomstring = Math.random()
-    .toString(36)
-    .slice(-8);
-  console.log(randomstring);
+  console.log(req.files);
 
   /**
    * YOUR APPLICATION LOGIC HERE...

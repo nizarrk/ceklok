@@ -42,6 +42,10 @@ let APP = {};
 APP.db = db;
 APP.ip = ip;
 
+const fileUpload = require('express-fileupload');
+// default options
+app.use(fileUpload());
+
 // add msisdn middleware
 app.use(msisdn());
 
@@ -63,7 +67,7 @@ if (process.env.JSON_REQUEST === 'true') {
     });
   });
 }
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan(process.env.LOG_ENV));
 

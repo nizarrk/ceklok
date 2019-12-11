@@ -34,3 +34,6 @@ jspm_packages/
 
 # Config key
 config/
+
+# Uploads Folder
+uploads/
