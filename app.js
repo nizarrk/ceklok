@@ -123,7 +123,10 @@ function modelObj(db, callback) {
         fs.readdir(__dirname + '/models/template', (err, files) => {
           db.sequelize.query('SELECT * FROM company WHERE payment_status = 1').then(res => {
             let models = {};
+            let mysqls = {};
+
             if (res[0].length > 0) {
+              let z = 1;
               res[0].map(result => {
                 let dbName = 'ceklok_' + result.company_code;
                 models[dbName] = { mysql: {} };
@@ -146,19 +149,20 @@ function modelObj(db, callback) {
                   models[dbName].mysql[modelName] = Model;
 
                   if (n === len) {
-                    let mysqls = {};
-
                     Object.keys(models).forEach(val => {
                       if (models[val].associate) models[val].associate(models);
 
                       mysqls[val] = models[val];
                     });
-
-                    callback(null, mysqls);
                   }
 
                   n++;
                 });
+
+                if (z === res[0].length) {
+                  callback(null, mysqls);
+                }
+                z++;
               });
             } else {
               callback(null);
@@ -253,7 +257,7 @@ function resOutput(APP, req, res, params, status) {
         if (messages[params.code]) message.company = messages[params.code];
 
         output.name = params.name || message.company.name;
-        output.code = message.company.code || params.code;
+        output.code = params.id || message.company.id;
         output.status = params.status || message.company.status;
         output.error = params.error || message.company.error;
         output.message = params.message || message.company.message;

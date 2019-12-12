@@ -507,7 +507,7 @@ exports.register = (APP, req, callback) => {
         });
 
         callback(null, {
-          code: 'INSERT SUCCESS',
+          code: 'INSERT_SUCCESS',
           data: data
         });
       }
@@ -532,7 +532,7 @@ exports.paymentCompany = (APP, req, callback) => {
           })
           .then(res => {
             console.log(res.image);
-            if (res.image == '') {
+            if (res.image == null) {
               return callback(null, true);
             } else {
               callback({

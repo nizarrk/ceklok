@@ -7,7 +7,7 @@
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.grade
+  APP.models.company[req.user.db].mysql.benefit
     .findAll()
     .then(rows => {
       return callback(null, {
@@ -19,73 +19,7 @@ exports.get = function(APP, req, callback) {
       });
     })
     .catch(err => {
-      console.log(err);
-
       return callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
-
-exports.getById = (APP, req, callback) => {
-  // add benefit and pricing to grade
-  // APP.models.company[req.user.db].mysql.grade.belongsTo(APP.models.company[req.user.db].mysql.benefit, {
-  //   targetKey: 'id',
-  //   foreignKey: 'benefit_id'
-  // });
-  APP.models.company[req.user.db].mysql.grade
-    .findOne({
-      where: {
-        id: req.body.id
-      }
-    })
-    .then(rows => {
-      if (rows === null) {
-        return callback({
-          code: 'NOT_FOUND'
-        });
-      }
-
-      let len = 0;
-      let benefit = [];
-      let arr = rows.benefit_id.split(',');
-
-      arr.map(res => {
-        APP.models.company[req.user.db].mysql.benefit
-          .findOne({
-            where: {
-              id: res
-            }
-          })
-          .then(result => {
-            benefit.push(result);
-            len++;
-            if (len === arr.length) {
-              console.log('oyi');
-              rows.dataValues.benefit = benefit;
-              callback(null, {
-                code: 'OK',
-                data: rows
-              });
-            }
-          })
-          .catch(err => {
-            console.log(err);
-          });
-      });
-
-      // callback(null, {
-      //   code: 'FOUND',
-      //   data: rows,
-      //   info: {
-      //     dataCount: rows.length
-      //   }
-      // });
-    })
-    .catch(err => {
-      console.log(err);
-      callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
       });
@@ -99,7 +33,7 @@ exports.getById = (APP, req, callback) => {
  * please check `Sequelize` documentation.
  */
 exports.insert = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.grade
+  APP.models.company[req.user.db].mysql.benefit
     .build({
       name: req.body.name,
       description: req.body.desc
@@ -143,7 +77,7 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.grade
+  APP.models.company[req.user.db].mysql.benefit
     .update(
       {
         name: req.body.name,
@@ -208,7 +142,7 @@ exports.delete = function(APP, req, callback) {
       id: req.body.id
     }
   };
-  APP.models.company[req.user.db].mysql.grade
+  APP.models.company[req.user.db].mysql.benefit
     .destroy(params)
     .then(deleted => {
       if (!deleted)

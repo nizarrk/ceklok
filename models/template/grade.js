@@ -11,6 +11,12 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      priviledge_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      benefit_id: {
+        type: Sequelize.STRING(45)
+      },
       name: {
         type: Sequelize.STRING(45)
       },

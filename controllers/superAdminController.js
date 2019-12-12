@@ -16,7 +16,15 @@ exports.verifyCompany = (APP, req, callback) => {
           .then(res => {
             if (res.status === 1) {
               return callback({
-                code: 'UPDATE_NONE'
+                code: 'UPDATE_NONE',
+                message: 'Payment have already verified!'
+              });
+            }
+
+            if (res.image === null) {
+              return callback({
+                code: 'UPDATE_NONE',
+                message: 'Company have not verify their payment!'
               });
             }
 
@@ -176,35 +184,7 @@ exports.verifyCompany = (APP, req, callback) => {
           });
       },
 
-      function createInvoice(data, callback) {
-        APP.models.mysql.invoice
-          .create({
-            payment_id: data.payment.id,
-            invoice: data.company.company_code + '-' + new Date().getTime(),
-            name: "Company's Payment",
-            description: 'Payment of Pricing that choosed by company',
-            from_rek_name: data.payment.rek_name,
-            from_rek_no: data.payment.rek_no,
-            to_rek_name: 'CEKLOK',
-            to_rek_no: '12345678'
-          })
-          .then(res => {
-            callback(null, {
-              payment: data.payment,
-              company: data.company,
-              admin: data.admin,
-              invoice: res
-            });
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
-      function sendInvoice(data, callback) {
+      function sendEmail(data, callback) {
         // add payment_method and pricing to payment
         APP.models.mysql.payment.belongsTo(APP.models.mysql.payment_method, {
           targetKey: 'id',
@@ -232,20 +212,18 @@ exports.verifyCompany = (APP, req, callback) => {
           .then(res => {
             //send to email
             APP.mailer.sendMail({
-              subject: 'Invoice',
+              subject: 'Company Verified',
               to: data.company.email,
               data: {
                 payment: res,
-                company: data.company,
-                invoice: data.invoice
+                company: data.company
               },
-              file: 'invoice.html'
+              file: 'verify_company.html'
             });
 
             callback(null, {
               payment: res,
-              company: data.company,
-              invoice: data.invoice
+              company: data.company
             });
           })
           .catch(err => {

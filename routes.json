@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": false
+    "auth": true
   },
   "/admin/register": {
     "method": "post",
@@ -159,6 +159,12 @@
     "method": "post",
     "controller": "gradeController",
     "function": "get",
+    "auth": true
+  },
+  "/grade/getbyid": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "getById",
     "auth": true
   },
   "/grade/insert": {
