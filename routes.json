@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": true
+    "auth": false
   },
   "/admin/register": {
     "method": "post",
@@ -23,16 +23,22 @@
     "function": "login",
     "auth": false
   },
-  "/admin/addemployee": {
-    "method": "post",
-    "controller": "adminController",
-    "function": "addEmployee",
-    "auth": true
-  },
   "/admin/verifyuser": {
     "method": "post",
     "controller": "adminController",
     "function": "verifyEmployee",
+    "auth": true
+  },
+  "/employee/addemployee": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "addEmployee",
+    "auth": true
+  },
+  "/employee/updateemployee": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "updateEmployee",
     "auth": true
   },
   "/user/register": {
@@ -206,6 +212,30 @@
   "/department/delete": {
     "method": "post",
     "controller": "departmentController",
+    "function": "delete",
+    "auth": true
+  },
+  "/benefit/get": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "get",
+    "auth": true
+  },
+  "/benefit/insert": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "insert",
+    "auth": true
+  },
+  "/benefit/update": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "update",
+    "auth": true
+  },
+  "/benefit/delete": {
+    "method": "post",
+    "controller": "benefitController",
     "function": "delete",
     "auth": true
   },

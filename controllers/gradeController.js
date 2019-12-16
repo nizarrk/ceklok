@@ -29,11 +29,6 @@ exports.get = function(APP, req, callback) {
 };
 
 exports.getById = (APP, req, callback) => {
-  // add benefit and pricing to grade
-  // APP.models.company[req.user.db].mysql.grade.belongsTo(APP.models.company[req.user.db].mysql.benefit, {
-  //   targetKey: 'id',
-  //   foreignKey: 'benefit_id'
-  // });
   APP.models.company[req.user.db].mysql.grade
     .findOne({
       where: {
@@ -62,7 +57,6 @@ exports.getById = (APP, req, callback) => {
             benefit.push(result);
             len++;
             if (len === arr.length) {
-              console.log('oyi');
               rows.dataValues.benefit = benefit;
               callback(null, {
                 code: 'OK',
@@ -74,14 +68,6 @@ exports.getById = (APP, req, callback) => {
             console.log(err);
           });
       });
-
-      // callback(null, {
-      //   code: 'FOUND',
-      //   data: rows,
-      //   info: {
-      //     dataCount: rows.length
-      //   }
-      // });
     })
     .catch(err => {
       console.log(err);
@@ -146,6 +132,7 @@ exports.update = function(APP, req, callback) {
   APP.models.company[req.user.db].mysql.grade
     .update(
       {
+        benefit_id: req.body.benefit,
         name: req.body.name,
         description: req.body.desc
       },

@@ -413,6 +413,14 @@ async.series(
   ],
   () => {
     app.use((req, res, next) => {
+      let tgl = new Date().getDate().toString();
+      if (tgl.length == 1) {
+        tgl = '0' + new Date().getDate().toString();
+      }
+      let month = new Date().getMonth() + 1;
+      let year = new Date().getFullYear().toString();
+
+      req.currentDate = new Date(`${year}-${month}-${tgl}`);
       req.customDate = new Date();
       req.customTime = moment()
         .format('HH:mm:ss')
@@ -471,7 +479,8 @@ async.series(
               req,
               res,
               {
-                code: '-1',
+                id: '-1',
+                error: true,
                 message: 'General error!'
               },
               'err'
@@ -487,8 +496,9 @@ async.series(
             req,
             res,
             {
-              code: '-1',
+              id: '-1',
               message: 'Service not found!',
+              error: true,
               status: 404
             },
             'err'

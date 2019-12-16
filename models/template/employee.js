@@ -14,7 +14,13 @@ module.exports = function(sequelize, Sequelize) {
       department_id: {
         type: Sequelize.STRING(45)
       },
+      department_upload: {
+        type: Sequelize.STRING(45)
+      },
       job_title_id: {
+        type: Sequelize.STRING(45)
+      },
+      job_title_upload: {
         type: Sequelize.STRING(45)
       },
       role_id: {
@@ -23,7 +29,13 @@ module.exports = function(sequelize, Sequelize) {
       grade_id: {
         type: Sequelize.STRING(45)
       },
+      grade_upload: {
+        type: Sequelize.STRING(45)
+      },
       benefit_id: {
+        type: Sequelize.STRING(45)
+      },
+      benefit_upload: {
         type: Sequelize.STRING(45)
       },
       employee_code: {
@@ -36,6 +48,9 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.STRING(45)
       },
       password: {
+        type: Sequelize.STRING(45)
+      },
+      old_password: {
         type: Sequelize.STRING(45)
       },
       name: {

@@ -289,7 +289,8 @@ exports.register = (APP, req, callback) => {
               tlp: req.body.telp,
               email: req.body.email,
               user_name: req.body.username,
-              password: data.pass
+              password: data.pass,
+              old_password: data.pass
             })
             .save()
             .then(result => {
@@ -577,25 +578,34 @@ exports.forgotPassword = (APP, req, callback) => {
           })
           .then(res => {
             if (res != null) {
-              APP.models.mongo.otp
-                .findByIdAndUpdate(res._id, {
-                  otp: otp,
-                  count: res.count + 1,
-                  date: req.customDate,
-                  time: req.customTime,
-                  elapsed_time: req.elapsedTime || '0'
-                })
-                .then(result => {
-                  callback(null, {
-                    code: 'UPDATE_SUCCESS',
-                    data: {
-                      row: result
-                    },
-                    info: {
-                      dataCount: result.length
-                    }
-                  });
+              if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
+                return callback({
+                  code: 'ERR',
+                  message: 'Limit reached for today!'
                 });
+              }
+              if (res.date.getTime() !== req.currentDate.getTime() || res.count < 3) {
+                APP.models.mongo.otp
+                  .findByIdAndUpdate(res._id, {
+                    otp: otp,
+                    count: res.count == 3 ? 1 : res.count + 1,
+                    date: req.currentDate,
+                    time: req.customTime,
+                    elapsed_time: req.elapsedTime || '0'
+                  })
+                  .then(result => {
+                    callback(null, {
+                      code: 'UPDATE_SUCCESS',
+                      data: {
+                        row: result,
+                        otp: otp
+                      },
+                      info: {
+                        dataCount: result.length
+                      }
+                    });
+                  });
+              }
             } else {
               APP.models.mongo.otp
                 .create({
@@ -603,7 +613,7 @@ exports.forgotPassword = (APP, req, callback) => {
                   otp: otp,
                   count: 1,
                   endpoint: req.originalUrl,
-                  date: req.customDate,
+                  date: req.currentDate,
                   time: req.customTime,
                   elapsed_time: req.elapsedTime || '0'
                 })
@@ -611,7 +621,8 @@ exports.forgotPassword = (APP, req, callback) => {
                   callback(null, {
                     code: 'INSERT_SUCCESS',
                     data: {
-                      row: res
+                      row: res,
+                      otp: otp
                     },
                     info: {
                       dataCount: res.length
@@ -619,16 +630,26 @@ exports.forgotPassword = (APP, req, callback) => {
                   });
                 });
             }
-            //send to email
-            APP.mailer.sendMail({
-              subject: 'Reset Password',
-              to: req.body.email,
-              data: {
-                otp: otp
-              },
-              file: 'forgot_password.html'
-            });
           });
+      },
+
+      function sendEmail(data, callback) {
+        console.log(data.data.row.otp);
+
+        //send to email
+        APP.mailer.sendMail({
+          subject: 'Reset Password',
+          to: req.body.email,
+          data: {
+            otp: data.data.otp
+          },
+          file: 'forgot_password.html'
+        });
+
+        callback(null, {
+          code: data.code,
+          data: data.data
+        });
       }
     ],
     (err, result) => {
@@ -693,6 +714,27 @@ exports.resetPassword = (APP, req, callback) => {
           });
         }
         callback(null, true);
+      },
+
+      function checkPassword(result, callback) {
+        APP.models.company[dbName].mysql.employee
+          .findOne({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            bcrypt.compare(req.body.pass, res.password).then(res => {
+              console.log(res);
+
+              if (res === false) return callback(null, true);
+
+              callback({
+                code: 'INVALID_PASSWORD',
+                message: 'Password is match with previous password!'
+              });
+            });
+          });
       },
 
       function encryptPassword(result, callback) {

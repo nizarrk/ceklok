@@ -23,6 +23,9 @@ module.exports = function(sequelize, Sequelize) {
       password: {
         type: Sequelize.STRING(45)
       },
+      old_password: {
+        type: Sequelize.STRING(45)
+      },
       name: {
         type: Sequelize.STRING(45)
       },
