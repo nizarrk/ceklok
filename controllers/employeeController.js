@@ -5,6 +5,40 @@ const trycatch = require('trycatch');
 const bcrypt = require('bcrypt');
 const path = require('path');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
+
+exports.viewEmployeeInfo = (APP, req, callback) => {
+  if (req.user.admin) {
+    APP.models.company[req.user.db].mysql.employee
+      .findOne({
+        where: {
+          id: req.body.id
+        }
+      })
+      .then(res => {
+        if (res == null) {
+          callback({
+            code: 'NOT_FOUND'
+          });
+        }
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      })
+      .catch(err => {
+        callback({
+          code: 'ERR_DATABASE',
+          data: JSON.stringify(err)
+        });
+      });
+  } else {
+    callback(null, {
+      code: 'OK',
+      message: 'sek belum tau diisi apa'
+    });
+  }
+};
 
 exports.addEmployee = (APP, req, callback) => {
   async.waterfall(
@@ -212,6 +246,7 @@ exports.addEmployee = (APP, req, callback) => {
         if (email && username) {
           APP.models.company[req.user.db].mysql.employee
             .build({
+              priviledge_id: req.body.priviledge,
               role_id: req.body.role,
               grade_id: req.body.grade,
               department_id: req.body.department,
@@ -285,6 +320,7 @@ exports.addEmployee = (APP, req, callback) => {
         APP.models.mongo.employee_history
           .create({
             id: result.id,
+            priviledge: result.priviledge_id,
             role: result.role_id,
             department: result.department_id,
             job_title: result.job_title_id,
@@ -335,7 +371,7 @@ exports.addEmployee = (APP, req, callback) => {
   );
 };
 
-exports.updateEmployee = (APP, req, callback) => {
+exports.updateEmployeeInfo = (APP, req, callback) => {
   async.waterfall(
     [
       function checkEmployeeStatus(callback) {
@@ -368,25 +404,10 @@ exports.updateEmployee = (APP, req, callback) => {
             }
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let benefitPath = './uploads/company/benefit/';
-            let gradePath = './uploads/company/grade/';
-            let job_titlePath = './uploads/company/job_title/';
-            let departmentPath = './uploads/company/department/';
+            let benefitPath = `./uploads/company_${req.user.code}/employee/benefit/`;
 
             if (!fs.existsSync(benefitPath)) {
-              fs.mkdirSync(benefitPath);
-            }
-
-            if (!fs.existsSync(gradePath)) {
-              fs.mkdirSync(gradePath);
-            }
-
-            if (!fs.existsSync(job_titlePath)) {
-              fs.mkdirSync(job_titlePath);
-            }
-
-            if (!fs.existsSync(departmentPath)) {
-              fs.mkdirSync(departmentPath);
+              mkdirp.sync(benefitPath);
             }
 
             if (req.files.benefit_upload) {
@@ -401,53 +422,10 @@ exports.updateEmployee = (APP, req, callback) => {
               );
             }
 
-            if (req.files.grade_upload) {
-              req.files.grade_upload.mv(gradePath + fileName + path.extname(req.files.grade_upload.name), function(
-                err
-              ) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
-            if (req.files.job_upload) {
-              req.files.job_upload.mv(job_titlePath + fileName + path.extname(req.files.job_upload.name), function(
-                err
-              ) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
-            if (req.files.department_upload) {
-              req.files.department_upload.mv(
-                departmentPath + fileName + path.extname(req.files.department_upload.name),
-                function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
-                }
-              );
-            }
-
             callback(null, {
               benefit: req.files.benefit_upload
                 ? benefitPath + fileName + path.extname(req.files.benefit_upload.name)
-                : result.benefit_upload,
-              grade: req.files.grade_upload
-                ? gradePath + fileName + path.extname(req.files.grade_upload.name)
-                : result.grade_upload,
-              job: req.files.job_upload
-                ? job_titlePath + fileName + path.extname(req.files.job_title_upload)
-                : result.job_title_upload,
-              department: req.files.department_upload
-                ? departmentPath + fileName + path.extname(req.files.department_upload.name)
-                : result.department_upload
+                : result.benefit_upload
             });
           },
           err => {
@@ -471,14 +449,8 @@ exports.updateEmployee = (APP, req, callback) => {
           .then(res => {
             res
               .update({
-                department_id: req.body.department,
-                department_upload: result.department,
-                grade_id: req.body.grade,
-                grade_upload: result.grade,
                 benefit_id: req.body.benefit,
                 benefit_upload: result.benefit,
-                job_title_id: req.body.job,
-                job_title_upload: result.job,
                 name: req.body.name,
                 gender: req.body.gender,
                 pob: req.body.pob,
@@ -494,8 +466,8 @@ exports.updateEmployee = (APP, req, callback) => {
                 email: req.body.email,
                 user_name: req.body.username
               })
-              .then(result => {
-                callback(null, result);
+              .then(updated => {
+                callback(null, { result, updated });
               })
               .catch(err => {
                 callback({
@@ -516,30 +488,32 @@ exports.updateEmployee = (APP, req, callback) => {
       function updateEmployeeHistory(result, callback) {
         APP.models.mongo.employee_history
           .create({
-            id: result.id,
-            role: result.role_id,
-            department: result.department_id,
-            job_title: result.job_title_id,
-            grade: result.grade_id,
-            benefit: result.benefit_id,
-            company_code: result.company_code,
-            employee_code: result.employee_code,
-            username: result.user_name,
-            password: result.password,
-            name: result.name,
-            gender: result.gender,
-            pob: result.pob,
-            dob: result.dob,
-            address: result.address,
-            kelurahan: result.kelurahan,
-            kecamatan: result.kecamatan,
-            city: result.city,
-            province: result.province,
-            zipcode: result.zipcode,
-            msisdn: result.msisdn,
-            tlp: result.tlp,
-            email: result.email,
-            status: result.status,
+            id: result.updated.id,
+            priviledge: result.updated.priviledge_id,
+            role: result.updated.role_id,
+            department: result.updated.department_id,
+            job_title: result.updated.job_title_id,
+            grade: result.updated.grade_id,
+            benefit: result.updated.benefit_id,
+            benefit_upload: result.result.benefit,
+            company_code: result.updated.company_code,
+            employee_code: result.updated.employee_code,
+            username: result.updated.user_name,
+            password: result.updated.password,
+            name: result.updated.name,
+            gender: result.updated.gender,
+            pob: result.updated.pob,
+            dob: result.updated.dob,
+            address: result.updated.address,
+            kelurahan: result.updated.kelurahan,
+            kecamatan: result.updated.kecamatan,
+            city: result.updated.city,
+            province: result.updated.province,
+            zipcode: result.updated.zipcode,
+            msisdn: result.updated.msisdn,
+            tlp: result.updated.tlp,
+            email: result.updated.email,
+            status: result.updated.status,
             endpoint: req.originalUrl,
             date: req.currentDate,
             time: req.customTime,
@@ -547,7 +521,162 @@ exports.updateEmployee = (APP, req, callback) => {
           })
           .then(res => {
             callback(null, {
-              code: 'INSERT_SUCCESS',
+              code: 'UPDATE_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.updateEmployeeStatus = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkEmployeeStatus(callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            where: {
+              id: req.body.id,
+              status: 1
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND'
+              });
+            }
+
+            callback(null, res);
+          });
+      },
+
+      function uploadDocuments(result, callback) {
+        trycatch(
+          () => {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'ERR',
+                message: 'No files were uploaded.'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let statusPath = `./uploads/company_${req.user.code}/employee/status/`;
+
+            if (!fs.existsSync(statusPath)) {
+              mkdirp.sync(statusPath);
+            }
+
+            if (req.files.status_upload) {
+              req.files.status_upload.mv(statusPath + fileName + path.extname(req.files.status_upload.name), function(
+                err
+              ) {
+                if (err)
+                  return callback({
+                    code: 'ERR'
+                  });
+              });
+            }
+
+            callback(null, {
+              status: req.files.status_upload
+                ? statusPath + fileName + path.extname(req.files.status_upload.name)
+                : result.status_upload
+            });
+          },
+          err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR',
+              data: JSON.stringify(err)
+            });
+          }
+        );
+      },
+
+      function updateEmployeeStatus(result, callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            res
+              .update({
+                status: req.body.status,
+                status_upload: result.status
+              })
+              .then(updated => {
+                callback(null, { result, updated });
+              })
+              .catch(err => {
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
+                });
+              });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function updateEmployeeHistory(result, callback) {
+        APP.models.mongo.employee_history
+          .create({
+            id: result.updated.id,
+            priviledge: result.updated.priviledge_id,
+            role: result.updated.role_id,
+            department: result.updated.department_id,
+            job_title: result.updated.job_title_id,
+            grade: result.updated.grade_id,
+            benefit: result.updated.benefit_id,
+            benefit_upload: result.result.benefit,
+            company_code: result.updated.company_code,
+            employee_code: result.updated.employee_code,
+            username: result.updated.user_name,
+            password: result.updated.password,
+            name: result.updated.name,
+            gender: result.updated.gender,
+            pob: result.updated.pob,
+            dob: result.updated.dob,
+            address: result.updated.address,
+            kelurahan: result.updated.kelurahan,
+            kecamatan: result.updated.kecamatan,
+            city: result.updated.city,
+            province: result.updated.province,
+            zipcode: result.updated.zipcode,
+            msisdn: result.updated.msisdn,
+            tlp: result.updated.tlp,
+            email: result.updated.email,
+            status: result.updated.status,
+            endpoint: req.originalUrl,
+            date: req.currentDate,
+            time: req.customTime,
+            elapsed_time: req.elapsedTime || '0'
+          })
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
               data: res
             });
           })

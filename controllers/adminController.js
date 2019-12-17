@@ -722,7 +722,8 @@ exports.login = (APP, req, callback) => {
           {
             id: rows[0].id,
             code: rows[0].company_code,
-            db: `ceklok_${rows[0].company_code}`
+            db: `ceklok_${rows[0].company_code}`,
+            admin: true
           },
           key.key,
           {
@@ -733,6 +734,7 @@ exports.login = (APP, req, callback) => {
         APP.models.mongo.token
           .findOne({
             id_admin: rows[0].id,
+            company_code: rows[0].company_code,
             platform: req.body.platform
           })
           .then(res => {

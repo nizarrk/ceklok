@@ -453,7 +453,10 @@ exports.login = (APP, req, callback) => {
       function setToken(rows, callback) {
         let token = jwt.sign(
           {
-            id: rows[0].id
+            id: rows[0].id,
+            code: rows[0].company_code,
+            db: `ceklok_${rows[0].company_code}`,
+            admin: false
           },
           key.key,
           {
@@ -464,6 +467,7 @@ exports.login = (APP, req, callback) => {
         APP.models.mongo.token
           .findOne({
             id_user: rows[0].id,
+            company_code: rows[0].company_code,
             platform: req.body.platform
           })
           .then(res => {

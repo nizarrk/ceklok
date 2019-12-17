@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      priviledge_id: {
+        type: Sequelize.STRING(45)
+      },
       department_id: {
         type: Sequelize.STRING(45)
       },
@@ -96,6 +99,9 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
         allowNull: false,
         defaultValue: 0
+      },
+      status_upload: {
+        type: Sequelize.STRING(45)
       },
       created_at: {
         allowNull: false,

@@ -20,7 +20,7 @@ module.exports = function(sequelize, Sequelize) {
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 1
       },
       created_at: {
         allowNull: false,

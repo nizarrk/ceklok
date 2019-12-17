@@ -7,7 +7,7 @@
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
-  APP.models.mysql.priviledge
+  APP.models.company[req.user.db].mysql.priviledge
     .findAll()
     .then(rows => {
       return callback(null, {
@@ -33,7 +33,7 @@ exports.get = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.insert = function(APP, req, callback) {
-  APP.models.mysql.priviledge
+  APP.models.company[req.user.db].mysql.priviledge
     .build({
       name: req.body.name,
       description: req.body.desc
@@ -77,7 +77,7 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  APP.models.mysql.priviledge
+  APP.models.company[req.user.db].mysql.priviledge
     .update(
       {
         name: req.body.name,
@@ -142,7 +142,7 @@ exports.delete = function(APP, req, callback) {
       id: req.body.id
     }
   };
-  APP.models.mysql.priviledge
+  APP.models.company[req.user.db].mysql.priviledge
     .destroy(params)
     .then(deleted => {
       if (!deleted)
