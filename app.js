@@ -481,7 +481,8 @@ async.series(
               {
                 id: '-1',
                 error: true,
-                message: 'General error!'
+                message: 'General error!',
+                status: 500
               },
               'err'
             );

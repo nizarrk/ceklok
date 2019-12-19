@@ -5,6 +5,8 @@ const fs = require('fs');
 const path = require('path');
 
 exports.sendMail = data => {
+  console.log('isi', data.attachments);
+
   fs.readFile(path.join(__dirname, '../config/template/', data.file), 'utf8', (err, file) => {
     if (err) throw err;
 
@@ -20,6 +22,7 @@ exports.sendMail = data => {
       from: '"CEKLOK.ID 👻" <ayofutsalmalang@gmail.com>',
       to: data.to,
       subject: data.subject,
+      attachments: data.attachments,
       html: mustache.to_html(file, data.data)
     };
 

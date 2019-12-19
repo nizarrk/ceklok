@@ -36,4 +36,4 @@ jspm_packages/
 config/
 
 # Uploads Folder
-uploads/
+public/uploads/

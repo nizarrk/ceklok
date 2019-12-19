@@ -53,6 +53,48 @@
     "function": "updateEmployeeStatus",
     "auth": true
   },
+  "/employee/updaterotasi": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "updateEmployeeRotasi",
+    "auth": true
+  },
+  "/employee/getsp": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "getSuratPeringatan",
+    "auth": true
+  },
+  "/employee/addsp": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "addSuratPeringatan",
+    "auth": true
+  },
+  "/employeestatus/get": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "get",
+    "auth": true
+  },
+  "/employeestatus/insert": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "insert",
+    "auth": true
+  },
+  "/employeestatus/update": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "update",
+    "auth": true
+  },
+  "/employeestatus/delete": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "delete",
+    "auth": true
+  },
   "/user/register": {
     "method": "post",
     "controller": "userController",

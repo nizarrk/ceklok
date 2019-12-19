@@ -404,7 +404,7 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
             }
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let benefitPath = `./uploads/company_${req.user.code}/employee/benefit/`;
+            let benefitPath = `./public/uploads/company_${req.user.code}/employee/benefit/`;
 
             if (!fs.existsSync(benefitPath)) {
               mkdirp.sync(benefitPath);
@@ -574,7 +574,7 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
             }
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let statusPath = `./uploads/company_${req.user.code}/employee/status/`;
+            let statusPath = `./public/uploads/company_${req.user.code}/employee/status/`;
 
             if (!fs.existsSync(statusPath)) {
               mkdirp.sync(statusPath);
@@ -669,6 +669,7 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
             tlp: result.updated.tlp,
             email: result.updated.email,
             status: result.updated.status,
+            status_upload: result.result.status,
             endpoint: req.originalUrl,
             date: req.currentDate,
             time: req.customTime,
@@ -681,6 +682,396 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
             });
           })
           .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.updateEmployeeRotasi = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkEmployeeStatus(callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            where: {
+              id: req.body.id,
+              status: 1
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND'
+              });
+            }
+
+            callback(null, res);
+          });
+      },
+
+      function uploadDocuments(result, callback) {
+        trycatch(
+          () => {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'ERR',
+                message: 'No files were uploaded.'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let gradePath = `./public/uploads/company_${req.user.code}/employee/grade/`;
+            let jobPath = `./public/uploads/company_${req.user.code}/employee/job_title/`;
+            let departmentPath = `./public/uploads/company_${req.user.code}/employee/department/`;
+
+            if (!fs.existsSync(gradePath)) {
+              mkdirp.sync(gradePath);
+            }
+
+            if (!fs.existsSync(jobPath)) {
+              mkdirp.sync(jobPath);
+            }
+
+            if (!fs.existsSync(departmentPath)) {
+              mkdirp.sync(departmentPath);
+            }
+
+            if (req.files.grade_upload) {
+              req.files.grade_upload.mv(gradePath + fileName + path.extname(req.files.grade_upload.name), function(
+                err
+              ) {
+                if (err)
+                  return callback({
+                    code: 'ERR'
+                  });
+              });
+            }
+
+            if (req.files.job_upload) {
+              req.files.job_upload.mv(jobPath + fileName + path.extname(req.files.job_upload.name), function(err) {
+                if (err)
+                  return callback({
+                    code: 'ERR'
+                  });
+              });
+            }
+
+            if (req.files.department_upload) {
+              req.files.department_upload.mv(
+                departmentPath + fileName + path.extname(req.files.department_upload.name),
+                function(err) {
+                  if (err)
+                    return callback({
+                      code: 'ERR'
+                    });
+                }
+              );
+            }
+
+            callback(null, {
+              grade: req.files.grade_upload
+                ? gradePath + fileName + path.extname(req.files.grade_upload.name)
+                : result.grade_upload,
+              job: req.files.job_upload
+                ? jobPath + fileName + path.extname(req.files.job_upload.name)
+                : result.job_title_upload,
+              department: req.files.department_upload
+                ? departmentPath + fileName + path.extname(req.files.department_upload.name)
+                : result.department_upload
+            });
+          },
+          err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR',
+              data: JSON.stringify(err)
+            });
+          }
+        );
+      },
+
+      function updateEmployeeRotasi(result, callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            res
+              .update({
+                grade_id: req.body.grade,
+                grade_upload: result.grade,
+                job_title_id: req.body.job,
+                job_title_upload: result.job,
+                department_id: req.body.department,
+                department_upload: result.department
+              })
+              .then(updated => {
+                callback(null, { result, updated });
+              })
+              .catch(err => {
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
+                });
+              });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function updateEmployeeHistory(result, callback) {
+        APP.models.mongo.employee_history
+          .create({
+            id: result.updated.id,
+            priviledge: result.updated.priviledge_id,
+            role: result.updated.role_id,
+            department: result.updated.department_id,
+            department_upload: result.result.department,
+            job_title: result.updated.job_title_id,
+            job_title_upload: result.result.job,
+            grade: result.updated.grade_id,
+            grade_upload: result.result.grade,
+            benefit: result.updated.benefit_id,
+            benefit_upload: result.result.benefit,
+            company_code: result.updated.company_code,
+            employee_code: result.updated.employee_code,
+            username: result.updated.user_name,
+            password: result.updated.password,
+            name: result.updated.name,
+            gender: result.updated.gender,
+            pob: result.updated.pob,
+            dob: result.updated.dob,
+            address: result.updated.address,
+            kelurahan: result.updated.kelurahan,
+            kecamatan: result.updated.kecamatan,
+            city: result.updated.city,
+            province: result.updated.province,
+            zipcode: result.updated.zipcode,
+            msisdn: result.updated.msisdn,
+            tlp: result.updated.tlp,
+            email: result.updated.email,
+            status: result.updated.status,
+            endpoint: req.originalUrl,
+            date: req.currentDate,
+            time: req.customTime,
+            elapsed_time: req.elapsedTime || '0'
+          })
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.getSuratPeringatan = (APP, req, callback) => {
+  APP.models.company[req.user.db].mysql.violation
+    .findAll()
+    .then(res => {
+      callback(null, {
+        code: res.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        data: res
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.addSuratPeringatan = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function generateCode(callback) {
+        let pad = 'VLT-000';
+        let kode = '';
+
+        APP.models.company[req.user.db].mysql.violation
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            if (res.length == 0) {
+              console.log('kosong');
+              let str = '' + 1;
+              kode = pad.substring(0, pad.length - str.length) + str;
+
+              callback(null, kode);
+            } else {
+              console.log('ada');
+              console.log(res[0].code);
+
+              let lastID = res[0].code;
+              let replace = lastID.replace('VLT-', '');
+              console.log(replace);
+
+              let str = parseInt(replace) + 1;
+              kode = pad.substring(0, pad.length - str.toString().length) + str;
+
+              callback(null, kode);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function uploadPath(result, callback) {
+        trycatch(
+          () => {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'ERR',
+                message: 'No files were uploaded.'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let docPath = `./public/uploads/company_${req.user.code}/employee/doc/`;
+
+            if (!fs.existsSync(docPath)) {
+              mkdirp.sync(docPath);
+            }
+
+            callback(null, {
+              code: result,
+              doc: req.files.doc_upload
+                ? docPath + fileName + path.extname(req.files.doc_upload.name)
+                : result.doc_upload
+            });
+          },
+          err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR',
+              data: JSON.stringify(err)
+            });
+          }
+        );
+      },
+
+      function insertViolation(result, callback) {
+        // add employee to violation
+        APP.models.company[req.user.db].mysql.violation.belongsTo(APP.models.company[req.user.db].mysql.employee, {
+          targetKey: 'id',
+          foreignKey: 'employee_id'
+        });
+
+        let counter = 1;
+        APP.models.company[req.user.db].mysql.violation
+          .findAll({
+            include: [
+              {
+                model: APP.models.company[req.user.db].mysql.employee
+              }
+            ],
+            where: {
+              employee_id: req.body.id
+            },
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            if (res.length > 0) {
+              counter = res[0].sequence + 1;
+              if (res[0].sequence >= 3) {
+                return callback({
+                  code: 'ERR',
+                  message: 'Employee is already have 3 violation warnings!'
+                });
+              }
+            }
+
+            // upload file
+            if (req.files.doc_upload) {
+              req.files.doc_upload.mv(result.doc, function(err) {
+                if (err)
+                  return callback({
+                    code: 'ERR'
+                  });
+              });
+            }
+
+            APP.models.company[req.user.db].mysql.violation
+              .create({
+                employee_id: req.body.id,
+                doc_upload: result.doc.slice(8), // slice 8 buat ngilangin './public'
+                code: result.code,
+                sequence: counter,
+                description: `Surat Peringatan ${counter}`
+              })
+              .then(inserted => {
+                //send email
+                APP.mailer.sendMail({
+                  subject: 'Violation Warning',
+                  to: res[0].employee.email,
+                  data: {
+                    desc: inserted.description
+                  },
+                  attachments: [
+                    {
+                      filename: result.doc.slice(49), // slice 49 buat ngambil nama file
+                      path: req.protocol + '://' + req.get('host') + result.doc.slice(8) // slice 8 buat ngilangin './public'
+                    }
+                  ],
+                  file: 'violation_warning.html'
+                });
+                callback(null, {
+                  code: 'INSERT_SUCCESS',
+                  data: inserted
+                });
+              })
+              .catch(err => {
+                console.log('insert error', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
+                });
+              });
+          })
+          .catch(err => {
+            console.log('find error', err);
             callback({
               code: 'ERR_DATABASE',
               data: JSON.stringify(err)
