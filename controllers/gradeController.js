@@ -88,7 +88,8 @@ exports.insert = function(APP, req, callback) {
   APP.models.company[req.user.db].mysql.grade
     .build({
       name: req.body.name,
-      description: req.body.desc
+      description: req.body.desc,
+      benefit_id: req.body.benefit
     })
     .save()
     .then(result => {

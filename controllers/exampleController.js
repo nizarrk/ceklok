@@ -5,7 +5,7 @@ const fs = require('fs');
 const os = require('os');
 
 exports.test = function(APP, req, callback) {
-  console.log(req.get('host'));
+  console.log(process.env.DBNAME + req.body.company);
 
   /**
    * YOUR APPLICATION LOGIC HERE...

@@ -268,28 +268,30 @@ exports.verifyCompany = (APP, req, callback) => {
           files.map(file => {
             let tableName = file.replace('.js', '');
             x.push(file);
-            APP.db.sequelize.query(`CREATE TABLE ${data.dbName}.${tableName} LIKE ceklok.${tableName}`).then(() => {
-              x.map(model => {
-                let Model = APP.db
-                  .customSequelize(data.dbName)
-                  .import(path.join(__dirname, '../models/template/', model));
-                let modelName = model.replace('.js', '');
+            APP.db.sequelize
+              .query(`CREATE TABLE ${data.dbName}.${tableName} LIKE ${process.env.MYSQL_NAME}.${tableName}`)
+              .then(() => {
+                x.map(model => {
+                  let Model = APP.db
+                    .customSequelize(data.dbName)
+                    .import(path.join(__dirname, '../models/template/', model));
+                  let modelName = model.replace('.js', '');
 
-                models[modelName] = Model;
+                  models[modelName] = Model;
 
-                if (n === len) {
-                  let mysqls = {};
+                  if (n === len) {
+                    let mysqls = {};
 
-                  Object.keys(models).forEach(val => {
-                    if (models[val].associate) models[val].associate(models);
+                    Object.keys(models).forEach(val => {
+                      if (models[val].associate) models[val].associate(models);
 
-                    mysqls[val] = models[val];
-                  });
-                }
+                      mysqls[val] = models[val];
+                    });
+                  }
 
-                n++;
+                  n++;
+                });
               });
-            });
           });
         });
         return callback(null, {

@@ -4,6 +4,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
+const path = require('path');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
 const dbName = 'ceklok_VST1912090';
 
 exports.checkExistingEmailCompany = (APP, req, callback) => {
@@ -532,7 +535,13 @@ exports.paymentCompany = (APP, req, callback) => {
             }
           })
           .then(res => {
-            console.log(res.image);
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Invoice not found'
+              });
+            }
+
             if (res.image == null) {
               return callback(null, true);
             } else {
@@ -543,6 +552,8 @@ exports.paymentCompany = (APP, req, callback) => {
             }
           })
           .catch(err => {
+            console.log(err);
+
             callback({
               code: 'ERR_DATABASE',
               data: JSON.stringify(err)
@@ -550,7 +561,7 @@ exports.paymentCompany = (APP, req, callback) => {
           });
       },
 
-      function uploadBukti(result, callback) {
+      function uploadPath(result, callback) {
         if (!req.files || Object.keys(req.files).length === 0) {
           return callback({
             code: 'ERR',
@@ -558,25 +569,14 @@ exports.paymentCompany = (APP, req, callback) => {
           });
         }
 
-        let fileName = '';
-        let path = '/uploads/';
-        // The name of the input field (i.e. "image") is used to retrieve the uploaded file
-        let image = req.files.image;
-        if (image.mimetype === 'image/jpeg') {
-          fileName = new Date().toISOString().replace(/:|\./g, '') + '.jpeg';
-        } else if (image.mimetype === 'image/png') {
-          fileName = new Date().toISOString().replace(/:|\./g, '') + '.png';
+        let fileName = new Date().toISOString().replace(/:|\./g, '');
+        let imagePath = './public/uploads/payment/company/';
+
+        if (!fs.existsSync(imagePath)) {
+          mkdirp.sync(imagePath);
         }
 
-        // Use the mv() method to place the file somewhere on your server
-        image.mv('.' + path + fileName, function(err) {
-          if (err)
-            return callback({
-              code: 'ERR'
-            });
-
-          callback(null, path + fileName);
-        });
+        callback(null, imagePath + fileName + path.extname(req.files.image.name));
       },
 
       function updatePaymentDetails(result, callback) {
@@ -586,7 +586,7 @@ exports.paymentCompany = (APP, req, callback) => {
               from_bank_name: req.body.bank,
               from_rek_name: req.body.name,
               from_rek_no: req.body.no,
-              image: result
+              image: result.slice(8)
             },
             {
               where: {
@@ -595,6 +595,17 @@ exports.paymentCompany = (APP, req, callback) => {
             }
           )
           .then(res => {
+            // Use the mv() method to place the file somewhere on your server
+            req.files.image.mv(result, function(err) {
+              if (err) {
+                console.log(err);
+
+                return callback({
+                  code: 'ERR'
+                });
+              }
+            });
+
             callback(null, {
               code: 'UPDATE_SUCCESS',
               data: res
@@ -680,10 +691,8 @@ exports.login = (APP, req, callback) => {
 
             if (rows[0].status == 0) {
               return callback({
-                code: 'VERIFICATION_NEEDED',
-                info: {
-                  parameter: 'User have to wait for admin to verify their account first.'
-                }
+                code: 'INVALID_REQUEST',
+                message: 'Company have to wait for admin to verify their account first!'
               });
             }
             callback(null, rows);
@@ -809,89 +818,135 @@ exports.login = (APP, req, callback) => {
 };
 
 exports.verifyEmployee = (APP, req, callback) => {
-  // add role, grade, department and job_title to employee
-  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.role, {
-    targetKey: 'id',
-    foreignKey: 'role_id'
-  });
-  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.grade, {
-    targetKey: 'id',
-    foreignKey: 'grade_id'
-  });
-  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.department, {
-    targetKey: 'id',
-    foreignKey: 'department_id'
-  });
-  APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.job_title, {
-    targetKey: 'id',
-    foreignKey: 'job_title_id'
-  });
+  async.waterfall(
+    [
+      function updateEmployeeInfo(callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            if (res.status == 1) {
+              return callback({
+                code: 'UPDATE_NONE'
+              });
+            }
+            res
+              .update({
+                role_id: req.body.role,
+                grade_id: req.body.grade,
+                department_id: req.body.department,
+                job_title_id: req.body.job,
+                status: req.body.status,
+                status_contract_id: req.body.contract
+              })
+              .then(result => {
+                callback(null, result);
+              })
+              .catch(err => {
+                console.log('1', err);
 
-  APP.models.company[req.user.db].mysql.employee
-    .findOne({
-      include: [
-        {
-          model: APP.models.company[req.user.db].mysql.role
-        },
-        {
-          model: APP.models.company[req.user.db].mysql.grade
-        },
-        {
-          model: APP.models.company[req.user.db].mysql.department
-        },
-        {
-          model: APP.models.company[req.user.db].mysql.job_title
-        }
-      ],
-      where: {
-        email: req.body.email
-      }
-    })
-    .then(res => {
-      if (res.status == 1) {
-        return callback({
-          code: 'UPDATE_NONE'
-        });
-      }
-      res
-        .update({
-          role_id: req.body.role,
-          grade_id: req.body.grade,
-          department_id: req.body.department,
-          job_title_id: req.body.job,
-          status: req.body.status
-        })
-        .then(result => {
-          //send to email
-          APP.mailer.sendMail({
-            subject: 'Account Verified',
-            to: req.body.email,
-            data: {
-              role: res.role.name,
-              grade: res.grade.name,
-              department: res.department.name,
-              job: res.job_title.name
-            },
-            file: 'verify_employee.html'
-          });
-          callback(null, {
-            code: 'UPDATE_SUCCESS',
-            data: result
-          });
-        })
-        .catch(err => {
-          console.log(err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: JSON.stringify(err)
+                });
+              });
+          })
+          .catch(err => {
+            console.log('2', err);
 
-          callback({
-            code: 'ERR_DATABASE',
-            data: JSON.stringify(err)
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
           });
+      },
+
+      function sendEmail(result, callback) {
+        // add role, grade, department, job_title and status_contract to employee
+        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.role, {
+          targetKey: 'id',
+          foreignKey: 'role_id'
         });
-    })
-    .catch(err => {
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
+        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.grade, {
+          targetKey: 'id',
+          foreignKey: 'grade_id'
+        });
+        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.department, {
+          targetKey: 'id',
+          foreignKey: 'department_id'
+        });
+        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.job_title, {
+          targetKey: 'id',
+          foreignKey: 'job_title_id'
+        });
+        APP.models.company[req.user.db].mysql.employee.belongsTo(
+          APP.models.company[req.user.db].mysql.status_contract,
+          {
+            targetKey: 'id',
+            foreignKey: 'status_contract_id'
+          }
+        );
+
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            include: [
+              {
+                model: APP.models.company[req.user.db].mysql.role
+              },
+              {
+                model: APP.models.company[req.user.db].mysql.grade
+              },
+              {
+                model: APP.models.company[req.user.db].mysql.department
+              },
+              {
+                model: APP.models.company[req.user.db].mysql.job_title
+              },
+              {
+                model: APP.models.company[req.user.db].mysql.status_contract
+              }
+            ],
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            //send to email
+            APP.mailer.sendMail({
+              subject: 'Account Verified',
+              to: req.body.email,
+              data: {
+                role: res.role.name,
+                grade: res.grade.name,
+                department: res.department.name,
+                job: res.job_title.name,
+                contract: res.status_contract.name
+              },
+              file: 'verify_employee.html'
+            });
+
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log('3', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

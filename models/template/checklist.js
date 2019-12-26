@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'job_title',
+    'checklist',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -10,6 +10,9 @@ module.exports = function(sequelize, Sequelize) {
         primaryKey: true,
         allowNull: false,
         unique: true
+      },
+      code: {
+        type: Sequelize.STRING(45)
       },
       name: {
         type: Sequelize.STRING(45)

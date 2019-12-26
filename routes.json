@@ -95,6 +95,36 @@
     "function": "delete",
     "auth": true
   },
+  "/checklist/get": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "get",
+    "auth": true
+  },
+  "/checklist/insert": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "insert",
+    "auth": true
+  },
+  "/checklist/update": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "update",
+    "auth": true
+  },
+  "/checklist/updatestatus": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "updateStatus",
+    "auth": true
+  },
+  "/checklist/delete": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "delete",
+    "auth": true
+  },
   "/user/register": {
     "method": "post",
     "controller": "userController",

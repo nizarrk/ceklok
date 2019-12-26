@@ -2,11 +2,11 @@
   "OK": {
     "error": false,
     "code": "00",
-    "name": "OK_NAME",
+    "name": "OK",
     "status": 200,
     "from": "",
     "info": {},
-    "message": "Success!",
+    "message": "Ok",
     "data": {}
   },
   "INSERT_SUCCESS": {
@@ -39,6 +39,16 @@
     "message": "Delete Success!",
     "data": {}
   },
+  "NOT_FOUND": {
+    "error": false,
+    "code": "NOT_FOUND",
+    "name": "NOT_FOUND",
+    "status": 404,
+    "from": "",
+    "info": {},
+    "message": "Not found",
+    "data": {}
+  },
   "FOUND": {
     "error": false,
     "code": "00",
@@ -46,29 +56,32 @@
     "status": 200,
     "from": "",
     "info": {},
-    "message": "Data Found!",
+    "message": "Found",
     "data": {}
   },
-  "NOT_FOUND": {
+
+  "AVAILABLE": {
     "error": false,
-    "code": "00",
-    "name": "NOT_FOUND",
+    "code": "AVAILABLE",
+    "name": "AVAILABLE",
     "status": 200,
     "from": "",
     "info": {},
-    "message": "No Record Found!",
+    "message": "Available",
     "data": {}
   },
+
   "DUPLICATE": {
     "error": true,
-    "code": "00",
-    "name": "DUPLICATE",
+    "code": "-01",
+    "name": "ERR_DUPLICATE",
     "status": 200,
     "from": "",
     "info": {},
-    "message": "Duplicate  Entry!",
+    "message": "Duplicates!",
     "data": {}
   },
+
   "UPDATE_NONE": {
     "error": false,
     "code": "00",
@@ -76,9 +89,10 @@
     "status": 200,
     "from": "",
     "info": {},
-    "message": "Empty Query!",
-    "data": {}
+    "data": {},
+    "message": "Empty Query!"
   },
+
   "DELETE_NONE": {
     "error": false,
     "code": "00",
@@ -86,27 +100,150 @@
     "status": 200,
     "from": "",
     "info": {},
-    "message": "Empty Query!",
-    "data": {}
+    "data": {},
+    "message": "Empty Query!"
   },
+
   "ERR": {
     "error": true,
-    "code": "-01",
+    "code": "ERR",
     "name": "ERR",
     "status": 500,
     "from": "",
     "info": {},
-    "message": "Error!",
+    "message": "Something went wrong!",
     "data": {}
   },
+
+  "ERR_GENERAL": {
+    "error": true,
+    "code": "ERR_GENERAL",
+    "name": "ERR_GENERAL",
+    "status": 500,
+    "from": "",
+    "info": {},
+    "message": "General Error!",
+    "data": {}
+  },
+
+  "SERVICE_NOT_FOUND": {
+    "error": true,
+    "code": "SERVICE_NOT_FOUND",
+    "name": "SERVICE_NOT_FOUND",
+    "status": 404,
+    "from": "",
+    "info": {},
+    "message": "Service not found!",
+    "data": {}
+  },
+
   "ERR_DATABASE": {
     "error": true,
-    "code": "-01",
+    "code": "ERR_DATABASE",
     "name": "ERR_DATABASE",
     "status": 500,
     "from": "",
     "info": {},
-    "message": "Database Error Found!",
+    "message": "Database problems!",
     "data": {}
+  },
+
+  "INVALID_REQUEST": {
+    "error": true,
+    "code": "INVALID_REQUEST",
+    "name": "INVALID_REQUEST",
+    "status": 400,
+    "from": "",
+    "info": {},
+    "message": "Invalid request!",
+    "data": {}
+  },
+
+  "INVALID_HEADERS": {
+    "error": true,
+    "code": "INVALID_HEADERS",
+    "name": "INVALID_HEADERS",
+    "status": 400,
+    "from": "",
+    "info": {},
+    "message": "Invalid headers!",
+    "data": {}
+  },
+
+  "MISSING_KEY": {
+    "error": true,
+    "code": "MISSING_KEY",
+    "name": "MISSING_KEY",
+    "status": 400,
+    "from": "",
+    "info": {},
+    "message": "Missing key!",
+    "data": {}
+  },
+
+  "INVALID_KEY": {
+    "error": true,
+    "code": "INVALID_KEY",
+    "name": "INVALID_KEY",
+    "status": 400,
+    "from": "",
+    "info": {},
+    "message": "Invalid key!",
+    "data": {}
+  },
+
+  "UNAUTHORIZED": {
+    "error": true,
+    "code": "UNAUTHORIZED",
+    "name": "UNAUTHORIZED",
+    "status": 401,
+    "from": "",
+    "info": {},
+    "message": "Unauthorized!",
+    "data": {}
+  },
+
+  "DEVICE_DISSCONNECTED": {
+    "error": true,
+    "code": "DEVICE_DISSCONNECTED",
+    "name": "DEVICE_DISSCONNECTED",
+    "status": 408,
+    "from": "",
+    "info": {},
+    "message": "Device is not Connected!",
+    "data": {}
+  },
+
+  "SOCKET_ERR": {
+    "error": true,
+    "code": "SOCKET_ERR",
+    "name": "SOCKET_ERR",
+    "status": 500,
+    "from": "",
+    "info": {},
+    "message": "Socket Error!",
+    "data": {}
+  },
+
+  "MAIL_ERR": {
+    "error": true,
+    "code": "MAIL_ERR",
+    "name": "MAIL_ERR",
+    "status": 500,
+    "from": "",
+    "info": {},
+    "data": {},
+    "message": "Sending Email Error!"
+  },
+
+  "OTP_ERR": {
+    "error": true,
+    "code": "OTP_ERR",
+    "name": "OTP_ERR",
+    "status": 500,
+    "from": "",
+    "info": {},
+    "data": {},
+    "message": "OTP Error!"
   }
 }

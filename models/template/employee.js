@@ -100,6 +100,12 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         defaultValue: 0
       },
+      checklist_id: {
+        type: Sequelize.STRING(45)
+      },
+      status_contract_id: {
+        type: Sequelize.INTEGER(45)
+      },
       status_upload: {
         type: Sequelize.STRING(45)
       },

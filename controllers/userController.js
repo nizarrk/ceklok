@@ -4,10 +4,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
-const dbName = 'ceklok_VST1912090';
 
 exports.checkExistingTelp = (APP, req, callback) => {
-  APP.models.company[dbName].mysql.employee
+  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
     .findAll({
       where: {
         tlp: req.body.telp
@@ -48,7 +47,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
 };
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.company[dbName].mysql.employee
+  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
     .findAll({
       where: {
         email: req.body.email
@@ -89,7 +88,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.company[dbName].mysql.employee
+  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
     .findAll({
       where: {
         company_code: req.body.company,
@@ -208,7 +207,7 @@ exports.register = (APP, req, callback) => {
         let time = year + month + tgl;
         let pad = '0000';
 
-        APP.models.company[dbName].mysql.employee
+        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
           .findAll({
             limit: 1,
             order: [['id', 'DESC']]
@@ -271,7 +270,7 @@ exports.register = (APP, req, callback) => {
         let username = APP.validation.username(req.body.username);
 
         if (email && username) {
-          APP.models.company[dbName].mysql.employee
+          APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
             .build({
               employee_code: data.kode,
               company_code: req.body.company,
@@ -391,7 +390,7 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.company[dbName].mysql.employee
+        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
           .findAll({
             where: {
               user_name: req.body.username,
@@ -412,10 +411,8 @@ exports.login = (APP, req, callback) => {
 
             if (rows[0].status == 0) {
               return callback({
-                code: 'VERIFICATION_NEEDED',
-                info: {
-                  parameter: 'User have to wait for admin to verify their account first.'
-                }
+                code: 'INVALID_REQUEST',
+                message: 'User have to wait for admin to verify their account first!'
               });
             }
 
@@ -548,7 +545,7 @@ exports.forgotPassword = (APP, req, callback) => {
   async.waterfall(
     [
       function checkEmail(callback) {
-        APP.models.company[dbName].mysql.employee
+        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
           .findAll({
             where: {
               email: req.body.email
@@ -721,7 +718,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function checkPassword(result, callback) {
-        APP.models.company[dbName].mysql.employee
+        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
           .findOne({
             where: {
               email: req.body.email
@@ -753,7 +750,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function updatePassword(result, callback) {
-        APP.models.company[dbName].mysql.employee
+        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
           .findOne({
             where: {
               email: req.body.email

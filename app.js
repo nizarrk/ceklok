@@ -268,8 +268,6 @@ function resOutput(APP, req, res, params, status) {
           if (message.company.error !== false) {
             output.debug = {
               from: params.from || process.env.SERVICE_NAME || message.company.from,
-              status: params.status || message.company.status,
-              name: params.name || message.company.name,
               info: params.info || message.company.info
             };
           }
@@ -480,9 +478,7 @@ async.series(
               res,
               {
                 id: '-1',
-                error: true,
-                message: 'General error!',
-                status: 500
+                code: 'ERR_GENERAL'
               },
               'err'
             );
@@ -498,9 +494,7 @@ async.series(
             res,
             {
               id: '-1',
-              message: 'Service not found!',
-              error: true,
-              status: 404
+              code: 'SERVICE_NOT_FOUND'
             },
             'err'
           );
