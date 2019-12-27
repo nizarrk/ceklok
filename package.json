@@ -33,6 +33,7 @@
     "async": "^3.1.0",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.2",
+    "csvjson": "^5.1.0",
     "env2": "^2.2.2",
     "express": "^4.16.3",
     "express-fileupload": "^1.1.6",
