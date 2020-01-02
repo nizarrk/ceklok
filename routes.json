@@ -3,7 +3,13 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": false
+    "auth": true
+  },
+  "/test/tes": {
+    "method": "post",
+    "controller": "exampleController",
+    "function": "testing",
+    "auth": true
   },
   "/admin/register": {
     "method": "post",
@@ -39,6 +45,12 @@
     "method": "post",
     "controller": "employeeController",
     "function": "addEmployee",
+    "auth": true
+  },
+  "/employee/import": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "importEmployeeData",
     "auth": true
   },
   "/employee/updateinfo": {
