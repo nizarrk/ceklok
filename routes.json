@@ -379,7 +379,55 @@
   },
   "/jobtitle/delete": {
     "method": "post",
-    "controller": "priviledgeController",
+    "controller": "jobtitleController",
+    "function": "delete",
+    "auth": true
+  },
+  "/absence/type/get": {
+    "method": "post",
+    "controller": "absenceTypeController",
+    "function": "get",
+    "auth": true
+  },
+  "/absence/type/insert": {
+    "method": "post",
+    "controller": "absenceTypeController",
+    "function": "insert",
+    "auth": true
+  },
+  "/absence/type/update": {
+    "method": "post",
+    "controller": "absenceTypeController",
+    "function": "update",
+    "auth": true
+  },
+  "/absence/type/delete": {
+    "method": "post",
+    "controller": "absenceTypeController",
+    "function": "delete",
+    "auth": true
+  },
+  "/absence/get": {
+    "method": "post",
+    "controller": "absenceController",
+    "function": "get",
+    "auth": true
+  },
+  "/absence/insert": {
+    "method": "post",
+    "controller": "absenceController",
+    "function": "insert",
+    "auth": true
+  },
+  "/absence/update": {
+    "method": "post",
+    "controller": "absenceController",
+    "function": "update",
+    "auth": true
+  },
+  "/absence/delete": {
+    "method": "post",
+    "controller": "absenceController",
     "function": "delete",
     "auth": true
   },

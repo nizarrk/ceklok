@@ -261,7 +261,10 @@ function resOutput(APP, req, res, params, status) {
         output.status = params.status || message.company.status;
         output.error = params.error || message.company.error;
         output.message = params.message || message.company.message;
-        output.data = params.data || message.company.data;
+        output.data =
+          process.env.ENCRYPT === 'true'
+            ? require('./functions/rsa').encrypt(params.data || message.company.data)
+            : params.data || message.company.data;
         output.debug = undefined;
 
         if (process.env.NODE_ENV !== 'production') {

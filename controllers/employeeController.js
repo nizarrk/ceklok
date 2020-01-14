@@ -223,7 +223,6 @@ exports.addEmployee = (APP, req, callback) => {
             callback(null, res);
           })
           .catch(err => {
-            console.log(err);
             callback({
               code: 'ERR',
               data: JSON.stringify(err)
@@ -247,8 +246,10 @@ exports.addEmployee = (APP, req, callback) => {
               });
             })
             .catch(err => {
+              console.log('error pas enkrip', err);
+
               callback({
-                code: 'ERR_BCRYPT',
+                code: 'ERR',
                 data: JSON.stringify(err)
               });
             });
@@ -259,7 +260,9 @@ exports.addEmployee = (APP, req, callback) => {
 
       function registerUser(data, callback) {
         let email = APP.validation.email(req.body.email);
-        let username = APP.validation.username(req.body.username);
+        let username = APP.validation.username(
+          data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase()
+        );
 
         if (email && username) {
           APP.models.company[req.user.db].mysql.employee
@@ -296,7 +299,7 @@ exports.addEmployee = (APP, req, callback) => {
                 subject: 'Account Created',
                 to: req.body.email,
                 data: {
-                  username: req.body.username,
+                  username: result.user_name,
                   pass: data.pass
                 },
                 file: 'create_employee.html'
@@ -318,7 +321,7 @@ exports.addEmployee = (APP, req, callback) => {
               if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
                 let params = 'Error! Empty Query'; //This is only example, Object can also be used
                 return callback({
-                  code: 'UPDATE_NONE',
+                  code: 'INSERT_NONE',
                   data: params
                 });
               }

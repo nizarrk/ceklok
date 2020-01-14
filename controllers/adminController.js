@@ -20,28 +20,22 @@ exports.checkExistingEmailCompany = (APP, req, callback) => {
       if (res && res.length > 0) {
         return callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate email!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'email company'
-          }
+          id: 'ARP01',
+          message: 'Email Company sudah pernah terdaftar, gunakan email yang lain'
         });
       }
       return callback(null, {
         code: 'NOT_FOUND',
-        data: null,
-        info: {
-          dataCount: res.length,
-          parameter: 'email company'
-        }
+        id: 'ARQ97',
+        message: 'Data Email Company tidak ditemukan'
       });
     })
     .catch(err => {
       console.log('iki error email company', err);
       return callback({
         code: 'ERR_DATABASE',
+        id: 'ARQ98',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
         data: JSON.stringify(err)
       });
     });
@@ -60,22 +54,14 @@ exports.checkExistingTelpCompany = (APP, req, callback) => {
       if (res && res.length > 0) {
         return callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate telp!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'telp company'
-          }
+          id: 'ARP01',
+          message: 'Telp Company sudah pernah terdaftar, gunakan Telp yang lain'
         });
       }
       return callback(null, {
         code: 'NOT_FOUND',
-        data: null,
-        info: {
-          dataCount: res.length,
-          parameter: 'telp company'
-        }
+        id: 'ARQ97',
+        message: 'Data Telp Company tidak ditemukan'
       });
     })
     .catch(err => {
@@ -98,28 +84,22 @@ exports.checkExistingEmailAdmin = (APP, req, callback) => {
       if (res && res.length > 0) {
         return callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate email!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'email admin'
-          }
+          id: 'ARP01',
+          message: 'Email Admin sudah pernah terdaftar, gunakan email yang lain'
         });
       }
       return callback(null, {
         code: 'NOT_FOUND',
-        data: null,
-        info: {
-          dataCount: res.length,
-          parameter: 'email admin'
-        }
+        id: 'ARQ97',
+        message: 'Data Email Admin Tidak ditemukan'
       });
     })
     .catch(err => {
       console.log('iki error email admin', err);
       return callback({
         code: 'ERR_DATABASE',
+        id: 'ARQ98',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
         data: JSON.stringify(err)
       });
     });
@@ -136,28 +116,22 @@ exports.checkExistingTelpAdmin = (APP, req, callback) => {
       if (res && res.length > 0) {
         return callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate telp!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'telp admin'
-          }
+          id: 'ARP01',
+          message: 'Telp Admin sudah pernah terdaftar, gunakan Telp yang lain'
         });
       }
       return callback(null, {
         code: 'NOT_FOUND',
-        data: null,
-        info: {
-          dataCount: res.length,
-          parameter: 'telp admin'
-        }
+        id: 'ARQ97',
+        message: 'Data Telp Admin Tidak ditemukan'
       });
     })
     .catch(err => {
       console.log('iki error telp admin', err);
       callback({
         code: 'ERR_DATABASE',
+        id: 'ARQ98',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
         data: JSON.stringify(err)
       });
     });
@@ -174,28 +148,22 @@ exports.checkExistingUsername = (APP, req, callback) => {
       if (res && res.length > 0) {
         return callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate username!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'username admin'
-          }
+          id: 'ARP01',
+          message: 'Username sudah pernah terdaftar, gunakan username yang lain'
         });
       }
       return callback(null, {
         code: 'NOT_FOUND',
-        data: null,
-        info: {
-          dataCount: res.length,
-          parameter: 'username admin'
-        }
+        id: 'ARQ97',
+        message: 'Data Username Tidak ditemukan'
       });
     })
     .catch(err => {
       console.log('iki error username', err);
       return callback({
         code: 'ERR_DATABASE',
+        id: 'ARQ98',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
         data: JSON.stringify(err)
       });
     });
@@ -266,7 +234,9 @@ exports.register = (APP, req, callback) => {
               console.log('iki error bcrypt', err);
 
               callback({
-                code: 'ERR_DATABASE',
+                code: 'ERR',
+                id: 'ARN99',
+                message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
                 data: JSON.stringify(err)
               });
             });
@@ -303,7 +273,11 @@ exports.register = (APP, req, callback) => {
               let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
               return callback({
                 code: 'DUPLICATE',
-                data: params
+                id: 'ARQ96',
+                message: 'Kesalahan pada parameter',
+                info: {
+                  parameter: params
+                }
               });
             }
 
@@ -311,12 +285,18 @@ exports.register = (APP, req, callback) => {
               let params = 'Error! Empty Query'; //This is only example, Object can also be used
               return callback({
                 code: 'UPDATE_NONE',
-                data: params
+                id: 'ARQ96',
+                message: 'Kesalahan pada parameter',
+                info: {
+                  parameter: params
+                }
               });
             }
 
             return callback({
               code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: JSON.stringify(err)
             });
           });
@@ -359,7 +339,11 @@ exports.register = (APP, req, callback) => {
                 let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
                 return callback({
                   code: 'DUPLICATE',
-                  data: params
+                  id: 'ARQ96',
+                  message: 'Kesalahan pada parameter',
+                  info: {
+                    parameter: params
+                  }
                 });
               }
 
@@ -367,12 +351,18 @@ exports.register = (APP, req, callback) => {
                 let params = 'Error! Empty Query'; //This is only example, Object can also be used
                 return callback({
                   code: 'UPDATE_NONE',
-                  data: params
+                  id: 'ARQ96',
+                  message: 'Kesalahan pada parameter',
+                  info: {
+                    parameter: params
+                  }
                 });
               }
 
               return callback({
                 code: 'ERR_DATABASE',
+                id: 'ARQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                 data: JSON.stringify(err)
               });
             });
@@ -402,6 +392,8 @@ exports.register = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: JSON.stringify(err)
             });
           });
@@ -461,10 +453,22 @@ exports.register = (APP, req, callback) => {
               })
               .catch(err => {
                 console.log('1', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  id: 'ARQ98',
+                  message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                  data: JSON.stringify(err)
+                });
               });
           })
           .catch(err => {
             console.log('2', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: JSON.stringify(err)
+            });
           });
       },
 
@@ -492,6 +496,8 @@ exports.register = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: JSON.stringify(err)
             });
           });
@@ -512,6 +518,8 @@ exports.register = (APP, req, callback) => {
 
         callback(null, {
           code: 'INSERT_SUCCESS',
+          id: 'ARP00',
+          message: 'Registrasi Sukses!',
           data: data
         });
       }
@@ -538,7 +546,8 @@ exports.paymentCompany = (APP, req, callback) => {
             if (res == null) {
               return callback({
                 code: 'NOT_FOUND',
-                message: 'Invoice not found'
+                id: 'PVP01',
+                message: 'Invoice tidak ditemukan, mohon periksa kembali nomor invoice anda.'
               });
             }
 
@@ -547,7 +556,8 @@ exports.paymentCompany = (APP, req, callback) => {
             } else {
               callback({
                 code: 'ERR',
-                message: 'Already Paid!'
+                id: 'PVP03',
+                message: 'Terjadi kesalahan, mohon ulangi kembali.'
               });
             }
           })
@@ -556,6 +566,8 @@ exports.paymentCompany = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
+              id: 'PVQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: JSON.stringify(err)
             });
           });
@@ -565,7 +577,8 @@ exports.paymentCompany = (APP, req, callback) => {
         if (!req.files || Object.keys(req.files).length === 0) {
           return callback({
             code: 'ERR',
-            message: 'No files were uploaded.'
+            id: 'PVS01',
+            message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi'
           });
         }
 
@@ -601,13 +614,17 @@ exports.paymentCompany = (APP, req, callback) => {
                 console.log(err);
 
                 return callback({
-                  code: 'ERR'
+                  code: 'ERR',
+                  id: 'PVS01',
+                  message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
                 });
               }
             });
 
             callback(null, {
               code: 'UPDATE_SUCCESS',
+              id: 'PVP00',
+              message: 'Verifikasi pembayaran diterima!',
               data: res
             });
           })
@@ -616,6 +633,8 @@ exports.paymentCompany = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
+              id: 'PVQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: JSON.stringify(err)
             });
           });
