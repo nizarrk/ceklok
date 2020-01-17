@@ -39,7 +39,7 @@ const generateEmployeeCode = async (APP, req, index) => {
     console.log('kosong');
     let str = '' + 1;
 
-    kode = req.user.code + '-' + time + '-' + str;
+    kode = req.user.code + '-' + time + str;
 
     return kode;
   } else {
@@ -90,7 +90,7 @@ const checkEmployeeEntry = (APP, req, callback) => {
 
       //       callback({
       //         code: 'ERR_DATABASE',
-      //         data: JSON.stringify(err)
+      //         data: err
       //       });
       //     });
       // },
@@ -125,7 +125,7 @@ const checkEmployeeEntry = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -160,7 +160,7 @@ const checkEmployeeEntry = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -195,7 +195,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
       .catch(err => {
         callback({
           code: 'ERR_DATABASE',
-          data: JSON.stringify(err)
+          data: err
         });
       });
   } else {
@@ -225,7 +225,7 @@ exports.addEmployee = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -250,7 +250,7 @@ exports.addEmployee = (APP, req, callback) => {
 
               callback({
                 code: 'ERR',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         } else {
@@ -258,10 +258,28 @@ exports.addEmployee = (APP, req, callback) => {
         }
       },
 
+      function hitungCuti(data, callback) {
+        APP.models.company[req.user.db].mysql.status_contract
+          .findOne({
+            where: {
+              id: req.body.contract
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Status contract tidak ditemukan'
+              });
+            }
+            callback(null, { data, status: res.dataValues });
+          });
+      },
+
       function registerUser(data, callback) {
         let email = APP.validation.email(req.body.email);
         let username = APP.validation.username(
-          data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase()
+          data.data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase()
         );
 
         if (email && username) {
@@ -273,7 +291,12 @@ exports.addEmployee = (APP, req, callback) => {
               department_id: req.body.department,
               job_title_id: req.body.job,
               benefit_id: req.body.benefit,
-              employee_code: data.kode,
+              status_contract_id: req.body.cotract,
+              total_cuti:
+                data.status.type === 1 && data.status.leave_setting === 1
+                  ? data.status.leave_permission - (data.status.leave_permission - (12 - (new Date().getMonth() + 1)))
+                  : 0,
+              employee_code: data.data.kode,
               company_code: req.body.company,
               name: req.body.name,
               gender: req.body.gender,
@@ -288,9 +311,11 @@ exports.addEmployee = (APP, req, callback) => {
               msisdn: 'default',
               tlp: req.body.telp,
               email: req.body.email,
-              user_name: data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase(),
-              password: data.encryptedPass,
-              status: 1
+              user_name:
+                data.data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase(),
+              password: data.data.encryptedPass,
+              status: 1,
+              fultime_at: data.status.type === 1 ? new Date() : null
             })
             .save()
             .then(result => {
@@ -328,7 +353,7 @@ exports.addEmployee = (APP, req, callback) => {
 
               return callback({
                 code: 'ERR_DATABASE',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         } else {
@@ -379,7 +404,7 @@ exports.addEmployee = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -428,7 +453,7 @@ exports.importEmployeeData = (APP, req, callback) => {
 
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           }
         );
@@ -509,7 +534,7 @@ exports.importEmployeeData = (APP, req, callback) => {
 
               return callback({
                 code: 'ERR_DATABASE',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         });
@@ -543,7 +568,7 @@ exports.importEmployeeData = (APP, req, callback) => {
 
               return callback({
                 code: 'ERR_DATABASE',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         });
@@ -576,7 +601,7 @@ exports.importEmployeeData = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -614,6 +639,12 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
       function uploadDocuments(result, callback) {
         trycatch(
           () => {
+            if (req.body.benefit == result.benefit_id && req.body.contract == result.status_contract_id) {
+              return callback(null, {
+                benefit: result.benefit_upload,
+                contract: result.status_contract_upload
+              });
+            }
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
                 code: 'ERR',
@@ -623,9 +654,14 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
             let benefitPath = `./public/uploads/company_${req.user.code}/employee/benefit/`;
+            let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
 
             if (!fs.existsSync(benefitPath)) {
               mkdirp.sync(benefitPath);
+            }
+
+            if (!fs.existsSync(contractPath)) {
+              mkdirp.sync(contractPath);
             }
 
             if (req.files.benefit_upload) {
@@ -640,10 +676,25 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
               );
             }
 
+            if (req.files.contract_upload) {
+              req.files.contract_upload.mv(
+                contractPath + fileName + path.extname(req.files.contract_upload.name),
+                function(err) {
+                  if (err)
+                    return callback({
+                      code: 'ERR'
+                    });
+                }
+              );
+            }
+
             callback(null, {
               benefit: req.files.benefit_upload
-                ? benefitPath + fileName + path.extname(req.files.benefit_upload.name)
-                : result.benefit_upload
+                ? benefitPath.slice(8) + fileName + path.extname(req.files.benefit_upload.name)
+                : result.benefit_upload,
+              contract: req.files.contract_upload
+                ? contractPath.slice(8) + fileName + path.extname(req.files.contract_upload.name)
+                : result.contract_upload
             });
           },
           err => {
@@ -651,7 +702,7 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
 
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           }
         );
@@ -682,7 +733,9 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
                 msisdn: 'default',
                 tlp: req.body.telp,
                 email: req.body.email,
-                user_name: req.body.username
+                user_name: req.body.username,
+                status_contract_id: req.body.contract,
+                status_contract_upload: result.contract
               })
               .then(updated => {
                 callback(null, { result, updated });
@@ -690,7 +743,7 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
               .catch(err => {
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -698,7 +751,7 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
             console.log(err);
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -746,7 +799,7 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -820,7 +873,7 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
 
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           }
         );
@@ -845,7 +898,7 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
               .catch(err => {
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -853,7 +906,7 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
             console.log(err);
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -902,7 +955,7 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -1013,7 +1066,7 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
 
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           }
         );
@@ -1042,7 +1095,7 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
               .catch(err => {
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -1050,7 +1103,7 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
             console.log(err);
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -1101,7 +1154,7 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -1127,7 +1180,7 @@ exports.getSuratPeringatan = (APP, req, callback) => {
       console.log(err);
       callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -1204,7 +1257,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
 
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           }
         );
@@ -1284,7 +1337,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
                 console.log('insert error', err);
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -1292,7 +1345,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
             console.log('find error', err);
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }

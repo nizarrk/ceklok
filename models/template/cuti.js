@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'status_contract',
+    'cuti',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,28 +11,33 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      user_id: {
+        type: Sequelize.INTEGER(11)
+      },
       code: {
         type: Sequelize.STRING(45)
       },
-      name: {
-        type: Sequelize.STRING(45)
-      },
-      description: {
-        type: Sequelize.STRING(45)
-      },
-      type: {
+      total: {
         type: Sequelize.INTEGER(11)
+      },
+      left: {
+        type: Sequelize.INTEGER(11)
+      },
+      period: {
+        type: Sequelize.INTEGER(11)
+      },
+      date_start: {
+        type: Sequelize.DATE,
+        allowNull: false
+      },
+      date_end: {
+        type: Sequelize.DATE,
+        allowNull: false
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
-        defaultValue: 1
-      },
-      leave_setting: {
-        type: Sequelize.INTEGER(1) // 0 = cuti dihitung dari awal masuk, 1 = cuti dihitung dari tgl menjadi pegawai tetap
-      },
-      leave_permission: {
-        type: Sequelize.INTEGER(11)
+        defaultValue: 0
       },
       created_at: {
         allowNull: false,

@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": true
+    "auth": false
   },
   "/test/tes": {
     "method": "post",
@@ -428,6 +428,30 @@
   "/absence/delete": {
     "method": "post",
     "controller": "absenceController",
+    "function": "delete",
+    "auth": true
+  },
+  "/cuti/get": {
+    "method": "post",
+    "controller": "cutiController",
+    "function": "get",
+    "auth": true
+  },
+  "/cuti/insert": {
+    "method": "post",
+    "controller": "cutiController",
+    "function": "insert",
+    "auth": true
+  },
+  "/cuti/update": {
+    "method": "post",
+    "controller": "cutiController",
+    "function": "update",
+    "auth": true
+  },
+  "/cuti/delete": {
+    "method": "post",
+    "controller": "cutiController",
     "function": "delete",
     "auth": true
   },

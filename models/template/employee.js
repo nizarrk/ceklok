@@ -100,14 +100,23 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         defaultValue: 0
       },
+      status_upload: {
+        type: Sequelize.STRING(45)
+      },
       checklist_id: {
         type: Sequelize.STRING(45)
+      },
+      total_cuti: {
+        type: Sequelize.INTEGER(11)
       },
       status_contract_id: {
         type: Sequelize.INTEGER(45)
       },
-      status_upload: {
+      status_contract_upload: {
         type: Sequelize.STRING(45)
+      },
+      fultime_at: {
+        type: Sequelize.DATE
       },
       created_at: {
         allowNull: false,
