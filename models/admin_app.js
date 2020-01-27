@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'grade',
+    'admin_app',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,25 +11,22 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      code: {
+      user_name: {
         type: Sequelize.STRING(45)
       },
-      priviledge_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      benefit_id: {
+      password: {
         type: Sequelize.STRING(45)
       },
       name: {
         type: Sequelize.STRING(45)
       },
-      description: {
+      email: {
         type: Sequelize.STRING(45)
       },
       status: {
-        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
+        type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
         allowNull: false,
-        defaultValue: 1
+        defaultValue: 0
       },
       created_at: {
         allowNull: false,

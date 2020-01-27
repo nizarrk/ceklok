@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      cuti_type_id: {
+        type: Sequelize.INTEGER(11)
+      },
       user_id: {
         type: Sequelize.INTEGER(11)
       },
@@ -33,6 +36,12 @@ module.exports = function(sequelize, Sequelize) {
       date_end: {
         type: Sequelize.DATE,
         allowNull: false
+      },
+      count: {
+        type: Sequelize.INTEGER(11)
+      },
+      upload: {
+        type: Sequelize.STRING(45)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

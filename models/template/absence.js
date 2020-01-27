@@ -39,6 +39,9 @@ module.exports = function(sequelize, Sequelize) {
       count: {
         type: Sequelize.INTEGER(11)
       },
+      uploads: {
+        type: Sequelize.STRING(45)
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

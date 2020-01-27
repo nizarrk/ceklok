@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'grade',
+    'cuti_type',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -14,17 +14,18 @@ module.exports = function(sequelize, Sequelize) {
       code: {
         type: Sequelize.STRING(45)
       },
-      priviledge_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      benefit_id: {
-        type: Sequelize.STRING(45)
-      },
       name: {
         type: Sequelize.STRING(45)
       },
       description: {
         type: Sequelize.STRING(45)
+      },
+      type: {
+        type: Sequelize.INTEGER(1),
+        defaultValue: 0 // 0 = cuti reguler, 1 = cuti khusus
+      },
+      days: {
+        type: Sequelize.INTEGER(11)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

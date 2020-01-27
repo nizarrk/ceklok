@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'grade',
+    'schedule',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -14,17 +14,35 @@ module.exports = function(sequelize, Sequelize) {
       code: {
         type: Sequelize.STRING(45)
       },
-      priviledge_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      benefit_id: {
-        type: Sequelize.STRING(45)
-      },
       name: {
         type: Sequelize.STRING(45)
       },
       description: {
         type: Sequelize.STRING(45)
+      },
+      check_in_start: {
+        type: Sequelize.TIME
+      },
+      check_in_end: {
+        type: Sequelize.TIME
+      },
+      check_out_start: {
+        type: Sequelize.TIME
+      },
+      check_out_end: {
+        type: Sequelize.TIME
+      },
+      work_time: {
+        type: Sequelize.TIME
+      },
+      break_time: {
+        type: Sequelize.TIME
+      },
+      weekly_work_time: {
+        type: Sequelize.STRING(45)
+      },
+      weekly_work_day: {
+        type: Sequelize.INTEGER(11)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

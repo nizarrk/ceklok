@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": false
+    "auth": true
   },
   "/test/tes": {
     "method": "post",
@@ -431,10 +431,40 @@
     "function": "delete",
     "auth": true
   },
+  "/cuti/type/get": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "get",
+    "auth": true
+  },
+  "/cuti/type/insert": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "insert",
+    "auth": true
+  },
+  "/cuti/type/update": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "update",
+    "auth": true
+  },
+  "/cuti/type/delete": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "delete",
+    "auth": true
+  },
   "/cuti/get": {
     "method": "post",
     "controller": "cutiController",
     "function": "get",
+    "auth": true
+  },
+  "/cuti/getlamacutikhusus": {
+    "method": "post",
+    "controller": "cutiController",
+    "function": "getLamaCutiKhusus",
     "auth": true
   },
   "/cuti/insert": {
@@ -455,10 +485,52 @@
     "function": "delete",
     "auth": true
   },
+  "/schedule/get": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "get",
+    "auth": true
+  },
+  "/schedule/getbyid": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "getById",
+    "auth": true
+  },
+  "/schedule/insert": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "insert",
+    "auth": true
+  },
+  "/schedule/update": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "update",
+    "auth": true
+  },
+  "/schedule/delete": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "delete",
+    "auth": true
+  },
+  "/superadmin/add": {
+    "method": "post",
+    "controller": "superAdminController",
+    "function": "addSuperAdmin",
+    "auth": false
+  },
+  "/superadmin/login": {
+    "method": "post",
+    "controller": "superAdminController",
+    "function": "login",
+    "auth": false
+  },
   "/superadmin/verifycompany": {
     "method": "post",
     "controller": "superAdminController",
     "function": "verifyCompany",
-    "auth": false
+    "auth": true
   }
 }

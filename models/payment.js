@@ -35,6 +35,9 @@ module.exports = function(sequelize, Sequelize) {
       image: {
         type: Sequelize.STRING(45) // foto bukti pembayaran
       },
+      image_admin: {
+        type: Sequelize.STRING(45) // bukti pembayaran sudah masuk
+      },
       total: {
         type: Sequelize.INTEGER(11)
       },
