@@ -20,12 +20,6 @@ module.exports = function(sequelize, Sequelize) {
       code: {
         type: Sequelize.STRING(45)
       },
-      total: {
-        type: Sequelize.INTEGER(11)
-      },
-      left: {
-        type: Sequelize.INTEGER(11)
-      },
       period: {
         type: Sequelize.INTEGER(11)
       },

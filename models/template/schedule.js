@@ -41,8 +41,19 @@ module.exports = function(sequelize, Sequelize) {
       weekly_work_time: {
         type: Sequelize.STRING(45)
       },
-      weekly_work_day: {
-        type: Sequelize.INTEGER(11)
+      work_day: {
+        type: Sequelize.STRING(45),
+        get: function() {
+          let data = this.getDataValue('work_day').split(',');
+          let hasil = [];
+
+          data.map(x => {
+            let num = parseInt(x);
+            hasil.push(num);
+          });
+
+          return hasil;
+        }
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

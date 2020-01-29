@@ -14,7 +14,7 @@ const mkdirp = require('mkdirp');
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.cuti
+  APP.models.company[req.user.db].mysql.absent
     .findAll()
     .then(rows => {
       return callback(null, {
@@ -28,56 +28,25 @@ exports.get = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
 
-exports.getLamaCutiKhusus = (APP, req, callback) => {
-  APP.models.company[req.user.db].mysql.cuti_type
-    .findOne({
-      where: {
-        id: req.body.cuti
-      }
-    })
-    .then(res => {
-      if (res.type == 1) {
-        let exceptionDate = [];
-        let dateStart = moment(req.body.start).format('YYYY-MM-DD');
-        let dateEnd = moment(dateStart)
-          .add(res.days - 1, 'days')
-          .format('YYYY-MM-DD');
-        let dateMove = new Date(dateStart);
-        let strDate = dateStart;
-
-        while (strDate < dateEnd) {
-          let strDate = dateMove.toISOString().slice(0, 10);
-          let exceptionDay = new Date(strDate);
-          dateMove.setDate(dateMove.getDate() + 1);
-          if (exceptionDay.getDay() == 6 || exceptionDay.getDay() == 0) {
-            exceptionDate.push(exceptionDay);
-          }
-        }
-
-        console.log(exceptionDate.length);
-        dateEnd = moment(dateEnd)
-          .add(exceptionDate.length, 'days')
-          .format('YYYY-MM-DD');
-      }
-    })
-    .catch(err => {
-      console.log(err);
-    });
-};
-
+/**
+ * The model name `example` based on the related file in `/models` directory.
+ *
+ * There're many ways to insert data to MySql with `Sequelize`,
+ * please check `Sequelize` documentation.
+ */
 exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'C000';
+        let pad = 'ABS000';
         let kode = '';
 
-        APP.models.company[req.user.db].mysql.cuti
+        APP.models.company[req.user.db].mysql.absent
           .findAll({
             limit: 1,
             order: [['id', 'DESC']]
@@ -94,7 +63,7 @@ exports.insert = function(APP, req, callback) {
               console.log(res[0].code);
 
               let lastID = res[0].code;
-              let replace = lastID.replace('C', '');
+              let replace = lastID.replace('ABS', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;
@@ -104,7 +73,7 @@ exports.insert = function(APP, req, callback) {
             }
           })
           .catch(err => {
-            console.log('1', err);
+            console.log(err);
 
             callback({
               code: 'ERR_DATABASE',
@@ -113,18 +82,18 @@ exports.insert = function(APP, req, callback) {
           });
       },
 
-      function checkCutiType(result, callback) {
-        APP.models.company[req.user.db].mysql.cuti_type
+      function checkAbsentType(result, callback) {
+        APP.models.company[req.user.db].mysql.absent_type
           .findOne({
             where: {
-              id: req.body.cuti
+              id: req.body.type
             }
           })
           .then(res => {
             if (res === null) {
               callback({
                 code: 'NOT_FOUND',
-                message: 'Cuti khusus tidak ditemukan.'
+                message: 'Tipe absent tidak ditemukan.'
               });
             }
             if (res.type === 0) {
@@ -135,7 +104,6 @@ exports.insert = function(APP, req, callback) {
             } else {
               callback(null, {
                 kode: result,
-                days: res.days,
                 type: res.type
               });
             }
@@ -159,25 +127,29 @@ exports.insert = function(APP, req, callback) {
               .then(res => {
                 callback(null, {
                   result,
-                  schedule: res.work_day
+                  schedule: {
+                    days: res.work_day,
+                    time: res.work_time
+                  }
                 });
               });
           });
       },
 
-      function checkLamaCuti(data, callback) {
+      function checkLamaAbsent(data, callback) {
         moment.updateLocale('us', {
-          workingWeekdays: data.schedule
+          workingWeekdays: data.schedule.days
         });
-        if (data.result.type == 0) {
-          let date1 = moment(req.body.start);
-          let date2 = moment(req.body.end);
+
+        if (data.result.type == 1) {
+          let date1 = moment(req.body.datestart);
+          let date2 = moment(req.body.dateend);
           let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
           let listDate = [];
           let dateMove = new Date(date1);
-          let strDate = req.body.start;
+          let strDate = req.body.datestart;
 
-          while (strDate < req.body.end) {
+          while (strDate < req.body.dateend) {
             strDate = dateMove.toISOString().slice(0, 10);
             // listDate.push(strDate);
             dateMove.setDate(dateMove.getDate() + 1);
@@ -188,62 +160,53 @@ exports.insert = function(APP, req, callback) {
             }
           }
 
+          let work_skip = APP.time.timeXday(data.schedule.time, diff);
+
           return callback(null, {
             kode: data.result.kode,
             days: diff - listDate.length,
-            type: data.result.type
+            type: data.result.type,
+            time: work_skip
           });
         }
 
-        if (data.result.type == 1) {
-          let startDate = moment(req.body.start),
-            days = data.result.days - 1, // -1 biar hari pertama keitung cuti
-            defaultDays = startDate
-              .clone()
-              .add(days, 'days')
-              .format('YYYY-MM-DD'),
-            bussinessDays = startDate
-              .clone()
-              .businessAdd(days)
-              .format('YYYY-MM-DD');
+        if (data.result.type == 0) {
+          let date = req.body.datestart;
+          req.body.dateend = date;
           return callback(null, {
             kode: data.result.kode,
-            days: data.result.days,
+            days: 0,
             type: data.result.type,
-            dateend: bussinessDays
+            time: moment
+              .utc(moment(req.body.timeend, 'HH:mm:ss').diff(moment(req.body.timestart, 'HH:mm:ss')))
+              .format('HH:mm:ss')
           });
         } else {
           return callback({
             code: 'ERR',
-            message: 'tipe cuti tidak tersedia'
+            message: 'tipe absent tidak tersedia'
           });
         }
       },
 
-      function checkTglCuti(result, callback) {
+      function checkTglAbsent(result, callback) {
         APP.db.sequelize
           .query(
-            `SELECT * FROM ${req.user.db}.cuti
+            `SELECT * FROM ${req.user.db}.absent
             WHERE
               user_id = ${req.body.user} 
             AND
-              '${req.body.start}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              req.body.end
-            }' <= date_format(date_end, '%Y-%m-%d')
+              '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${req.body.dateend}' <= date_format(date_end, '%Y-%m-%d')
             OR
-              '${req.body.start}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              req.body.start
-            }' <= date_format(date_end, '%Y-%m-%d')
+              '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${req.body.datestart}' <= date_format(date_end, '%Y-%m-%d')
             OR
-              '${result.dateend ? result.dateend : req.body.end}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              result.dateend ? result.dateend : req.body.end
-            }' <= date_format(date_end, '%Y-%m-%d')`
+              '${req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${req.body.dateend}' <= date_format(date_end, '%Y-%m-%d')`
           )
           .then(res => {
             if (res[0].length > 0) {
               return callback({
                 code: 'ERR',
-                message: 'Sudah pernah cuti di tanggal ini'
+                message: 'Sudah pernah absen di tanggal ini'
               });
             } else {
               return callback(null, result);
@@ -270,7 +233,7 @@ exports.insert = function(APP, req, callback) {
             }
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/employee/cuti/`;
+            let docPath = `./public/uploads/company_${req.user.code}/employee/absen/`;
 
             // if (!fs.existsSync(docPath)) {
             //   mkdirp.sync(docPath);
@@ -280,7 +243,7 @@ exports.insert = function(APP, req, callback) {
               kode: data.kode,
               days: data.days,
               type: data.type,
-              dateend: data.dateend,
+              time: data.time,
               doc: req.files.doc_upload
                 ? docPath + fileName + path.extname(req.files.doc_upload.name)
                 : data.result.doc_upload
@@ -297,16 +260,19 @@ exports.insert = function(APP, req, callback) {
         );
       },
 
-      function insertCuti(data, callback) {
-        APP.models.company[req.user.db].mysql.cuti
+      function insertAbsent(data, callback) {
+        APP.models.company[req.user.db].mysql.absent
           .build({
-            user_id: req.body.user,
             code: data.kode,
-            cuti_type_id: req.body.cuti,
-            date_start: req.body.start,
-            date_end: data.type == 1 ? data.dateend : req.body.end,
-            period: req.body.period,
+            absent_type_id: req.body.type,
+            user_id: req.user.admin == true ? req.body.user : req.user.id,
+            date_start: req.body.datestart,
+            date_end: req.body.dateend,
+            time_start: req.body.timestart,
+            time_end: req.body.timeend,
+            description: req.body.desc,
             count: data.days,
+            time_total: data.time,
             upload: data.doc.slice(8) // slice 8 buat ngilangin './public'
           })
           .save()
@@ -320,15 +286,14 @@ exports.insert = function(APP, req, callback) {
                   });
               });
             }
-
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
-              data: result.dataValues,
-              type: data.type
+              code: 'INSERT_SUCCESS',
+              data: result.dataValues || params
             });
           })
           .catch(err => {
-            console.log(err);
+            console.log('pas insert', err);
 
             if (err.original && err.original.code === 'ER_DUP_ENTRY') {
               let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
@@ -348,55 +313,9 @@ exports.insert = function(APP, req, callback) {
 
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
-      },
-
-      function updateSisaCuti(result, callback) {
-        console.log(result);
-
-        if (result.type !== 0) {
-          callback(null, {
-            code: 'INSERT_SUCCESS',
-            data: result.data
-          });
-        } else {
-          APP.models.company[req.user.db].mysql.employee
-            .findOne({
-              where: {
-                id: req.user.id
-              }
-            })
-            .then(res => {
-              res
-                .update({
-                  total_cuti: res.total_cuti - result.data.count
-                })
-                .then(result => {
-                  callback(null, {
-                    code: 'INSERT_SUCCESS',
-                    data: result.data
-                  });
-                })
-                .catch(err => {
-                  console.log('error update');
-
-                  callback({
-                    code: 'ERR_DATABASE',
-                    data: err
-                  });
-                });
-            })
-            .catch(err => {
-              console.log('error find');
-
-              callback({
-                code: 'ERR_DATABASE',
-                data: err
-              });
-            });
-        }
       }
     ],
     (err, result) => {
@@ -414,12 +333,10 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.cuti
+  APP.models.company[req.user.db].mysql.absent
     .update(
       {
-        name: req.body.name,
-        description: req.body.desc,
-        location: req.body.loc
+        status: req.body.status
       },
       {
         where: {
@@ -463,7 +380,7 @@ exports.update = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -480,7 +397,7 @@ exports.delete = function(APP, req, callback) {
       id: req.body.id
     }
   };
-  APP.models.company[req.user.db].mysql.cuti
+  APP.models.company[req.user.db].mysql.absent
     .destroy(params)
     .then(deleted => {
       if (!deleted)
@@ -497,7 +414,7 @@ exports.delete = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };

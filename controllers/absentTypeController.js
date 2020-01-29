@@ -9,7 +9,7 @@ const async = require('async');
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.absence
+  APP.models.company[req.user.db].mysql.absent_type
     .findAll()
     .then(rows => {
       return callback(null, {
@@ -38,10 +38,10 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'ABS-000';
+        let pad = 'AT000';
         let kode = '';
 
-        APP.models.company[req.user.db].mysql.absence
+        APP.models.company[req.user.db].mysql.absent_type
           .findAll({
             limit: 1,
             order: [['id', 'DESC']]
@@ -58,7 +58,7 @@ exports.insert = function(APP, req, callback) {
               console.log(res[0].code);
 
               let lastID = res[0].code;
-              let replace = lastID.replace('ABS-', '');
+              let replace = lastID.replace('AT', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;
@@ -77,15 +77,13 @@ exports.insert = function(APP, req, callback) {
           });
       },
 
-      function insertAbsence(result, callback) {
-        APP.models.company[req.user.db].mysql.absence
+      function insertAbsentType(result, callback) {
+        APP.models.company[req.user.db].mysql.absent_type
           .build({
             code: result,
-            absence_type_id: req.body.type,
-            user_id: req.user.admin == true ? req.body.user : req.user.id,
-            date_start: req.body.datestart,
-            date_end: req.body.dateend,
-            description: req.body.desc
+            name: req.body.name,
+            description: req.body.desc,
+            type: req.body.type
           })
           .save()
           .then(result => {
@@ -136,10 +134,11 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.absence
+  APP.models.company[req.user.db].mysql.absent_type
     .update(
       {
-        status: req.body.status
+        name: req.body.name,
+        description: req.body.desc
       },
       {
         where: {
@@ -200,7 +199,7 @@ exports.delete = function(APP, req, callback) {
       id: req.body.id
     }
   };
-  APP.models.company[req.user.db].mysql.absence
+  APP.models.company[req.user.db].mysql.absent_type
     .destroy(params)
     .then(deleted => {
       if (!deleted)

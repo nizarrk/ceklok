@@ -5,6 +5,54 @@ const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
 
+const generateEmployeeCode = async (APP, req, index) => {
+  let tgl = new Date().getDate().toString();
+  if (tgl.length == 1) {
+    tgl = '0' + new Date().getDate().toString();
+  }
+  let month = (new Date().getMonth() + 1).toString();
+  if (month.length == 1) {
+    month = '0' + month;
+  }
+  let year = new Date()
+    .getFullYear()
+    .toString()
+    .slice(2, 4);
+  let time = year + month + tgl;
+  let pad = '0000';
+  let kode = '';
+  let add = 1;
+
+  if (index) {
+    add = index;
+  }
+
+  let res = await APP.models.company[`ceklok_${req.body.company}`].mysql.employee.findAll({
+    limit: 1,
+    order: [['id', 'DESC']]
+  });
+
+  if (res.length == 0) {
+    console.log('kosong');
+    let str = '' + 1;
+
+    kode = req.body.company + '-' + time + str;
+
+    return kode;
+  } else {
+    console.log('ada');
+    let lastID = res[0].employee_code;
+    let replace = lastID.replace(req.body.company + '-', '');
+    let lastNum = replace.charAt(replace.length - 1);
+
+    let num = parseInt(lastNum) + add;
+
+    kode = req.body.company + '-' + time + num;
+
+    return kode;
+  }
+};
+
 exports.checkExistingTelp = (APP, req, callback) => {
   APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
     .findAll({
@@ -197,48 +245,19 @@ exports.register = (APP, req, callback) => {
         module.exports.checkExistingCredentials(APP, req, callback);
       },
 
-      function generateEmployeeCode(result, callback) {
-        let tgl = new Date().getDate().toString();
-        let month = new Date().getMonth().toString();
-        let year = new Date()
-          .getFullYear()
-          .toString()
-          .slice(2, 4);
-        let time = year + month + tgl;
-        let pad = '0000';
+      function generateCode(result, callback) {
+        let code = new Promise((resolve, reject) => {
+          resolve(generateEmployeeCode(APP, req));
+        });
 
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
-          })
+        code
           .then(res => {
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              let ans = pad.substring(0, pad.length - str.length) + str;
-
-              let kode = req.body.company + '-' + time + '-' + ans;
-
-              callback(null, kode);
-            } else {
-              console.log('ada');
-              let lastID = res[0].employee_code;
-              let replace = lastID.replace(req.body.company + '-' + time + '-', '');
-
-              let str = '' + parseInt(replace) + 1;
-              let ans = pad.substring(0, pad.length - str.length) + str;
-
-              let kode = req.body.company + '-' + time + '-' + ans;
-
-              callback(null, kode);
-            }
+            callback(null, res);
           })
           .catch(err => {
-            console.log(err);
             callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              code: 'ERR',
+              data: err
             });
           });
       },
@@ -274,6 +293,7 @@ exports.register = (APP, req, callback) => {
             .build({
               employee_code: data.kode,
               company_code: req.body.company,
+              nik: req.body.nik,
               name: req.body.name,
               gender: req.body.gender,
               pob: req.body.pob,
@@ -330,7 +350,11 @@ exports.register = (APP, req, callback) => {
       }
     ],
     (err, result) => {
-      if (err) return callback(err);
+      if (err) {
+        console.log(err);
+
+        return callback(err);
+      }
 
       callback(null, result);
     }

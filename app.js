@@ -44,7 +44,11 @@ APP.ip = ip;
 
 const fileUpload = require('express-fileupload');
 // default options
-app.use(fileUpload());
+app.use(
+  fileUpload({
+    createParentPath: true
+  })
+);
 
 // add msisdn middleware
 app.use(msisdn());

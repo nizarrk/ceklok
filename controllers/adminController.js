@@ -859,7 +859,8 @@ exports.verifyEmployee = (APP, req, callback) => {
                 department_id: req.body.department,
                 job_title_id: req.body.job,
                 status: req.body.status,
-                status_contract_id: req.body.contract
+                status_contract_id: req.body.contract,
+                schedule_id: req.body.schedule
               })
               .then(result => {
                 callback(null, result);

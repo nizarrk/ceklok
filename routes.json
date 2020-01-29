@@ -389,45 +389,45 @@
     "function": "get",
     "auth": true
   },
-  "/absence/type/insert": {
+  "/absent/type/insert": {
     "method": "post",
-    "controller": "absenceTypeController",
+    "controller": "absentTypeController",
     "function": "insert",
     "auth": true
   },
-  "/absence/type/update": {
+  "/absent/type/update": {
     "method": "post",
-    "controller": "absenceTypeController",
+    "controller": "absentTypeController",
     "function": "update",
     "auth": true
   },
-  "/absence/type/delete": {
+  "/absent/type/delete": {
     "method": "post",
-    "controller": "absenceTypeController",
+    "controller": "absentTypeController",
     "function": "delete",
     "auth": true
   },
-  "/absence/get": {
+  "/absent/get": {
     "method": "post",
-    "controller": "absenceController",
+    "controller": "absentController",
     "function": "get",
     "auth": true
   },
-  "/absence/insert": {
+  "/absent/insert": {
     "method": "post",
-    "controller": "absenceController",
+    "controller": "absentController",
     "function": "insert",
     "auth": true
   },
-  "/absence/update": {
+  "/absent/update": {
     "method": "post",
-    "controller": "absenceController",
+    "controller": "absentController",
     "function": "update",
     "auth": true
   },
-  "/absence/delete": {
+  "/absent/delete": {
     "method": "post",
-    "controller": "absenceController",
+    "controller": "absentController",
     "function": "delete",
     "auth": true
   },

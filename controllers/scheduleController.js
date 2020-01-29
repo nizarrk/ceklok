@@ -98,7 +98,16 @@ exports.insert = function(APP, req, callback) {
       },
 
       function hitungJamKerja(result, callback) {
-        let hours = moment.duration(req.body.work).hours() * req.body.day;
+        //jadikan array int
+        let numDay = [];
+        let splited = req.body.arr.split(',');
+
+        splited.map(x => {
+          let num = parseInt(x);
+          numDay.push(num);
+        });
+
+        let hours = moment.duration(req.body.work).hours() * numDay.length;
         let minutes = moment.duration(req.body.work).minutes() * req.body.day;
         let hourstominutes = hours * 60;
         let totalminutes = hourstominutes + minutes;

@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'absence',
+    'absent_type',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,35 +11,21 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      absence_type_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      user_id: {
-        type: Sequelize.INTEGER(11)
-      },
       code: {
+        type: Sequelize.STRING(45)
+      },
+      name: {
         type: Sequelize.STRING(45)
       },
       description: {
         type: Sequelize.STRING(45)
       },
-      date_start: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
-      date_end: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 1
       },
-      count: {
-        type: Sequelize.INTEGER(11)
-      },
-      uploads: {
+      type: {
         type: Sequelize.STRING(45)
       },
       created_at: {

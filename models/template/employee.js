@@ -41,6 +41,9 @@ module.exports = function(sequelize, Sequelize) {
       benefit_upload: {
         type: Sequelize.STRING(100)
       },
+      schedule_id: {
+        type: Sequelize.STRING(100)
+      },
       employee_code: {
         type: Sequelize.STRING(100)
       },
