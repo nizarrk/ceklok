@@ -100,28 +100,16 @@ exports.insert = function(APP, req, callback) {
       function hitungJamKerja(result, callback) {
         //jadikan array int
         let numDay = [];
-        let splited = req.body.arr.split(',');
+        let splited = req.body.day.split(',');
 
         splited.map(x => {
           let num = parseInt(x);
           numDay.push(num);
         });
 
-        let hours = moment.duration(req.body.work).hours() * numDay.length;
-        let minutes = moment.duration(req.body.work).minutes() * req.body.day;
-        let hourstominutes = hours * 60;
-        let totalminutes = hourstominutes + minutes;
-
-        let minutestohours = totalminutes / 60;
-        let rhours = Math.floor(minutestohours);
-        let newminutes = (minutestohours - rhours) * 60;
-        let rminutes = Math.round(newminutes);
-        console.log(totalminutes + ' minutes = ' + rhours + ' hour(s) and ' + rminutes + ' minute(s).');
-        console.log(rhours + ':' + rminutes + ':' + '00');
-
         callback(null, {
           code: result,
-          week: rhours + ':' + rminutes + ':' + '00'
+          week: APP.time.timeXday(req.body.work, numDay.length)
         });
       },
 
@@ -138,7 +126,7 @@ exports.insert = function(APP, req, callback) {
             work_time: req.body.work,
             break_time: req.body.break,
             weekly_work_time: result.week,
-            weekly_work_day: req.body.day
+            work_day: req.body.day
           })
           .save()
           .then(result => {
@@ -201,7 +189,8 @@ exports.update = function(APP, req, callback) {
         work_time: req.body.work,
         break_time: req.body.break,
         weekly_work_time: req.body.weekly,
-        weekly_work_day: req.body.day
+        work_day: req.body.day,
+        updated_at: new Date()
       },
       {
         where: {

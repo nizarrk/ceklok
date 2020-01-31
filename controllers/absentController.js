@@ -288,8 +288,8 @@ exports.insert = function(APP, req, callback) {
             }
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
-              code: 'INSERT_SUCCESS',
-              data: result.dataValues || params
+              data: data,
+              row: result.dataValues
             });
           })
           .catch(err => {
@@ -316,6 +316,59 @@ exports.insert = function(APP, req, callback) {
               data: err
             });
           });
+      },
+
+      function sendMailToAdmin(result, callback) {
+        APP.models.mysql.admin
+          .findAll({
+            where: {
+              company_code: req.user.code
+            }
+          })
+          .then(res => {
+            if (res.length == 0) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'admin company tidak ditemukan'
+              });
+            }
+            let emailList = [];
+
+            res.map(data => {
+              emailList.push(data.email);
+            });
+            //send to email
+            APP.mailer.sendMail({
+              subject: 'New Leave Permission Request',
+              to: emailList,
+              data: {
+                code: result.data.kode,
+                absent_type_id: req.body.type,
+                user_id: req.user.admin == true ? req.body.user : req.user.id,
+                date_start: req.body.datestart,
+                date_end: req.body.dateend,
+                time_start: req.body.timestart,
+                time_end: req.body.timeend,
+                description: req.body.desc,
+                count: result.data.days,
+                time_total: result.data.time
+              },
+              file: 'leave_permission.html'
+            });
+
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              data: result
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error function sendMailToAdmin',
+              data: err
+            });
+          });
       }
     ],
     (err, result) => {
@@ -333,56 +386,212 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.absent
-    .update(
-      {
-        status: req.body.status
+  async.waterfall(
+    [
+      function getAbsentDetails(callback) {
+        APP.models.company[req.user.db].mysql.absent
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'absent tidak ditemukan'
+              });
+            }
+            callback(null, res);
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error function getAbsentDetails',
+              data: err
+            });
+          });
       },
-      {
-        where: {
-          id: req.body.id
+
+      function checkAbsentType(result, callback) {
+        APP.models.company[req.user.db].mysql.absent_type.findOne().then(res => {
+          if (res === null) {
+            callback({
+              code: 'NOT_FOUND',
+              message: 'Tipe absent tidak ditemukan.'
+            });
+          }
+          if (res.type === 0) {
+            callback(null, {
+              kode: result,
+              type: res.type
+            });
+          } else {
+            callback(null, {
+              kode: result,
+              type: res.type
+            });
+          }
+        });
+      },
+
+      function checkSchedule(result, callback) {
+        APP.models.company[req.user.db].mysql.employee
+          .findOne({
+            where: {
+              id: req.user.id
+            }
+          })
+          .then(user => {
+            APP.models.company[req.user.db].mysql.schedule
+              .findOne({
+                where: {
+                  id: user.schedule_id
+                }
+              })
+              .then(res => {
+                callback(null, {
+                  result,
+                  schedule: {
+                    days: res.work_day,
+                    time: res.work_time
+                  }
+                });
+              });
+          });
+      },
+
+      function checkLamaAbsent(data, callback) {
+        moment.updateLocale('us', {
+          workingWeekdays: data.schedule.days
+        });
+
+        if (data.result.type == 1) {
+          let date1 = moment(req.body.datestart);
+          let date2 = moment(req.body.dateend);
+          let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
+          let listDate = [];
+          let dateMove = new Date(date1);
+          let strDate = req.body.datestart;
+
+          while (strDate < req.body.dateend) {
+            strDate = dateMove.toISOString().slice(0, 10);
+            // listDate.push(strDate);
+            dateMove.setDate(dateMove.getDate() + 1);
+            let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
+
+            if (!checkDay) {
+              listDate.push(strDate);
+            }
+          }
+
+          let work_skip = APP.time.timeXday(data.schedule.time, diff);
+
+          return callback(null, {
+            kode: data.result.kode,
+            days: diff - listDate.length,
+            type: data.result.type,
+            time: work_skip
+          });
         }
-      }
-    )
-    .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
 
-      let params = 'Update Success'; //This is only example, Object can also be used
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: params
-      });
-    })
-    .catch(err => {
-      console.log('iki error', err);
+        if (data.result.type == 0) {
+          let date = req.body.datestart;
+          req.body.dateend = date;
+          return callback(null, {
+            kode: data.result.kode,
+            days: 0,
+            type: data.result.type,
+            time: moment
+              .utc(moment(req.body.timeend, 'HH:mm:ss').diff(moment(req.body.timestart, 'HH:mm:ss')))
+              .format('HH:mm:ss')
+          });
+        } else {
+          return callback({
+            code: 'ERR',
+            message: 'tipe absent tidak tersedia'
+          });
+        }
+      },
 
-      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-        let params = 'Error! Empty Query'; //This is only example, Object can also be used
-        return callback({
-          code: 'UPDATE_NONE',
-          data: params
-        });
+      function checkTglAbsent(result, callback) {
+        APP.db.sequelize
+          .query(
+            `SELECT * FROM ${req.user.db}.absent
+            WHERE
+              user_id = ${req.body.user} 
+            AND
+              '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${req.body.dateend}' <= date_format(date_end, '%Y-%m-%d')
+            OR
+              '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${req.body.datestart}' <= date_format(date_end, '%Y-%m-%d')
+            OR
+              '${req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${req.body.dateend}' <= date_format(date_end, '%Y-%m-%d')`
+          )
+          .then(res => {
+            if (res[0].length > 0) {
+              return callback({
+                code: 'ERR',
+                message: 'Sudah pernah absen di tanggal ini'
+              });
+            } else {
+              return callback(null, result);
+            }
+          })
+          .catch(err => {
+            console.log('2', err);
+
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function uploadPath(data, callback) {
+        trycatch(
+          () => {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'ERR',
+                message: 'No files were uploaded.'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let docPath = `./public/uploads/company_${req.user.code}/employee/absen/`;
+
+            // if (!fs.existsSync(docPath)) {
+            //   mkdirp.sync(docPath);
+            // }
+
+            callback(null, {
+              kode: data.kode,
+              days: data.days,
+              type: data.type,
+              time: data.time,
+              doc: req.files.doc_upload
+                ? docPath + fileName + path.extname(req.files.doc_upload.name)
+                : data.result.doc_upload
+            });
+          },
+          err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          }
+        );
       }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
 
-      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-        return callback({
-          code: 'DUPLICATE',
-          data: params
-        });
-      }
-
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+      callback(null, result);
+    }
+  );
 };
 
 /**

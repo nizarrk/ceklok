@@ -68,9 +68,9 @@ exports.test = function(APP, req, callback) {
   // console.log(totalminutes + ' minutes = ' + rhours + ' hour(s) and ' + rminutes + ' minute(s).');
   // console.log(rhours + ':' + rminutes + ':' + '00');
 
-  moment.updateLocale('us', {
-    workingWeekdays: [1, 2, 3, 5, 6]
-  });
+  // moment.updateLocale('us', {
+  //   workingWeekdays: [1, 2, 3, 5, 6]
+  // });
 
   //  let diff = moment(req.body.end, 'YYYY-MM-DD').businessDiff(moment(req.body.start,'YYYY-MM-DD'));
   //  console.log(diff);
@@ -107,9 +107,33 @@ exports.test = function(APP, req, callback) {
 
   // console.log(date2.diff(date1, 'days') + 1);
 
-  let then = '09:00:00';
-  let now = '14:20:30';
+  //   let then = '09:00:00';
+  //   let now = '14:20:30';
 
-  let hasil = moment.utc(moment(now, 'HH:mm:ss').diff(moment(then, 'HH:mm:ss'))).format('HH:mm:ss');
-  console.log(hasil);
+  //   let hasil = moment.utc(moment(now, 'HH:mm:ss').diff(moment(then, 'HH:mm:ss'))).format('HH:mm:ss');
+  //   console.log(hasil);
+  let where1;
+  if (req.body.status) {
+    where1 = {
+      status: req.body.status
+    };
+  }
+  let where2;
+  if (req.body.start && req.body.end) {
+    where2 = {
+      created_by: {
+        $between: [req.body.start, req.body.end]
+      }
+    };
+  }
+  APP.models.company[req.user.db].mysql.absent_cuti
+    .findAll({
+      where: { where1, where2 }
+    })
+    .then(res => {
+      callback(null, {
+        code: 'OK',
+        data: res
+      });
+    });
 };

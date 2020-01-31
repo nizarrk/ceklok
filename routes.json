@@ -407,6 +407,30 @@
     "function": "delete",
     "auth": true
   },
+  "/absentcuti/insert": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "insert",
+    "auth": true
+  },
+  "/absentcuti/update": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "update",
+    "auth": true
+  },
+  "/absentcuti/updatestatus": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "updateStatus",
+    "auth": true
+  },
+  "/absentcuti/delete": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "delete",
+    "auth": true
+  },
   "/absent/get": {
     "method": "post",
     "controller": "absentController",

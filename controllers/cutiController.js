@@ -169,6 +169,7 @@ exports.insert = function(APP, req, callback) {
         moment.updateLocale('us', {
           workingWeekdays: data.schedule
         });
+
         if (data.result.type == 0) {
           let date1 = moment(req.body.start);
           let date2 = moment(req.body.end);
@@ -324,7 +325,10 @@ exports.insert = function(APP, req, callback) {
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
               data: result.dataValues,
-              type: data.type
+              kode: data.kode,
+              type: data.type,
+              dateend: data.dateend,
+              days: data.days
             });
           })
           .catch(err => {
@@ -354,13 +358,8 @@ exports.insert = function(APP, req, callback) {
       },
 
       function updateSisaCuti(result, callback) {
-        console.log(result);
-
         if (result.type !== 0) {
-          callback(null, {
-            code: 'INSERT_SUCCESS',
-            data: result.data
-          });
+          callback(null, result);
         } else {
           APP.models.company[req.user.db].mysql.employee
             .findOne({
@@ -373,11 +372,8 @@ exports.insert = function(APP, req, callback) {
                 .update({
                   total_cuti: res.total_cuti - result.data.count
                 })
-                .then(result => {
-                  callback(null, {
-                    code: 'INSERT_SUCCESS',
-                    data: result.data
-                  });
+                .then(() => {
+                  callback(null, result);
                 })
                 .catch(err => {
                   console.log('error update');
@@ -397,6 +393,56 @@ exports.insert = function(APP, req, callback) {
               });
             });
         }
+      },
+
+      function sendMailToAdmin(result, callback) {
+        APP.models.mysql.admin
+          .findAll({
+            where: {
+              company_code: req.user.code
+            }
+          })
+          .then(res => {
+            if (res.length == 0) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'admin company tidak ditemukan'
+              });
+            }
+            let emailList = [];
+
+            res.map(data => {
+              emailList.push(data.email);
+            });
+            //send to email
+            APP.mailer.sendMail({
+              subject: 'New Leave Permission Request',
+              to: emailList,
+              data: {
+                user_id: req.body.user,
+                code: result.kode,
+                cuti_type_id: req.body.cuti,
+                date_start: req.body.start,
+                date_end: result.type == 1 ? result.dateend : req.body.end,
+                period: req.body.period,
+                count: result.days
+              },
+              file: 'leave_permission.html'
+            });
+
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              data: result
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error function sendMailToAdmin',
+              data: err
+            });
+          });
       }
     ],
     (err, result) => {
