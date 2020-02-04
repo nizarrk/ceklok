@@ -431,28 +431,10 @@
     "function": "delete",
     "auth": true
   },
-  "/absent/get": {
+  "/absentcuti/history": {
     "method": "post",
-    "controller": "absentController",
+    "controller": "absentCutiController",
     "function": "get",
-    "auth": true
-  },
-  "/absent/insert": {
-    "method": "post",
-    "controller": "absentController",
-    "function": "insert",
-    "auth": true
-  },
-  "/absent/update": {
-    "method": "post",
-    "controller": "absentController",
-    "function": "update",
-    "auth": true
-  },
-  "/absent/delete": {
-    "method": "post",
-    "controller": "absentController",
-    "function": "delete",
     "auth": true
   },
   "/cuti/type/get": {
@@ -476,36 +458,6 @@
   "/cuti/type/delete": {
     "method": "post",
     "controller": "cutiKhususController",
-    "function": "delete",
-    "auth": true
-  },
-  "/cuti/get": {
-    "method": "post",
-    "controller": "cutiController",
-    "function": "get",
-    "auth": true
-  },
-  "/cuti/getlamacutikhusus": {
-    "method": "post",
-    "controller": "cutiController",
-    "function": "getLamaCutiKhusus",
-    "auth": true
-  },
-  "/cuti/insert": {
-    "method": "post",
-    "controller": "cutiController",
-    "function": "insert",
-    "auth": true
-  },
-  "/cuti/update": {
-    "method": "post",
-    "controller": "cutiController",
-    "function": "update",
-    "auth": true
-  },
-  "/cuti/delete": {
-    "method": "post",
-    "controller": "cutiController",
     "function": "delete",
     "auth": true
   },
@@ -539,11 +491,59 @@
     "function": "delete",
     "auth": true
   },
+  "/branch/insert": {
+    "method": "post",
+    "controller": "branchLocationController",
+    "function": "insert",
+    "auth": true
+  },
+  "/branch/update": {
+    "method": "post",
+    "controller": "branchLocationController",
+    "function": "update",
+    "auth": true
+  },
+  "/branch/delete": {
+    "method": "post",
+    "controller": "branchLocationController",
+    "function": "delete",
+    "auth": true
+  },
+  "/device/insert": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "insert",
+    "auth": true
+  },
+  "/device/update": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "update",
+    "auth": true
+  },
+  "/device/delete": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "delete",
+    "auth": true
+  },
   "/superadmin/add": {
     "method": "post",
     "controller": "superAdminController",
     "function": "addSuperAdmin",
     "auth": false
+  },
+  "/presence/generatepresence": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "generateDailyPresence",
+    "auth": true
+  },
+  "/presence/checkinout": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "checkInOutProcess",
+    "auth": true
   },
   "/superadmin/login": {
     "method": "post",

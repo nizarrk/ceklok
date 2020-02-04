@@ -14,8 +14,69 @@ const mkdirp = require('mkdirp');
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
+  let params = {};
+
+  if (req.body.status || req.body.status === 0) {
+    params.status = req.body.status;
+  }
+
+  if (req.body.datestart && req.body.dateend) {
+    params.$or = [
+      {
+        date_start: {
+          $between: [req.body.datestart, req.body.dateend]
+        }
+      },
+      {
+        date_end: {
+          $between: [req.body.datestart, req.body.dateend]
+        }
+      }
+    ];
+  }
+
+  if (req.body.status && req.body.datestart && req.body.dateend) {
+    params.status = req.body.status;
+
+    params.$or = [
+      {
+        date_start: {
+          $between: [req.body.datestart, req.body.dateend]
+        }
+      },
+      {
+        date_end: {
+          $between: [req.body.datestart, req.body.dateend]
+        }
+      }
+    ];
+  }
+
+  console.log(params);
+
+  // APP.db.sequelize
+  // .query(
+  //   `SELECT * FROM ${req.user.db}.absent_cuti
+  //   WHERE
+  //     user_id = ${req.user.id}
+  //   AND
+  //     '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
+  //     req.body.dateend
+  //   }' <= date_format(date_end, '%Y-%m-%d')
+  //   OR
+  //     '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
+  //     req.body.datestart
+  //   }' <= date_format(date_end, '%Y-%m-%d')
+  //   OR
+  //     '${req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
+  //     req.body.dateend
+  //   }' <= date_format(date_end, '%Y-%m-%d')`
+  // )
+
   APP.models.company[req.user.db].mysql.absent_cuti
-    .findAll()
+    .findAll({
+      where: params == {} ? 1 + 1 : params
+    })
     .then(rows => {
       return callback(null, {
         code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
@@ -33,12 +94,6 @@ exports.get = function(APP, req, callback) {
     });
 };
 
-/**
- * The model name `example` based on the related file in `/models` directory.
- *
- * There're many ways to insert data to MySql with `Sequelize`,
- * please check `Sequelize` documentation.
- */
 exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
@@ -961,55 +1016,119 @@ exports.delete = function(APP, req, callback) {
 };
 
 exports.updateStatus = (APP, req, callback) => {
-  APP.models.company[req.user.db].mysql.absent_cuti
-    .findOne({
-      where: {
-        id: req.body.id
-      }
-    })
-    .then(res => {
-      if (res == null) {
-        return callback({
-          code: 'NOT_FOUND',
-          message: 'Absen atau cuti tidak ditemukan'
-        });
-      }
+  async.waterfall(
+    [
+      function updateStatus(callback) {
+        APP.models.company[req.user.db].mysql.absent_cuti
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Absen atau cuti tidak ditemukan'
+              });
+            }
 
-      if (res.status !== 0) {
-        return callback({
-          code: 'INVALID_REQUEST',
-          message: 'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
-        });
-      }
+            if (res.status !== 0) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message:
+                  'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
+              });
+            }
 
-      res
-        .update({
-          status: req.body.status, // 0 = requested 1 = approved, 2 = reject
-          notes: req.body.notes,
-          updated_at: new Date(),
-          action_by: req.user.id
-        })
-        .then(updated => {
+            res
+              .update({
+                status: req.body.status, // 0 = requested 1 = approved, 2 = reject
+                notes: req.body.notes,
+                updated_at: new Date(),
+                action_by: req.user.id
+              })
+              .then(updated => {
+                callback(null, updated);
+              })
+              .catch(err => {
+                console.log('error update', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error update function updateStatus',
+                  data: err
+                });
+              });
+          })
+          .catch(err => {
+            console.log('error findOne', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error findOne function updateStatus',
+              data: err
+            });
+          });
+      },
+
+      function updateSisaCuti(result, callback) {
+        if (result.type == 0) {
           callback(null, {
             code: 'UPDATE_SUCCESS',
-            data: updated
+            data: result
           });
-        })
-        .catch(err => {
-          console.log('error update', err);
-          callback({
-            code: 'ERR_DATABASE',
-            message: 'Error update',
-            data: err
-          });
-        });
-    })
-    .catch(err => {
-      console.log('error findOne', err);
-      callback({
-        code: 'ERR_DATABASE',
-        message: 'Error findOne',
-        data: err
-      });
-    });
+        } else {
+          APP.models.company[req.user.db].mysql.cuti_type
+            .findOne({
+              where: {
+                id: result.absent_cuti_type_id
+              }
+            })
+            .then(res => {
+              if (res.days !== null) {
+                return callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: result
+                });
+              }
+              APP.models.company[req.user.db].mysql.employee
+                .update(
+                  {
+                    total_cuti: res.total_cuti - result.count
+                  },
+                  {
+                    where: result.user_id
+                  }
+                )
+                .then(() => {
+                  return callback(null, {
+                    code: 'UPDATE_SUCCESS',
+                    data: result
+                  });
+                })
+                .catch(err => {
+                  callback({
+                    code: 'ERR_DATABASE',
+                    message: 'Error update function updateSisaCuti',
+                    data: err
+                  });
+                });
+            })
+            .catch(err => {
+              console.log('error find');
+
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error findOne function updateSisaCuti',
+                data: err
+              });
+            });
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

@@ -107,33 +107,47 @@ exports.test = function(APP, req, callback) {
 
   // console.log(date2.diff(date1, 'days') + 1);
 
-  //   let then = '09:00:00';
-  //   let now = '14:20:30';
+  // let then = '09:00:00';
+  // let now = '23:20:30';
 
-  //   let hasil = moment.utc(moment(now, 'HH:mm:ss').diff(moment(then, 'HH:mm:ss'))).format('HH:mm:ss');
-  //   console.log(hasil);
-  let where1;
-  if (req.body.status) {
-    where1 = {
-      status: req.body.status
-    };
+  // let hasil = moment.utc(moment(now, 'HH:mm:ss').diff(moment(then, 'HH:mm:ss'))).format('HH:mm:ss');
+  // console.log(hasil);
+  // let where1;
+  // if (req.body.status) {
+  //   where1 = {
+  //     status: req.body.status
+  //   };
+  // }
+  // let where2;
+  // if (req.body.start && req.body.end) {
+  //   where2 = {
+  //     created_by: {
+  //       $between: [req.body.start, req.body.end]
+  //     }
+  //   };
+  // }
+  // APP.models.company[req.user.db].mysql.absent_cuti
+  //   .findAll({
+  //     where: { where1, where2 }
+  //   })
+  //   .then(res => {
+  //     callback(null, {
+  //       code: 'OK',
+  //       data: res
+  //     });
+  //   });
+  let format = 'hh:mm:ss';
+
+  // var time = moment() gives you current time. no format required.
+  let time = moment(),
+    beforeTime = moment('08:34:00', format),
+    afterTime = moment('23:34:00', format);
+
+  console.log(time);
+
+  if (time.isBetween(beforeTime, afterTime)) {
+    console.log('is between');
+  } else {
+    console.log('is not between');
   }
-  let where2;
-  if (req.body.start && req.body.end) {
-    where2 = {
-      created_by: {
-        $between: [req.body.start, req.body.end]
-      }
-    };
-  }
-  APP.models.company[req.user.db].mysql.absent_cuti
-    .findAll({
-      where: { where1, where2 }
-    })
-    .then(res => {
-      callback(null, {
-        code: 'OK',
-        data: res
-      });
-    });
 };
