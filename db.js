@@ -79,7 +79,8 @@ if (process.env.MYSQL === 'true') {
           pool: mysqlPool,
           dialectOptions: mysqlDialectOptions,
           define: define,
-          operatorsAliases: operatorsAliases
+          operatorsAliases: operatorsAliases,
+          timezone: '+07:00'
         };
   const sequelize = new Sequelize(process.env.MYSQL_NAME, process.env.MYSQL_USER, process.env.MYSQL_PASS, options);
 

@@ -17,14 +17,23 @@ module.exports = function(sequelize, Sequelize) {
       schedule_id: {
         type: Sequelize.INTEGER(11)
       },
-      device_id: {
-        type: Sequelize.STRING(50)
+      check_in_device_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      check_out_device_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      check_in_branch_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      check_out_branch_id: {
+        type: Sequelize.INTEGER(11)
       },
       code: {
         type: Sequelize.STRING(45)
       },
       date: {
-        type: Sequelize.DATE
+        type: Sequelize.DATEONLY
       },
       check_in: {
         type: Sequelize.TIME
@@ -39,9 +48,9 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.STRING(45)
       },
       status: {
-        type: Sequelize.INTEGER(1), //0 = absen, 1 = hadir, 2 = izin, 3 = cuti
+        type: Sequelize.STRING(11), //HADIR (H) No Check-in  (NCI) Waiting Absence (WA) ABSEN (A) IZIN (I) CUTI (C)
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 'WA'
       },
       created_at: {
         allowNull: false,

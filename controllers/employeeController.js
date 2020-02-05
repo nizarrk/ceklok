@@ -292,6 +292,7 @@ exports.addEmployee = (APP, req, callback) => {
               job_title_id: req.body.job,
               benefit_id: req.body.benefit,
               status_contract_id: req.body.cotract,
+              schedule_id: req.body.schedule,
               total_cuti:
                 data.status.type === 1 && data.status.leave_setting === 1
                   ? data.status.leave_permission - (data.status.leave_permission - (12 - (new Date().getMonth() + 1)))
@@ -325,7 +326,7 @@ exports.addEmployee = (APP, req, callback) => {
                 to: req.body.email,
                 data: {
                   username: result.user_name,
-                  pass: data.pass
+                  pass: data.data.pass
                 },
                 file: 'create_employee.html'
               });
@@ -372,6 +373,8 @@ exports.addEmployee = (APP, req, callback) => {
             job_title: result.job_title_id,
             grade: result.grade_id,
             benefit: result.benefit_id,
+            schedule: result.schedule_id,
+            status_contract: result.status_contract_id,
             company_code: result.company_code,
             employee_code: result.employee_code,
             username: result.user_name,

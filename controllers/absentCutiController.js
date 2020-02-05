@@ -374,10 +374,14 @@ exports.insert = function(APP, req, callback) {
               req.body.dateend
             }' <= date_format(date_end, '%Y-%m-%d')
             OR
+              user_id = ${req.user.id} 
+            AND
               '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
               req.body.datestart
             }' <= date_format(date_end, '%Y-%m-%d')
             OR
+              user_id = ${req.user.id} 
+            AND
               '${result.dateend ? result.dateend : req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
               result.dateend ? result.dateend : req.body.dateend
             }' <= date_format(date_end, '%Y-%m-%d')`
@@ -385,7 +389,7 @@ exports.insert = function(APP, req, callback) {
           .then(res => {
             if (res[0].length > 0) {
               return callback({
-                code: 'ERR',
+                code: 'INVALID_REQUEST',
                 message: 'Sudah pernah absen atau cuti di tanggal ini'
               });
             } else {

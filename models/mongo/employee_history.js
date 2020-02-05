@@ -15,6 +15,8 @@ module.exports = function(mongo) {
     grade_upload: String,
     benefit: String,
     benefit_upload: String,
+    schedule: String,
+    status_contract: String,
     company_code: String,
     employee_code: String,
     username: String,
