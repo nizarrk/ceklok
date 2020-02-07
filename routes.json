@@ -545,6 +545,66 @@
     "function": "checkInOutProcess",
     "auth": true
   },
+  "/presence/history": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "getHistoryCheckInOut",
+    "auth": true
+  },
+  "/presence/checkstatus": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "checkStatus",
+    "auth": true
+  },
+  "/presence/setting/get": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "get",
+    "auth": true
+  },
+  "/presence/setting/insert": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "insert",
+    "auth": true
+  },
+  "/presence/setting/update": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "update",
+    "auth": true
+  },
+  "/presence/setting/delete": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "delete",
+    "auth": true
+  },
+  "/timezone/setting/get": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "get",
+    "auth": true
+  },
+  "/timezone/setting/insert": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "insert",
+    "auth": true
+  },
+  "/timezone/setting/update": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "update",
+    "auth": true
+  },
+  "/timezone/setting/delete": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "delete",
+    "auth": true
+  },
   "/superadmin/login": {
     "method": "post",
     "controller": "superAdminController",

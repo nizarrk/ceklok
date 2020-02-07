@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'branch',
+    'timezone_setting',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -14,26 +14,17 @@ module.exports = function(sequelize, Sequelize) {
       code: {
         type: Sequelize.STRING(45)
       },
-      name: {
-        type: Sequelize.STRING(45)
-      },
-      description: {
-        type: Sequelize.STRING(45)
-      },
-      address: {
-        type: Sequelize.STRING(255)
-      },
-      lat_long: {
-        type: Sequelize.STRING(255)
-      },
-      latitude: {
-        type: Sequelize.FLOAT
-      },
-      longitude: {
-        type: Sequelize.FLOAT
-      },
-      radius: {
+      timezone_id: {
         type: Sequelize.INTEGER(11)
+      },
+      country_code: {
+        type: Sequelize.STRING(5)
+      },
+      timezone: {
+        type: Sequelize.STRING(45)
+      },
+      gmt_offset: {
+        type: Sequelize.FLOAT(10, 2)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

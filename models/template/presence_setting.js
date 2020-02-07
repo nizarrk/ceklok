@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'branch',
+    'presence_setting',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,29 +11,14 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      code: {
+      name: {
         type: Sequelize.STRING(45)
       },
-      name: {
+      code: {
         type: Sequelize.STRING(45)
       },
       description: {
         type: Sequelize.STRING(45)
-      },
-      address: {
-        type: Sequelize.STRING(255)
-      },
-      lat_long: {
-        type: Sequelize.STRING(255)
-      },
-      latitude: {
-        type: Sequelize.FLOAT
-      },
-      longitude: {
-        type: Sequelize.FLOAT
-      },
-      radius: {
-        type: Sequelize.INTEGER(11)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

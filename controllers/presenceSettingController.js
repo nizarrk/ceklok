@@ -3,12 +3,8 @@
 const async = require('async');
 
 exports.get = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.branch
-    .findAll({
-      where: {
-        name: req.body.name
-      }
-    })
+  APP.models[req.user.db].mysql.presence_setting
+    .findAll()
     .then(rows => {
       return callback(null, {
         code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
@@ -30,10 +26,10 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'B000';
+        let pad = 'PS000';
         let kode = '';
 
-        APP.models.company[req.user.db].mysql.branch
+        APP.models.company[req.user.db].mysql.presence_setting
           .findAll({
             limit: 1,
             order: [['id', 'DESC']]
@@ -50,7 +46,7 @@ exports.insert = function(APP, req, callback) {
               console.log(res[0].code);
 
               let lastID = res[0].code;
-              let replace = lastID.replace('B', '');
+              let replace = lastID.replace('PS', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;
@@ -60,7 +56,7 @@ exports.insert = function(APP, req, callback) {
             }
           })
           .catch(err => {
-            console.log('1', err);
+            console.log(err);
 
             callback({
               code: 'ERR_DATABASE',
@@ -69,28 +65,26 @@ exports.insert = function(APP, req, callback) {
           });
       },
 
-      function insertBranch(result, callback) {
-        APP.models.company[req.user.db].mysql.branch
+      function insertSetting(result, callback) {
+        APP.models.company[req.user.db].mysql.presence_setting
           .build({
             code: result,
             name: req.body.name,
-            description: req.body.desc,
-            address: req.body.address,
-            latitude: req.body.lat,
-            longitude: req.body.lng,
-            radius: req.body.radius
+            description: req.body.desc
           })
           .save()
           .then(result => {
-            let params = 'Insert Success'; //This is only branch, Object can also be used
+            let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
               code: 'INSERT_SUCCESS',
               data: result.dataValues || params
             });
           })
           .catch(err => {
+            console.log(err);
+
             if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-              let params = 'Error! Duplicate Entry'; //This is only branch, Object can also be used
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
               return callback({
                 code: 'DUPLICATE',
                 data: params
@@ -98,7 +92,7 @@ exports.insert = function(APP, req, callback) {
             }
 
             if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-              let params = 'Error! Empty Query'; //This is only branch, Object can also be used
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
               return callback({
                 code: 'UPDATE_NONE',
                 data: params
@@ -121,15 +115,11 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.branch
+  APP.models.company[req.user.db].mysql.presence_setting
     .update(
       {
         name: req.body.name,
-        description: req.body.desc,
-        address: req.body.address,
-        latitude: req.body.lat,
-        longitude: req.body.lng,
-        radius: req.body.radius
+        description: req.body.desc
       },
       {
         where: {
@@ -139,14 +129,14 @@ exports.update = function(APP, req, callback) {
     )
     .then(result => {
       if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only branch, Object can also be used
+        let params = 'No data updated'; //This is only example, Object can also be used
         return callback(null, {
           code: 'UPDATE_NONE',
           data: params
         });
       }
 
-      let params = 'Update Success'; //This is only branch, Object can also be used
+      let params = 'Update Success'; //This is only example, Object can also be used
       return callback(null, {
         code: 'UPDATE_SUCCESS',
         data: params
@@ -154,7 +144,7 @@ exports.update = function(APP, req, callback) {
     })
     .catch(err => {
       if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-        let params = 'Error! Empty Query'; //This is only branch, Object can also be used
+        let params = 'Error! Empty Query'; //This is only example, Object can also be used
         return callback({
           code: 'UPDATE_NONE',
           data: params
@@ -162,7 +152,7 @@ exports.update = function(APP, req, callback) {
       }
 
       if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-        let params = 'Error! Duplicate Entry'; //This is only branch, Object can also be used
+        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
         return callback({
           code: 'DUPLICATE',
           data: params
@@ -182,7 +172,7 @@ exports.delete = function(APP, req, callback) {
       id: req.body.id
     }
   };
-  APP.models.company[req.user.db].mysql.branch
+  APP.models.company[req.user.db].mysql.presence_setting
     .destroy(params)
     .then(deleted => {
       if (!deleted)
