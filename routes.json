@@ -281,6 +281,12 @@
     "function": "update",
     "auth": true
   },
+  "/grade/updatebenefit": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "updateGradeBenefit",
+    "auth": true
+  },
   "/grade/delete": {
     "method": "post",
     "controller": "gradeController",
@@ -333,6 +339,24 @@
     "method": "post",
     "controller": "benefitController",
     "function": "delete",
+    "auth": true
+  },
+  "/benefit/custom/insert": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "customInsert",
+    "auth": true
+  },
+  "/benefit/custom/update": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "customUpdate",
+    "auth": true
+  },
+  "/benefit/custom/delete": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "customDelete",
     "auth": true
   },
   "/priviledge/get": {

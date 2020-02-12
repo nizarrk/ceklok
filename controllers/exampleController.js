@@ -8,7 +8,7 @@ const trycatch = require('trycatch');
 const mkdirp = require('mkdirp');
 const bcrypt = require('bcrypt');
 // const moment = require('moment');
-const moment = require('moment-business-days');
+const moment = require('moment');
 
 exports.test = function(APP, req, callback) {
   // let total = 12
@@ -54,9 +54,11 @@ exports.test = function(APP, req, callback) {
 
   // let time = moment.duration("08:00:00").hours();
 
-  // let time = '08:10:00';
-  // let hours = moment.duration(time).hours() * 5;
-  // let minutes = moment.duration(time).minutes() * 5;
+  // let time = '58:10:30';
+  // let hours = moment.duration(time).asMinutes();
+  // console.log(hours);
+
+  // let minutes = moment.duration(time).minutes();
   // let hourstominutes = hours * 60;
   // let totalminutes = hourstominutes + minutes;
 
@@ -67,6 +69,24 @@ exports.test = function(APP, req, callback) {
   // let rminutes = Math.round(newminutes);
   // console.log(totalminutes + ' minutes = ' + rhours + ' hour(s) and ' + rminutes + ' minute(s).');
   // console.log(rhours + ':' + rminutes + ':' + '00');
+
+  // console.log(APP.time.timeDuration(hours));
+
+  // let result = [1,1,1,2,2,3,3,4,5]
+
+  // let userID = result.filter((item, index) => result.indexOf(item) === index)
+
+  // console.log(userID);
+
+  const durations = ['12:00:00', '15:00:00', '03:30:00'];
+
+  //  console.log(APP.time.timeDuration(durations));
+  let n = 0;
+  durations.map(x => {
+    n++;
+  });
+
+  console.log(n);
 
   // moment.updateLocale('us', {
   //   workingWeekdays: [1, 2, 3, 5, 6]
@@ -136,18 +156,18 @@ exports.test = function(APP, req, callback) {
   //       data: res
   //     });
   //   });
-  let format = 'hh:mm:ss';
+  // let format = 'hh:mm:ss';
 
-  // var time = moment() gives you current time. no format required.
-  let time = moment(),
-    beforeTime = moment('08:34:00', format),
-    afterTime = moment('23:34:00', format);
+  // // var time = moment() gives you current time. no format required.
+  // let time = moment(),
+  //   beforeTime = moment('08:34:00', format),
+  //   afterTime = moment('23:34:00', format);
 
-  console.log(time);
+  // console.log(time);
 
-  if (time.isBetween(beforeTime, afterTime)) {
-    console.log('is between');
-  } else {
-    console.log('is not between');
-  }
+  // if (time.isBetween(beforeTime, afterTime)) {
+  //   console.log('is between');
+  // } else {
+  //   console.log('is not between');
+  // }
 };

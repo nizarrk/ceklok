@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'grade',
+    'presence_monthly',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,14 +11,38 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      user_id: {
+        type: Sequelize.INTEGER(11)
+      },
       code: {
         type: Sequelize.STRING(45)
       },
-      priviledge_id: {
+      date: {
+        type: Sequelize.DATEONLY
+      },
+      total_time: {
+        type: Sequelize.STRING(50)
+      },
+      total_minus: {
+        type: Sequelize.STRING(50)
+      },
+      total_over: {
+        type: Sequelize.STRING(50)
+      },
+      total_present: {
         type: Sequelize.INTEGER(11)
       },
-      name: {
-        type: Sequelize.STRING(45)
+      total_absent: {
+        type: Sequelize.INTEGER(11)
+      },
+      total_permission: {
+        type: Sequelize.INTEGER(11)
+      },
+      total_cuti: {
+        type: Sequelize.INTEGER(11)
+      },
+      total_day: {
+        type: Sequelize.INTEGER(11)
       },
       description: {
         type: Sequelize.STRING(45)

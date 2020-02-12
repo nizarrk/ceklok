@@ -44,13 +44,19 @@ module.exports = function(sequelize, Sequelize) {
       total_time: {
         type: Sequelize.TIME
       },
+      total_minus: {
+        type: Sequelize.TIME
+      },
+      total_over: {
+        type: Sequelize.TIME
+      },
       description: {
         type: Sequelize.STRING(45)
       },
-      status: {
-        type: Sequelize.STRING(11), //HADIR (H) No Check-in  (NCI) Waiting Absence (WA) ABSEN (A) IZIN (I) CUTI (C)
+      presence_setting_id: {
+        type: Sequelize.INTEGER(1), //HADIR (H) No Check-in  (NCI) Waiting Absence (WA) ABSEN (A) IZIN (I) CUTI (C)
         allowNull: false,
-        defaultValue: 'WA'
+        defaultValue: 4 // 4 = WA
       },
       created_at: {
         allowNull: false,

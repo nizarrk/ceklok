@@ -1,6 +1,7 @@
 'use strict';
 
-const moment = require('moment-business-days');
+let moment = require('moment');
+let momentDurationFormatSetup = require('moment-duration-format');
 
 exports.timeXday = (time, days) => {
   let hours = moment.duration(time).hours() * days;
@@ -22,4 +23,21 @@ exports.timeXday = (time, days) => {
   console.log(result);
 
   return result;
+};
+
+exports.timeDuration = time => {
+  if (Array.isArray(time)) {
+    let total = 0;
+
+    time.map(x => {
+      total += moment.duration(x).asMinutes();
+    });
+
+    let dur = moment.duration(total, 'minutes');
+
+    return dur.format('HH:mm:ss');
+  }
+  let dur = moment.duration(time, 'minutes');
+
+  return dur.format('HH:mm:ss');
 };

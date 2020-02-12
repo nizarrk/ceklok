@@ -48,7 +48,8 @@ if (process.env.MYSQL === 'true') {
     $lt: Sequelize.Op.lt,
     $lte: Sequelize.Op.lte,
     $like: Sequelize.Op.like,
-    $in: Sequelize.Op.in
+    $in: Sequelize.Op.in,
+    $not: Sequelize.Op.not
   };
 
   const define = {
