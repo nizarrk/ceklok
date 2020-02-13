@@ -32,6 +32,7 @@ jspm_packages/
 .env
 .env.local
 .env.server
+.env.server.old
 
 # Config key
 config/

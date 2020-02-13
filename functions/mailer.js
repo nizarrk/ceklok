@@ -11,15 +11,17 @@ exports.sendMail = data => {
     if (err) throw err;
 
     let transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: String(process.env.EMAIL_HOST),
+      port: String(process.env.EMAIL_PORT),
+      secure: process.env.EMAIL_PORT == 465 ? true : false,
       auth: {
-        user: 'ayofutsalmalang@gmail.com',
-        pass: 'ayofutsal123'
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
       }
     });
 
     let mailOptions = {
-      from: '"CEKLOK.ID 👻" <ayofutsalmalang@gmail.com>',
+      from: String(process.env.EMAIL_SENDER),
       to: data.to,
       subject: data.subject,
       attachments: data.attachments,

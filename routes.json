@@ -209,29 +209,35 @@
     "function": "delete",
     "auth": false
   },
-  "/paymentMethod/get": {
+  "/payment/method/get": {
     "method": "post",
     "controller": "paymentMethodController",
     "function": "get",
     "auth": false
   },
-  "/paymentMethod/insert": {
+  "/payment/method/insert": {
     "method": "post",
     "controller": "paymentMethodController",
     "function": "insert",
     "auth": false
   },
-  "/paymentMethod/update": {
+  "/payment/method/update": {
     "method": "post",
     "controller": "paymentMethodController",
     "function": "update",
     "auth": false
   },
-  "/paymentMethod/delete": {
+  "/payment/method/delete": {
     "method": "post",
     "controller": "paymentMethodController",
     "function": "delete",
     "auth": false
+  },
+  "/transaction/company/get": {
+    "method": "post",
+    "controller": "transactionController",
+    "function": "getByCompany",
+    "auth": true
   },
   "/role/get": {
     "method": "post",
