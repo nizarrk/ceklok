@@ -95,7 +95,7 @@ exports.login = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -114,7 +114,7 @@ exports.login = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -162,7 +162,7 @@ exports.login = (APP, req, callback) => {
                 .catch(err => {
                   return callback({
                     code: 'ERR_DATABASE',
-                    data: JSON.stringify(err)
+                    data: err
                   });
                 });
             } else {
@@ -192,7 +192,7 @@ exports.login = (APP, req, callback) => {
                 .catch(err => {
                   return callback({
                     code: 'ERR_DATABASE',
-                    data: JSON.stringify(err)
+                    data: err
                   });
                 });
             }
@@ -227,6 +227,14 @@ exports.verifyCompany = (APP, req, callback) => {
                   message: 'Invalid Password!'
                 });
               }
+            })
+            .catch(err => {
+              console.log('Error function verifyCredentials', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error function verifyCredentials',
+                data: err
+              });
             });
         } else {
           callback({
@@ -248,9 +256,9 @@ exports.verifyCompany = (APP, req, callback) => {
         let fileName = new Date().toISOString().replace(/:|\./g, '');
         let imagePath = './public/uploads/payment/company/';
 
-        if (!fs.existsSync(imagePath)) {
-          mkdirp.sync(imagePath);
-        }
+        // if (!fs.existsSync(imagePath)) {
+        //   mkdirp.sync(imagePath);
+        // }
 
         callback(null, {
           result: result,
@@ -266,7 +274,8 @@ exports.verifyCompany = (APP, req, callback) => {
           .then(res => {
             if (res == null) {
               return callback({
-                code: 'NOT_FOUND'
+                code: 'NOT_FOUND',
+                message: 'Invoice tidak ditemukan'
               });
             }
 
@@ -305,16 +314,18 @@ exports.verifyCompany = (APP, req, callback) => {
                 callback(null, result.dataValues);
               })
               .catch(err => {
+                console.log('Error function updatePaymentStatus', err);
+
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -400,7 +411,7 @@ exports.verifyCompany = (APP, req, callback) => {
 
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -409,7 +420,7 @@ exports.verifyCompany = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -439,7 +450,7 @@ exports.verifyCompany = (APP, req, callback) => {
 
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -448,7 +459,7 @@ exports.verifyCompany = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -498,7 +509,7 @@ exports.verifyCompany = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -514,7 +525,7 @@ exports.verifyCompany = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -525,7 +536,7 @@ exports.verifyCompany = (APP, req, callback) => {
             console.log(err);
             return callback({
               code: 'ERR',
-              data: JSON.stringify(err)
+              data: err
             });
           }
 

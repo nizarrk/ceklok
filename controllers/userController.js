@@ -181,7 +181,7 @@ exports.checkExistingCompany = (APP, req, callback) => {
   APP.models.mysql.company
     .findAll({
       where: {
-        company_code: req.body.company
+        company_code: req.body.company ? req.body.company : ''
       }
     })
     .then(res => {
@@ -198,11 +198,7 @@ exports.checkExistingCompany = (APP, req, callback) => {
       }
       callback({
         code: 'NOT_FOUND',
-        data: null,
-        info: {
-          dataCount: res.length,
-          parameter: 'email'
-        }
+        message: 'Company tidak ditemukan'
       });
     })
     .catch(err => {
@@ -568,7 +564,11 @@ exports.login = (APP, req, callback) => {
 exports.forgotPassword = (APP, req, callback) => {
   async.waterfall(
     [
-      function checkEmail(callback) {
+      function checkCompany(callback) {
+        module.exports.checkExistingCompany(APP, req, callback);
+      },
+
+      function checkEmail(result, callback) {
         APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
           .findAll({
             where: {

@@ -239,6 +239,12 @@
     "function": "getByCompany",
     "auth": true
   },
+  "/transaction/get": {
+    "method": "post",
+    "controller": "transactionController",
+    "function": "getAllCompany",
+    "auth": true
+  },
   "/role/get": {
     "method": "post",
     "controller": "roleController",
@@ -645,6 +651,24 @@
     "method": "post",
     "controller": "superAdminController",
     "function": "verifyCompany",
+    "auth": true
+  },
+  "/company/get": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "getListCompany",
+    "auth": true
+  },
+  "/company/getbyid": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "getCompanyDetails",
+    "auth": true
+  },
+  "/company/update": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "editCompanyProfile",
     "auth": true
   }
 }

@@ -749,6 +749,7 @@ exports.login = (APP, req, callback) => {
         let token = jwt.sign(
           {
             id: rows[0].id,
+            company: rows[0].company_id,
             code: rows[0].company_code,
             db: `ceklok_${rows[0].company_code}`,
             admin: true
@@ -837,10 +838,150 @@ exports.login = (APP, req, callback) => {
 };
 
 exports.verifyEmployee = (APP, req, callback) => {
+  let mysql = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
-      function updateEmployeeInfo(callback) {
-        APP.models.company[req.user.db].mysql.employee
+      function checkBodyRole(callback) {
+        mysql.role
+          .findOne({
+            where: {
+              id: req.body.role
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter role'
+              });
+            }
+
+            callback(null, res.dataValues);
+          });
+      },
+
+      function checkBodyGrade(result, callback) {
+        mysql.grade
+          .findOne({
+            where: {
+              id: req.body.grade
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter grade'
+              });
+            }
+
+            callback(null, {
+              role: result,
+              grade: res.dataValues
+            });
+          });
+      },
+
+      function checkBodyDepartment(result, callback) {
+        mysql.department
+          .findOne({
+            where: {
+              id: req.body.department
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter department'
+              });
+            }
+
+            callback(null, {
+              role: result.role,
+              grade: result.grade,
+              department: res.dataValues
+            });
+          });
+      },
+
+      function checkBodyJob(result, callback) {
+        mysql.job_title
+          .findOne({
+            where: {
+              id: req.body.job
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter job'
+              });
+            }
+
+            callback(null, {
+              role: result.role,
+              grade: result.grade,
+              department: result.department,
+              job: res.dataValues
+            });
+          });
+      },
+
+      function checkBodyStatusContract(result, callback) {
+        mysql.status_contract
+          .findOne({
+            where: {
+              id: req.body.contract
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter contract'
+              });
+            }
+
+            callback(null, {
+              role: result.role,
+              grade: result.grade,
+              department: result.department,
+              job: result.job,
+              contract: res.dataValues
+            });
+          });
+      },
+
+      function checkBodySchedule(result, callback) {
+        mysql.schedule
+          .findOne({
+            where: {
+              id: req.body.schedule
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter schedule'
+              });
+            }
+
+            callback(null, {
+              role: result.role,
+              grade: result.grade,
+              department: result.department,
+              job: result.job,
+              contract: result.contract,
+              schedule: res.dataValues
+            });
+          });
+      },
+
+      function updateEmployeeInfo(result, callback) {
+        mysql.employee
           .findOne({
             where: {
               email: req.body.email
@@ -849,7 +990,8 @@ exports.verifyEmployee = (APP, req, callback) => {
           .then(res => {
             if (res.status == 1) {
               return callback({
-                code: 'UPDATE_NONE'
+                code: 'UPDATE_NONE',
+                message: 'Akun sudah di verify'
               });
             }
             res
@@ -862,8 +1004,16 @@ exports.verifyEmployee = (APP, req, callback) => {
                 status_contract_id: req.body.contract,
                 schedule_id: req.body.schedule
               })
-              .then(result => {
-                callback(null, result);
+              .then(updated => {
+                callback(null, {
+                  role: result.role,
+                  grade: result.grade,
+                  department: result.department,
+                  job: result.job,
+                  contract: result.contract,
+                  schedule: result.schedule,
+                  updated: updated.dataValues
+                });
               })
               .catch(err => {
                 console.log('1', err);
@@ -885,82 +1035,36 @@ exports.verifyEmployee = (APP, req, callback) => {
       },
 
       function sendEmail(result, callback) {
-        // add role, grade, department, job_title and status_contract to employee
-        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.role, {
-          targetKey: 'id',
-          foreignKey: 'role_id'
-        });
-        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.grade, {
-          targetKey: 'id',
-          foreignKey: 'grade_id'
-        });
-        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.department, {
-          targetKey: 'id',
-          foreignKey: 'department_id'
-        });
-        APP.models.company[req.user.db].mysql.employee.belongsTo(APP.models.company[req.user.db].mysql.job_title, {
-          targetKey: 'id',
-          foreignKey: 'job_title_id'
-        });
-        APP.models.company[req.user.db].mysql.employee.belongsTo(
-          APP.models.company[req.user.db].mysql.status_contract,
-          {
-            targetKey: 'id',
-            foreignKey: 'status_contract_id'
-          }
-        );
-
-        APP.models.company[req.user.db].mysql.employee
-          .findOne({
-            include: [
-              {
-                model: APP.models.company[req.user.db].mysql.role
-              },
-              {
-                model: APP.models.company[req.user.db].mysql.grade
-              },
-              {
-                model: APP.models.company[req.user.db].mysql.department
-              },
-              {
-                model: APP.models.company[req.user.db].mysql.job_title
-              },
-              {
-                model: APP.models.company[req.user.db].mysql.status_contract
+        try {
+          //send to email
+          APP.mailer.sendMail({
+            subject: 'Account Verified',
+            to: req.body.email,
+            data: {
+              role: result.role.name,
+              grade: result.grade.name,
+              department: result.department.name,
+              job: result.job.name,
+              contract: result.contract.name,
+              schedule: {
+                name: result.schedule.name,
+                desc: result.schedule.description
               }
-            ],
-            where: {
-              email: req.body.email
-            }
-          })
-          .then(res => {
-            //send to email
-            APP.mailer.sendMail({
-              subject: 'Account Verified',
-              to: req.body.email,
-              data: {
-                role: res.role.name,
-                grade: res.grade.name,
-                department: res.department.name,
-                job: res.job_title.name,
-                contract: res.status_contract.name
-              },
-              file: 'verify_employee.html'
-            });
-
-            callback(null, {
-              code: 'UPDATE_SUCCESS',
-              data: res
-            });
-          })
-          .catch(err => {
-            console.log('3', err);
-
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
+            },
+            file: 'verify_employee.html'
           });
+
+          callback(null, {
+            code: 'UPDATE_SUCCESS',
+            data: result
+          });
+        } catch (err) {
+          console.log('3', err);
+          callback({
+            code: 'ERR',
+            message: 'Error sendMail'
+          });
+        }
       }
     ],
     (err, result) => {

@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      transaction_type_id: {
+        type: Sequelize.INTEGER(11)
+      },
       payment_method_id: {
         type: Sequelize.INTEGER(11)
       },
@@ -19,6 +22,9 @@ module.exports = function(sequelize, Sequelize) {
       },
       company_id: {
         type: Sequelize.INTEGER(11)
+      },
+      date: {
+        type: Sequelize.DATEONLY
       },
       invoice: {
         type: Sequelize.STRING(45)
