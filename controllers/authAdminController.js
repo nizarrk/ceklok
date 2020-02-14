@@ -36,7 +36,7 @@ exports.checkExistingEmailCompany = (APP, req, callback) => {
         code: 'ERR_DATABASE',
         id: 'ARQ98',
         message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -68,7 +68,7 @@ exports.checkExistingTelpCompany = (APP, req, callback) => {
       console.log('iki error telp company', err);
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -100,7 +100,7 @@ exports.checkExistingEmailAdmin = (APP, req, callback) => {
         code: 'ERR_DATABASE',
         id: 'ARQ98',
         message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -132,7 +132,7 @@ exports.checkExistingTelpAdmin = (APP, req, callback) => {
         code: 'ERR_DATABASE',
         id: 'ARQ98',
         message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -164,7 +164,7 @@ exports.checkExistingUsername = (APP, req, callback) => {
         code: 'ERR_DATABASE',
         id: 'ARQ98',
         message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -237,7 +237,7 @@ exports.register = (APP, req, callback) => {
                 code: 'ERR',
                 id: 'ARN99',
                 message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         } else {
@@ -297,7 +297,7 @@ exports.register = (APP, req, callback) => {
               code: 'ERR_DATABASE',
               id: 'ARQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -363,7 +363,7 @@ exports.register = (APP, req, callback) => {
                 code: 'ERR_DATABASE',
                 id: 'ARQ98',
                 message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         } else {
@@ -394,7 +394,7 @@ exports.register = (APP, req, callback) => {
               code: 'ERR_DATABASE',
               id: 'ARQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -457,7 +457,7 @@ exports.register = (APP, req, callback) => {
                   code: 'ERR_DATABASE',
                   id: 'ARQ98',
                   message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -467,7 +467,7 @@ exports.register = (APP, req, callback) => {
               code: 'ERR_DATABASE',
               id: 'ARQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -498,7 +498,7 @@ exports.register = (APP, req, callback) => {
               code: 'ERR_DATABASE',
               id: 'ARQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -568,7 +568,7 @@ exports.paymentCompany = (APP, req, callback) => {
               code: 'ERR_DATABASE',
               id: 'PVQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -635,7 +635,7 @@ exports.paymentCompany = (APP, req, callback) => {
               code: 'ERR_DATABASE',
               id: 'PVQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -719,7 +719,7 @@ exports.login = (APP, req, callback) => {
           .catch(err => {
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -731,16 +731,15 @@ exports.login = (APP, req, callback) => {
             if (res === true) return callback(null, rows);
 
             callback({
-              code: 'INVALID_PASSWORD',
-              info: {
-                parameter: 'password did not match'
-              }
+              code: 'INVALID_REQUEST',
+              message: 'Password tidak cocok!'
             });
           })
           .catch(err => {
             callback({
-              code: 'ERR_BCRYPT',
-              data: JSON.stringify(err)
+              code: 'ERR',
+              message: 'Error comparePassword',
+              data: err
             });
           });
       },
@@ -792,7 +791,7 @@ exports.login = (APP, req, callback) => {
                 .catch(err => {
                   return callback({
                     code: 'ERR_DATABASE',
-                    data: JSON.stringify(err)
+                    data: err
                   });
                 });
             } else {
@@ -822,7 +821,7 @@ exports.login = (APP, req, callback) => {
                 .catch(err => {
                   return callback({
                     code: 'ERR_DATABASE',
-                    data: JSON.stringify(err)
+                    data: err
                   });
                 });
             }
@@ -1020,7 +1019,7 @@ exports.verifyEmployee = (APP, req, callback) => {
 
                 callback({
                   code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
+                  data: err
                 });
               });
           })
@@ -1029,7 +1028,7 @@ exports.verifyEmployee = (APP, req, callback) => {
 
             callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -1124,7 +1123,7 @@ exports.editStatusContractEmployee = (APP, req, callback) => {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };

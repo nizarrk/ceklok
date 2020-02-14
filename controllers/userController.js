@@ -4,226 +4,105 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
+const path = require('path');
 
-const generateEmployeeCode = async (APP, req, index) => {
-  let tgl = new Date().getDate().toString();
-  if (tgl.length == 1) {
-    tgl = '0' + new Date().getDate().toString();
-  }
-  let month = (new Date().getMonth() + 1).toString();
-  if (month.length == 1) {
-    month = '0' + month;
-  }
-  let year = new Date()
-    .getFullYear()
-    .toString()
-    .slice(2, 4);
-  let time = year + month + tgl;
-  let pad = '0000';
-  let kode = '';
-  let add = 1;
-
-  if (index) {
-    add = index;
-  }
-
-  let res = await APP.models.company[`ceklok_${req.body.company}`].mysql.employee.findAll({
-    limit: 1,
-    order: [['id', 'DESC']]
-  });
-
-  if (res.length == 0) {
-    console.log('kosong');
-    let str = '' + 1;
-
-    kode = req.body.company + '-' + time + str;
-
-    return kode;
-  } else {
-    console.log('ada');
-    let lastID = res[0].employee_code;
-    let replace = lastID.replace(req.body.company + '-', '');
-    let lastNum = replace.charAt(replace.length - 1);
-
-    let num = parseInt(lastNum) + add;
-
-    kode = req.body.company + '-' + time + num;
-
-    return kode;
-  }
-};
-
-exports.checkExistingTelp = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-    .findAll({
-      where: {
-        tlp: req.body.telp
-      }
-    })
-    .then(res => {
-      if (res && res.length > 0) {
-        callback({
-          code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate telp!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'telp'
-          }
-        });
-      }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'telp'
-        }
-      });
-    })
-    .catch(err => {
-      console.log('iki error telp', err);
-
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
-
-exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-    .findAll({
-      where: {
-        email: req.body.email
-      }
-    })
-    .then(res => {
-      if (res && res.length > 0) {
-        callback({
-          code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate Email!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'email'
-          }
-        });
-      }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'email'
-        }
-      });
-    })
-    .catch(err => {
-      console.log('iki error email', err);
-
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
-
-exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-    .findAll({
-      where: {
-        company_code: req.body.company,
-        user_name: req.body.username
-      }
-    })
-    .then(res => {
-      if (res && res.length > 0) {
-        callback({
-          code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate Username!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'username'
-          }
-        });
-      }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'username'
-        }
-      });
-    })
-    .catch(err => {
-      console.log('iki error username', err);
-
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
-
-exports.checkExistingCompany = (APP, req, callback) => {
-  APP.models.mysql.company
-    .findAll({
-      where: {
-        company_code: req.body.company ? req.body.company : ''
-      }
-    })
-    .then(res => {
-      if (res && res.length > 0) {
-        return callback(null, {
-          code: 'FOUND',
-          data: {
-            row: res
-          },
-          info: {
-            dataCount: res.length
-          }
-        });
-      }
-      callback({
-        code: 'NOT_FOUND',
-        message: 'Company tidak ditemukan'
-      });
-    })
-    .catch(err => {
-      console.log('iki error company', err);
-
-      callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
-};
-
-exports.checkExistingCredentials = (APP, req, callback) => {
+exports.checkExistingCredentialsAdmin = (APP, req, callback) => {
   async.waterfall(
     [
-      function checkUsername(callback) {
-        module.exports.checkExistingUsername(APP, req, callback);
+      function checkEmail(callback) {
+        APP.models.mysql.admin
+          .findAll({
+            where: {
+              email: req.body.email
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              return callback({
+                code: 'DUPLICATE',
+                id: 'ARP01',
+                message: 'Email Admin sudah pernah terdaftar, gunakan email yang lain'
+              });
+            }
+            return callback(null, {
+              code: 'NOT_FOUND',
+              id: 'ARQ97',
+              message: 'Data Email Admin Tidak ditemukan'
+            });
+          })
+          .catch(err => {
+            console.log('iki error email admin', err);
+            return callback({
+              code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
       },
 
       function checkTelp(result, callback) {
-        module.exports.checkExistingTelp(APP, req, callback);
+        APP.models.mysql.admin
+          .findAll({
+            where: {
+              tlp: req.body.telp
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              return callback({
+                code: 'DUPLICATE',
+                id: 'ARP01',
+                message: 'Telp Admin sudah pernah terdaftar, gunakan Telp yang lain'
+              });
+            }
+            return callback(null, {
+              code: 'NOT_FOUND',
+              id: 'ARQ97',
+              message: 'Data Telp Admin Tidak ditemukan'
+            });
+          })
+          .catch(err => {
+            console.log('iki error telp admin', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
       },
 
-      function checkEmail(result, callback) {
-        module.exports.checkExistingEmail(APP, req, callback);
+      function checkUsername(result, callback) {
+        APP.models.mysql.admin
+          .findAll({
+            where: {
+              user_name: req.body.username
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              return callback({
+                code: 'DUPLICATE',
+                id: 'ARP01',
+                message: 'Username sudah pernah terdaftar, gunakan username yang lain'
+              });
+            }
+            return callback(null, {
+              code: 'NOT_FOUND',
+              id: 'ARQ97',
+              message: 'Data Username Tidak ditemukan'
+            });
+          })
+          .catch(err => {
+            console.log('iki error username', err);
+            return callback({
+              code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
       }
     ],
     (err, result) => {
@@ -234,45 +113,110 @@ exports.checkExistingCredentials = (APP, req, callback) => {
   );
 };
 
-exports.register = (APP, req, callback) => {
+exports.checkExistingCredentialsAdminCeklok = (APP, req, callback) => {
   async.waterfall(
     [
-      function checkCredentials(callback) {
-        module.exports.checkExistingCredentials(APP, req, callback);
-      },
-
-      function generateCode(result, callback) {
-        let code = new Promise((resolve, reject) => {
-          resolve(generateEmployeeCode(APP, req));
-        });
-
-        code
+      function checkEmail(callback) {
+        APP.models.mysql.admin_app
+          .findAll({
+            where: {
+              email: req.body.email
+            }
+          })
           .then(res => {
-            callback(null, res);
+            if (res && res.length > 0) {
+              return callback({
+                code: 'DUPLICATE',
+                id: 'ARP01',
+                message: 'Email Admin sudah pernah terdaftar, gunakan email yang lain'
+              });
+            }
+            return callback(null, {
+              code: 'NOT_FOUND',
+              id: 'ARQ97',
+              message: 'Data Email Admin Tidak ditemukan'
+            });
           })
           .catch(err => {
-            callback({
-              code: 'ERR',
+            console.log('iki error email admin', err);
+            return callback({
+              code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: err
             });
           });
       },
 
+      function checkUsername(result, callback) {
+        APP.models.mysql.admin_app
+          .findAll({
+            where: {
+              user_name: req.body.username
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              return callback({
+                code: 'DUPLICATE',
+                id: 'ARP01',
+                message: 'Username sudah pernah terdaftar, gunakan username yang lain'
+              });
+            }
+            return callback(null, {
+              code: 'NOT_FOUND',
+              id: 'ARQ97',
+              message: 'Data Username Tidak ditemukan'
+            });
+          })
+          .catch(err => {
+            console.log('iki error username', err);
+            return callback({
+              code: 'ERR_DATABASE',
+              id: 'ARQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.createUserAdmin = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkCredentialsAdmin(callback) {
+        module.exports.checkExistingCredentialsAdmin(APP, req, callback);
+      },
+
       function encryptPassword(result, callback) {
-        let pass = APP.validation.password(req.body.pass);
+        let randomPass = Math.random()
+          .toString(36)
+          .slice(-8);
+        let pass = APP.validation.password(randomPass);
         if (pass === true) {
           bcrypt
-            .hash(req.body.pass, 10)
+            .hash(randomPass, 10)
             .then(hashed => {
               return callback(null, {
-                kode: result,
-                pass: hashed
+                pass: randomPass,
+                encryptedPass: hashed
               });
             })
             .catch(err => {
+              console.log('iki error bcrypt', err);
+
               callback({
-                code: 'ERR_BCRYPT',
-                data: JSON.stringify(err)
+                code: 'ERR',
+                id: 'ARN99',
+                message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
+                data: err
               });
             });
         } else {
@@ -280,16 +224,15 @@ exports.register = (APP, req, callback) => {
         }
       },
 
-      function registerUser(data, callback) {
+      function addingNewUser(data, callback) {
         let email = APP.validation.email(req.body.email);
         let username = APP.validation.username(req.body.username);
 
         if (email && username) {
-          APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+          APP.models.mysql.admin
             .build({
-              employee_code: data.kode,
-              company_code: req.body.company,
-              nik: req.body.nik,
+              company_id: req.user.company,
+              company_code: req.user.code,
               name: req.body.name,
               gender: req.body.gender,
               pob: req.body.pob,
@@ -304,25 +247,26 @@ exports.register = (APP, req, callback) => {
               tlp: req.body.telp,
               email: req.body.email,
               user_name: req.body.username,
-              password: data.pass,
-              old_password: data.pass
+              password: data.encryptedPass,
+              old_password: data.encryptedPass
             })
             .save()
-            .then(result => {
-              let params = 'Insert Success'; //This is only example, Object can also be used
-              return callback(null, {
-                code: 'INSERT_SUCCESS',
-                data: result.dataValues || params
+            .then(res => {
+              callback(null, {
+                pass: data.pass,
+                inserted: res
               });
             })
             .catch(err => {
-              console.log(err);
-
               if (err.original && err.original.code === 'ER_DUP_ENTRY') {
                 let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
                 return callback({
                   code: 'DUPLICATE',
-                  data: params
+                  id: 'ARQ96',
+                  message: 'Kesalahan pada parameter',
+                  info: {
+                    parameter: params
+                  }
                 });
               }
 
@@ -330,350 +274,44 @@ exports.register = (APP, req, callback) => {
                 let params = 'Error! Empty Query'; //This is only example, Object can also be used
                 return callback({
                   code: 'UPDATE_NONE',
-                  data: params
+                  id: 'ARQ96',
+                  message: 'Kesalahan pada parameter',
+                  info: {
+                    parameter: params
+                  }
                 });
               }
 
               return callback({
                 code: 'ERR_DATABASE',
-                data: JSON.stringify(err)
+                id: 'ARQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
               });
             });
         } else {
           if (email !== true) return callback(email);
           if (username !== true) return callback(username);
         }
-      }
-    ],
-    (err, result) => {
-      if (err) {
-        console.log(err);
-
-        return callback(err);
-      }
-
-      callback(null, result);
-    }
-  );
-};
-
-exports.login = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function checkBody(callback) {
-        if (!req.body.company)
-          return callback({
-            code: 'MISSING_KEY',
-            data: req.body,
-            info: {
-              missingParameter: 'company'
-            }
-          });
-
-        if (!req.body.username)
-          return callback({
-            code: 'MISSING_KEY',
-            data: req.body,
-            info: {
-              missingParameter: 'username'
-            }
-          });
-
-        if (!req.body.pass)
-          return callback({
-            code: 'MISSING_KEY',
-            data: req.body,
-            info: {
-              missingParameter: 'password'
-            }
-          });
-
-        if (!req.body.platform)
-          return callback({
-            code: 'MISSING_KEY',
-            data: req.body,
-            info: {
-              missingParameter: 'platform'
-            }
-          });
-
-        if (req.body.platform != 'Web' && req.body.platform != 'Mobile')
-          return callback({
-            code: 'INVALID_KEY',
-            data: req.body,
-            info: {
-              invalidParameter: 'platform'
-            }
-          });
-
-        callback(null, true);
       },
 
-      function checkUser(index, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-          .findAll({
-            where: {
-              user_name: req.body.username,
-              company_code: req.body.company
-            }
-          })
-          .then(rows => {
-            console.log(rows);
-
-            if (rows.length <= 0) {
-              return callback({
-                code: 'NOT_FOUND',
-                info: {
-                  parameter: 'No records found'
-                }
-              });
-            }
-
-            if (rows[0].status == 0) {
-              return callback({
-                code: 'INVALID_REQUEST',
-                message: 'User have to wait for admin to verify their account first!'
-              });
-            }
-
-            callback(null, rows);
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
-      function commparePassword(rows, callback) {
-        bcrypt
-          .compare(req.body.pass, rows[0].password)
-          .then(res => {
-            if (res === true) return callback(null, rows);
-
-            callback({
-              code: 'INVALID_PASSWORD',
-              info: {
-                parameter: 'password did not match'
-              }
-            });
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
-      function setToken(rows, callback) {
-        let token = jwt.sign(
-          {
-            id: rows[0].id,
-            code: rows[0].company_code,
-            db: `ceklok_${rows[0].company_code}`,
-            admin: false
-          },
-          key.key,
-          {
-            expiresIn: '1d'
-          }
-        );
-
-        APP.models.mongo.token
-          .findOne({
-            id_user: rows[0].id,
-            company_code: rows[0].company_code,
-            platform: req.body.platform
-          })
-          .then(res => {
-            if (res !== null) {
-              console.log('iki update');
-
-              APP.models.mongo.token
-                .findByIdAndUpdate(res._id, {
-                  token,
-                  date: req.customDate,
-                  time: req.customTime,
-                  elapsed_time: req.elapsedTime || '0'
-                })
-                .then(res => {
-                  return callback(null, {
-                    code: 'UPDATE_SUCCESS',
-                    data: {
-                      row: rows[0].dataValues,
-                      token
-                    },
-                    info: {
-                      dataCount: rows.length
-                    }
-                  });
-                })
-                .catch(err => {
-                  return callback({
-                    code: 'ERR_DATABASE',
-                    data: JSON.stringify(err)
-                  });
-                });
-            } else {
-              console.log('iki insert');
-
-              APP.models.mongo.token
-                .create({
-                  id_user: rows[0].id,
-                  platform: req.body.platform,
-                  token,
-                  date: req.customDate,
-                  time: req.customTime,
-                  elapsed_time: req.elapsedTime || '0'
-                })
-                .then(result => {
-                  return callback(null, {
-                    code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
-                    data:
-                      rows && rows.length > 0
-                        ? {
-                            row: rows[0].dataValues,
-                            token
-                          }
-                        : null,
-                    info: {
-                      dataCount: rows.length
-                    }
-                  });
-                })
-                .catch(err => {
-                  return callback({
-                    code: 'ERR_DATABASE',
-                    data: JSON.stringify(err)
-                  });
-                });
-            }
-          });
-      }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
-
-      callback(null, result);
-    }
-  );
-};
-
-exports.forgotPassword = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function checkCompany(callback) {
-        module.exports.checkExistingCompany(APP, req, callback);
-      },
-
-      function checkEmail(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-          .findAll({
-            where: {
-              email: req.body.email
-            }
-          })
-          .then(res => {
-            if (res.length <= 0) {
-              return callback({
-                code: 'NOT_FOUND',
-                info: {
-                  parameter: 'No records found'
-                }
-              });
-            }
-            callback(null, true);
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
-      },
-
-      function createOTP(result, callback) {
-        let otp = APP.otp.generateOTP();
-
-        APP.models.mongo.otp
-          .findOne({
-            email: req.body.email
-          })
-          .then(res => {
-            if (res != null) {
-              if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
-                return callback({
-                  code: 'ERR',
-                  message: 'Limit reached for today!'
-                });
-              }
-              if (res.date.getTime() !== req.currentDate.getTime() || res.count < 3) {
-                APP.models.mongo.otp
-                  .findByIdAndUpdate(res._id, {
-                    otp: otp,
-                    count: res.count == 3 ? 1 : res.count + 1,
-                    date: req.currentDate,
-                    time: req.customTime,
-                    elapsed_time: req.elapsedTime || '0'
-                  })
-                  .then(result => {
-                    callback(null, {
-                      code: 'UPDATE_SUCCESS',
-                      data: {
-                        row: result,
-                        otp: otp
-                      },
-                      info: {
-                        dataCount: result.length
-                      }
-                    });
-                  });
-              }
-            } else {
-              APP.models.mongo.otp
-                .create({
-                  email: req.body.email,
-                  otp: otp,
-                  count: 1,
-                  endpoint: req.originalUrl,
-                  date: req.currentDate,
-                  time: req.customTime,
-                  elapsed_time: req.elapsedTime || '0'
-                })
-                .then(res => {
-                  callback(null, {
-                    code: 'INSERT_SUCCESS',
-                    data: {
-                      row: res,
-                      otp: otp
-                    },
-                    info: {
-                      dataCount: res.length
-                    }
-                  });
-                });
-            }
-          });
-      },
-
-      function sendEmail(data, callback) {
-        console.log(data.data.row.otp);
-
+      function sendInvoice(data, callback) {
         //send to email
         APP.mailer.sendMail({
-          subject: 'Reset Password',
+          subject: 'Account Created',
           to: req.body.email,
           data: {
-            otp: data.data.otp
+            username: data.inserted.user_name,
+            pass: data.pass
           },
-          file: 'forgot_password.html'
+          file: 'create_employee.html'
         });
 
         callback(null, {
-          code: data.code,
-          data: data.data
+          code: 'INSERT_SUCCESS',
+          id: 'ARP00',
+          message: 'Registrasi Sukses!',
+          data: data
         });
       }
     ],
@@ -685,165 +323,320 @@ exports.forgotPassword = (APP, req, callback) => {
   );
 };
 
-exports.checkOTP = (APP, req, callback) => {
-  APP.models.mongo.otp
-    .findOne({
-      otp: req.body.otp
-    })
+exports.createUserAdminCeklok = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkCredentialsAdmin(callback) {
+        module.exports.checkExistingCredentialsAdminCeklok(APP, req, callback);
+      },
+
+      function encryptPassword(result, callback) {
+        let randomPass = Math.random()
+          .toString(36)
+          .slice(-8);
+        let pass = APP.validation.password(randomPass);
+        if (pass === true) {
+          bcrypt
+            .hash(randomPass, 10)
+            .then(hashed => {
+              return callback(null, {
+                pass: randomPass,
+                encryptedPass: hashed
+              });
+            })
+            .catch(err => {
+              console.log('iki error bcrypt', err);
+
+              callback({
+                code: 'ERR',
+                id: 'ARN99',
+                message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        } else {
+          return callback(pass);
+        }
+      },
+
+      function addingNewUser(data, callback) {
+        let email = APP.validation.email(req.body.email);
+        let username = APP.validation.username(req.body.username);
+
+        if (email && username) {
+          APP.models.mysql.admin_app
+            .build({
+              name: req.body.name,
+              email: req.body.email,
+              user_name: req.body.username,
+              password: data.encryptedPass,
+              old_password: data.encryptedPass
+            })
+            .save()
+            .then(res => {
+              callback(null, {
+                pass: data.pass,
+                inserted: res
+              });
+            })
+            .catch(err => {
+              if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+                let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+                return callback({
+                  code: 'DUPLICATE',
+                  id: 'ARQ96',
+                  message: 'Kesalahan pada parameter',
+                  info: {
+                    parameter: params
+                  }
+                });
+              }
+
+              if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+                let params = 'Error! Empty Query'; //This is only example, Object can also be used
+                return callback({
+                  code: 'UPDATE_NONE',
+                  id: 'ARQ96',
+                  message: 'Kesalahan pada parameter',
+                  info: {
+                    parameter: params
+                  }
+                });
+              }
+
+              return callback({
+                code: 'ERR_DATABASE',
+                id: 'ARQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        } else {
+          if (email !== true) return callback(email);
+          if (username !== true) return callback(username);
+        }
+      },
+
+      function sendInvoice(data, callback) {
+        //send to email
+        APP.mailer.sendMail({
+          subject: 'Account Created',
+          to: req.body.email,
+          data: {
+            username: data.inserted.user_name,
+            pass: data.pass
+          },
+          file: 'create_employee.html'
+        });
+
+        callback(null, {
+          code: 'INSERT_SUCCESS',
+          id: 'ARP00',
+          message: 'Registrasi Sukses!',
+          data: data
+        });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.getAllListUser = (APP, req, callback) => {
+  let mysql = APP.models.mysql;
+
+  if (req.user.admin) {
+    mysql.admin
+      .findAll({
+        where: {
+          company_id: req.user.company
+        }
+      })
+      .then(res => {
+        if (res.length == 0) {
+          return callback({
+            code: 'NOT_FOUND',
+            message: 'List user tidak ditemukan pada company'
+          });
+        }
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      })
+      .catch(err => {
+        console.log('Error list admin company', err);
+        callback({
+          code: 'ERR_DATABASE',
+          message: 'Error list user company',
+          data: err
+        });
+      });
+  } else if (req.user.superadmin) {
+    mysql.admin_app
+      .findAll()
+      .then(res => {
+        if (res.length == 0) {
+          return callback({
+            code: 'NOT_FOUND',
+            message: 'List user tidak ditemukan pada CEKLOK'
+          });
+        }
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      })
+      .catch(err => {
+        console.log('Error list admin ceklok', err);
+        callback({
+          code: 'ERR_DATABASE',
+          message: 'Error list user ceklok',
+          data: err
+        });
+      });
+  } else {
+    return callback({
+      code: 'INVALID_REQUEST',
+      message: 'Anda tidak bisa mengaksses fitur ini'
+    });
+  }
+};
+
+exports.getDetailsUser = (APP, req, callback) => {
+  let mysql = APP.models.mysql;
+
+  if (req.user.admin) {
+    mysql.admin
+      .findOne({
+        where: {
+          company_id: req.user.company,
+          id: req.body.id
+        }
+      })
+      .then(res => {
+        if (res == null) {
+          return callback({
+            code: 'NOT_FOUND',
+            message: 'User tidak ditemukan pada company'
+          });
+        }
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      })
+      .catch(err => {
+        console.log('Error Udmin company', err);
+        callback({
+          code: 'ERR_DATABASE',
+          message: 'Error User company',
+          data: err
+        });
+      });
+  } else if (req.user.superadmin) {
+    mysql.admin_app
+      .findOne({
+        where: {
+          id: req.body.id
+        }
+      })
+      .then(res => {
+        if (res == null) {
+          return callback({
+            code: 'NOT_FOUND',
+            message: 'User tidak ditemukan pada CEKLOK'
+          });
+        }
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      })
+      .catch(err => {
+        console.log('Error Udmin ceklok', err);
+        callback({
+          code: 'ERR_DATABASE',
+          message: 'Error User ceklok',
+          data: err
+        });
+      });
+  } else {
+    return callback({
+      code: 'INVALID_REQUEST',
+      message: 'Anda tidak bisa mengaksses fitur ini'
+    });
+  }
+};
+
+exports.editUserAdminCompany = (APP, req, callback) => {
+  APP.models.mysql.admin
+    .update(
+      {
+        name: req.body.name,
+        gender: req.body.gender,
+        pob: req.body.pob,
+        dob: req.body.dob,
+        address: req.body.address,
+        kelurahan: req.body.kel,
+        kecamatan: req.body.kec,
+        city: req.body.city,
+        province: req.body.prov,
+        zipcode: req.body.zip,
+        msisdn: 'default',
+        tlp: req.body.telp,
+        email: req.body.email,
+        user_name: req.body.username
+      },
+      {
+        where: {
+          id: req.body.id
+        }
+      }
+    )
     .then(res => {
       callback(null, {
-        code: res != null ? 'FOUND' : 'NOT_FOUND',
-        data:
-          res != null
-            ? {
-                row: res
-              }
-            : null,
-        info: {
-          dataCount: res.length,
-          parameter: 'otp'
-        }
+        code: 'UPDATE_SUCCESS',
+        data: res
       });
     })
     .catch(err => {
+      console.log(err);
       callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
 
-exports.resetPassword = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function checkBody(callback) {
-        let password = APP.validation.password(req.body.pass);
-        let konfirm = APP.validation.password(req.body.konf);
-
-        if (password != true) {
-          return callback(password);
-        }
-
-        if (konfirm != true) {
-          console.log('konfirm');
-
-          return callback(konfirm);
-        }
-
-        if (req.body.konf !== req.body.pass) {
-          callback({
-            code: 'NOT_MATCH',
-            info: {
-              parameter: 'konfirmasi password'
-            }
-          });
-        }
-        callback(null, true);
+exports.editUserAdminCeklok = (APP, req, callback) => {
+  APP.models.mysql.admin_app
+    .update(
+      {
+        name: req.body.name,
+        email: req.body.email,
+        user_name: req.body.username
       },
-
-      function checkPassword(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-          .findOne({
-            where: {
-              email: req.body.email
-            }
-          })
-          .then(res => {
-            bcrypt.compare(req.body.pass, res.password).then(res => {
-              console.log(res);
-
-              if (res === false) return callback(null, true);
-
-              callback({
-                code: 'INVALID_PASSWORD',
-                message: 'Password is match with previous password!'
-              });
-            });
-          });
-      },
-
-      function encryptPassword(result, callback) {
-        let pass = APP.validation.password(req.body.pass);
-        if (pass === true) {
-          bcrypt.hash(req.body.pass, 10).then(hashed => {
-            callback(null, hashed);
-          });
-        } else {
-          callback(pass);
+      {
+        where: {
+          id: req.body.id
         }
-      },
-
-      function updatePassword(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-          .findOne({
-            where: {
-              email: req.body.email
-            }
-          })
-          .then(res => {
-            if (res == null) {
-              callback({
-                code: 'NOT_FOUND',
-                data: null
-              });
-            }
-            res
-              .update({
-                password: result,
-                updated_at: new Date()
-              })
-              .then(res => {
-                callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: res
-                });
-              })
-              .catch(err => {
-                callback({
-                  code: 'ERR_DATABASE',
-                  data: JSON.stringify(err)
-                });
-              });
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
-            });
-          });
       }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
-
-      callback(null, result);
-    }
-  );
-};
-
-exports.logout = (APP, req, callback) => {
-  APP.models.mongo.token
-    .findOneAndDelete({
-      token: req.headers.authorization
-    })
+    )
     .then(res => {
       callback(null, {
-        code: res != null ? 'FOUND' : 'NOT_FOUND',
-        data:
-          res != null
-            ? {
-                row: res
-              }
-            : null,
-        info: {
-          dataCount: res.length
-        }
+        code: 'UPDATE_SUCCESS',
+        data: res
       });
     })
     .catch(err => {
+      console.log(err);
       callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };

@@ -62,6 +62,14 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         defaultValue: 0
       },
+      status: {
+        type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
+        allowNull: false,
+        defaultValue: 0
+      },
+      status_upload: {
+        type: Sequelize.STRING(100)
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

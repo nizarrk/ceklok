@@ -1,6 +1,8 @@
 'use strict';
 
 const async = require('async');
+const trycatch = require('trycatch');
+const path = require('path');
 
 exports.getListCompany = (APP, req, callback) => {
   let mysql = APP.models.mysql;
@@ -153,4 +155,119 @@ exports.editCompanyProfile = (APP, req, callback) => {
         data: err
       });
     });
+};
+
+exports.editCompanyStatus = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function uploadPath(callback) {
+        trycatch(
+          () => {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'ERR',
+                message: 'No files were uploaded.'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let docPath = `./public/uploads/company_${req.user.code}/status/`;
+
+            // if (!fs.existsSync(docPath)) {
+            //   mkdirp.sync(docPath);
+            // }
+
+            callback(null, docPath + fileName + path.extname(req.files.upload.name));
+          },
+          err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR',
+              message: 'Error upload data',
+              data: err
+            });
+          }
+        );
+      },
+
+      function updateStatus(result, callback) {
+        let mysql = APP.models.mysql;
+
+        if (!req.body.status) {
+          return callback({
+            code: 'MISSING_KEY',
+            message: 'Missing parameter status'
+          });
+        }
+
+        if (!req.body.id) {
+          return callback({
+            code: 'MISSING_KEY',
+            message: 'Missing parameter id'
+          });
+        }
+
+        mysql.company
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Company tidak ditemukan'
+              });
+            }
+
+            res
+              .update({
+                status: req.body.status,
+                status_upload: result.slice(8) // slice 8 untuk hilangin ./public
+              })
+              .then(updated => {
+                // Use the mv() method to place the file somewhere on your server
+                req.files.upload.mv(result, function(err) {
+                  if (err) {
+                    console.log(err);
+
+                    return callback({
+                      code: 'ERR',
+                      id: 'PVS01',
+                      message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
+                    });
+                  }
+                });
+                callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: updated
+                });
+              })
+              .catch(err => {
+                console.log('Error update', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error update',
+                  data: err
+                });
+              });
+          })
+          .catch(err => {
+            console.log('Error findOne', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error findOne',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

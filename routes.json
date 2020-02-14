@@ -11,27 +11,27 @@
     "function": "testing",
     "auth": true
   },
-  "/admin/register": {
+  "/auth/admin/register": {
     "method": "post",
-    "controller": "adminController",
+    "controller": "authAdminController",
     "function": "register",
     "auth": false
   },
-  "/admin/payment": {
+  "/auth/admin/payment": {
     "method": "post",
-    "controller": "adminController",
+    "controller": "authAdminController",
     "function": "paymentCompany",
     "auth": false
   },
-  "/admin/login": {
+  "/auth/admin/login": {
     "method": "post",
-    "controller": "adminController",
+    "controller": "authAdminController",
     "function": "login",
     "auth": false
   },
-  "/admin/verifyuser": {
+  "/auth/admin/verifyuser": {
     "method": "post",
-    "controller": "adminController",
+    "controller": "authAdminController",
     "function": "verifyEmployee",
     "auth": true
   },
@@ -137,51 +137,51 @@
     "function": "delete",
     "auth": true
   },
-  "/user/register": {
+  "/auth/employee/register": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "register",
     "auth": false
   },
-  "/user/login": {
+  "/auth/employee/login": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "login",
     "auth": false
   },
-  "/user/logout": {
+  "/auth/logout": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "logout",
     "auth": false
   },
-  "/user/checkcompany": {
+  "/auth/checkcompany": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "checkExistingCompany",
     "auth": false
   },
-  "/user/checkcredentials": {
+  "/auth/checkcredentials": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "checkExistingCredentials",
     "auth": false
   },
   "/auth/forgotpassword": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "forgotPassword",
     "auth": false
   },
   "/auth/checkotp": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "checkOTP",
     "auth": false
   },
   "/auth/resetpassword": {
     "method": "post",
-    "controller": "userController",
+    "controller": "authEemployeeController",
     "function": "resetPassword",
     "auth": false
   },
@@ -563,12 +563,6 @@
     "function": "delete",
     "auth": true
   },
-  "/superadmin/add": {
-    "method": "post",
-    "controller": "superAdminController",
-    "function": "addSuperAdmin",
-    "auth": false
-  },
   "/presence/generatepresence": {
     "method": "post",
     "controller": "presenceController",
@@ -641,15 +635,21 @@
     "function": "delete",
     "auth": true
   },
-  "/superadmin/login": {
+  "/auth/ceklok/add": {
     "method": "post",
-    "controller": "superAdminController",
+    "controller": "authCeklokController",
+    "function": "addSuperAdmin",
+    "auth": false
+  },
+  "/auth/ceklok/login": {
+    "method": "post",
+    "controller": "authCeklokController",
     "function": "login",
     "auth": false
   },
-  "/superadmin/verifycompany": {
+  "/auth/ceklok/verifycompany": {
     "method": "post",
-    "controller": "superAdminController",
+    "controller": "authCeklokController",
     "function": "verifyCompany",
     "auth": true
   },
@@ -669,6 +669,48 @@
     "method": "post",
     "controller": "companyController",
     "function": "editCompanyProfile",
+    "auth": true
+  },
+  "/company/updatestatus": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "editCompanyStatus",
+    "auth": true
+  },
+  "/user/add": {
+    "method": "post",
+    "controller": "userController",
+    "function": "createUserAdmin",
+    "auth": true
+  },
+  "/user/ceklok/add": {
+    "method": "post",
+    "controller": "userController",
+    "function": "createUserAdminCeklok",
+    "auth": true
+  },
+  "/user/get": {
+    "method": "post",
+    "controller": "userController",
+    "function": "getAllListUser",
+    "auth": true
+  },
+  "/user/getbyid": {
+    "method": "post",
+    "controller": "userController",
+    "function": "getDetailsUser",
+    "auth": true
+  },
+  "/user/update": {
+    "method": "post",
+    "controller": "userController",
+    "function": "editUserAdminCompany",
+    "auth": true
+  },
+  "/user/ceklok/update": {
+    "method": "post",
+    "controller": "userController",
+    "function": "editUserAdminCeklok",
     "auth": true
   }
 }
