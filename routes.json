@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": true
+    "auth": false
   },
   "/test/tes": {
     "method": "post",
@@ -71,37 +71,37 @@
     "function": "updateEmployeeRotasi",
     "auth": true
   },
-  "/employee/getsp": {
+  "/employee/violation/get": {
     "method": "post",
     "controller": "employeeController",
     "function": "getSuratPeringatan",
     "auth": true
   },
-  "/employee/addsp": {
+  "/employee/violation/add": {
     "method": "post",
     "controller": "employeeController",
     "function": "addSuratPeringatan",
     "auth": true
   },
-  "/employeestatus/get": {
+  "/employee/status/get": {
     "method": "post",
     "controller": "employeeStatusController",
     "function": "get",
     "auth": true
   },
-  "/employeestatus/insert": {
+  "/employee/status/insert": {
     "method": "post",
     "controller": "employeeStatusController",
     "function": "insert",
     "auth": true
   },
-  "/employeestatus/update": {
+  "/employee/status/update": {
     "method": "post",
     "controller": "employeeStatusController",
     "function": "update",
     "auth": true
   },
-  "/employeestatus/delete": {
+  "/employee/status/delete": {
     "method": "post",
     "controller": "employeeStatusController",
     "function": "delete",
@@ -139,49 +139,49 @@
   },
   "/auth/employee/register": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "register",
     "auth": false
   },
   "/auth/employee/login": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "login",
     "auth": false
   },
   "/auth/logout": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "logout",
     "auth": false
   },
   "/auth/checkcompany": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "checkExistingCompany",
     "auth": false
   },
   "/auth/checkcredentials": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "checkExistingCredentials",
     "auth": false
   },
   "/auth/forgotpassword": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "forgotPassword",
     "auth": false
   },
   "/auth/checkotp": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "checkOTP",
     "auth": false
   },
   "/auth/resetpassword": {
     "method": "post",
-    "controller": "authEemployeeController",
+    "controller": "authEmployeeController",
     "function": "resetPassword",
     "auth": false
   },
@@ -191,23 +191,35 @@
     "function": "get",
     "auth": false
   },
+  "/pricing/getbyid": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "getPricingDetails",
+    "auth": true
+  },
   "/pricing/insert": {
     "method": "post",
     "controller": "pricingController",
     "function": "insert",
-    "auth": false
+    "auth": true
   },
   "/pricing/update": {
     "method": "post",
     "controller": "pricingController",
     "function": "update",
-    "auth": false
+    "auth": true
+  },
+  "/pricing/updatefeature": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "updatePricingFeature",
+    "auth": true
   },
   "/pricing/delete": {
     "method": "post",
     "controller": "pricingController",
     "function": "delete",
-    "auth": false
+    "auth": true
   },
   "/payment/method/get": {
     "method": "post",
@@ -683,6 +695,24 @@
     "function": "createUserAdmin",
     "auth": true
   },
+  "/user/type/insert": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "createUserType",
+    "auth": true
+  },
+  "/user/type/update": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "updateUserType",
+    "auth": true
+  },
+  "/user/type/updatefeature": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "updateUserTypeFeature",
+    "auth": true
+  },
   "/user/ceklok/add": {
     "method": "post",
     "controller": "userController",
@@ -711,6 +741,60 @@
     "method": "post",
     "controller": "userController",
     "function": "editUserAdminCeklok",
+    "auth": true
+  },
+  "/user/ceklok/updatestatus": {
+    "method": "post",
+    "controller": "userController",
+    "function": "editCompanyStatus",
+    "auth": true
+  },
+  "/feature/ceklok/get": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "displayAllFeature",
+    "auth": true
+  },
+  "/feature/get": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "displayFeatureCompany",
+    "auth": true
+  },
+  "/feature/ceklok/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addNewFeature",
+    "auth": true
+  },
+  "/feature/ceklok/endpoint/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addEndpoint",
+    "auth": true
+  },
+  "/feature/ceklok/sub/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addSubFeature",
+    "auth": true
+  },
+  "/feature/ceklok/sub/setting/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addSubFeatureSettings",
+    "auth": true
+  },
+  "/dashboard/employee/get": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardEmployee",
+    "auth": true
+  },
+  "/dashboard/company/get": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardAdminCompany",
     "auth": true
   }
 }

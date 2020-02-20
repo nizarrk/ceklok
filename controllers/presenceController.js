@@ -736,27 +736,22 @@ exports.checkInOutProcess = (APP, req, callback) => {
 };
 
 exports.getHistoryCheckInOut = (APP, req, callback) => {
-  let query = `SELECT presence.id, presence.user_id, presence.check_in_device_id, 
+  let query = `SELECT 
+                presence.id, presence.user_id, presence.check_in_device_id, 
                 presence.check_out_device_id, presence.check_in_branch_id, 
                 presence.check_out_branch_id, presence.date, presence.check_in, 
-                presence.check_out, presence.total_time, presence.status, 
+                presence.check_out, presence.total_time, presence.presence_setting_id, 
                 employee.id AS 'employee_id', 
                 employee.nik AS 'employee_nik', 
                 employee.name AS 'employee_name', 		
-                check_in_device.id AS 'check_in_device_id', 
                 check_in_device.name AS 'check_in_device_name',
                 check_in_device.location AS 'check_in_device_location',
                 check_in_device.major AS 'check_in_device_major',
                 check_in_device.minor AS 'check_in_device_minor',
-                check_out_device.id AS 'check_out_device_id',
                 check_out_device.name AS 'check_out_device_name',
                 check_out_device.location AS 'check_out_device_location',
-                check_out_device.major AS 'check_out_device_major',
-                check_out_device.minor AS 'check_out_device_minor',
-                check_in_branch.id AS 'check_in_branch_id',
                 check_in_branch.name AS 'check_in_branch_name',
                 check_in_branch.address AS 'check_in_branch_address',
-                check_out_branch.id AS 'check_out_branch_id',
                 check_out_branch.name AS 'check_out_branch_name',
                 check_out_branch.address AS 'check_out_branch_address' 
               FROM 

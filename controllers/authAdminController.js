@@ -656,36 +656,28 @@ exports.login = (APP, req, callback) => {
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'username'
-            }
+            message: 'Missing key, username'
           });
 
         if (!req.body.pass)
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'password'
-            }
+            message: 'Missing key, password'
           });
 
         if (!req.body.platform)
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'platform'
-            }
+            message: 'Missing key, platform'
           });
 
         if (req.body.platform != 'Web')
           return callback({
             code: 'INVALID_KEY',
             data: req.body,
-            info: {
-              invalidParameter: 'platform'
-            }
+            message: 'Invalid key, username'
           });
 
         callback(null, true);
@@ -702,9 +694,7 @@ exports.login = (APP, req, callback) => {
             if (rows.length <= 0) {
               return callback({
                 code: 'NOT_FOUND',
-                info: {
-                  parameter: 'No records found'
-                }
+                message: 'Invalid Username or Password'
               });
             }
 
@@ -732,7 +722,7 @@ exports.login = (APP, req, callback) => {
 
             callback({
               code: 'INVALID_REQUEST',
-              message: 'Password tidak cocok!'
+              message: 'Invalid Username or Password'
             });
           })
           .catch(err => {
@@ -762,7 +752,6 @@ exports.login = (APP, req, callback) => {
         APP.models.mongo.token
           .findOne({
             id_admin: rows[0].id,
-            company_code: rows[0].company_code,
             platform: req.body.platform
           })
           .then(res => {
@@ -987,6 +976,13 @@ exports.verifyEmployee = (APP, req, callback) => {
             }
           })
           .then(res => {
+            console.log(res);
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Email tidak terdaftar'
+              });
+            }
             if (res.status == 1) {
               return callback({
                 code: 'UPDATE_NONE',

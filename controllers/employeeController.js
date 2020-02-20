@@ -659,13 +659,13 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
             let benefitPath = `./public/uploads/company_${req.user.code}/employee/benefit/`;
             let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
 
-            if (!fs.existsSync(benefitPath)) {
-              mkdirp.sync(benefitPath);
-            }
+            // if (!fs.existsSync(benefitPath)) {
+            //   mkdirp.sync(benefitPath);
+            // }
 
-            if (!fs.existsSync(contractPath)) {
-              mkdirp.sync(contractPath);
-            }
+            // if (!fs.existsSync(contractPath)) {
+            //   mkdirp.sync(contractPath);
+            // }
 
             if (req.files.benefit_upload) {
               req.files.benefit_upload.mv(

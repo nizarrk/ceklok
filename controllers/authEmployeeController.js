@@ -188,12 +188,7 @@ exports.checkExistingCompany = (APP, req, callback) => {
       if (res && res.length > 0) {
         return callback(null, {
           code: 'FOUND',
-          data: {
-            row: res
-          },
-          info: {
-            dataCount: res.length
-          }
+          data: res
         });
       }
       callback({
@@ -365,45 +360,35 @@ exports.login = (APP, req, callback) => {
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'company'
-            }
+            message: 'Missing key, company'
           });
 
         if (!req.body.username)
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'username'
-            }
+            message: 'Missing key, username'
           });
 
         if (!req.body.pass)
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'password'
-            }
+            message: 'Missing key, password'
           });
 
         if (!req.body.platform)
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'platform'
-            }
+            message: 'Missing key, platform'
           });
 
         if (req.body.platform != 'Web' && req.body.platform != 'Mobile')
           return callback({
             code: 'INVALID_KEY',
             data: req.body,
-            info: {
-              invalidParameter: 'platform'
-            }
+            message: 'Missing key, platform'
           });
 
         callback(null, true);
@@ -418,14 +403,10 @@ exports.login = (APP, req, callback) => {
             }
           })
           .then(rows => {
-            console.log(rows);
-
             if (rows.length <= 0) {
               return callback({
                 code: 'NOT_FOUND',
-                info: {
-                  parameter: 'No records found'
-                }
+                message: 'Invalid Username or Password'
               });
             }
 
@@ -453,10 +434,8 @@ exports.login = (APP, req, callback) => {
             if (res === true) return callback(null, rows);
 
             callback({
-              code: 'INVALID_PASSWORD',
-              info: {
-                parameter: 'password did not match'
-              }
+              code: 'INVALID_REQUEST',
+              message: 'Invalid Username or Password'
             });
           })
           .catch(err => {
@@ -606,13 +585,13 @@ exports.forgotPassword = (APP, req, callback) => {
           })
           .then(res => {
             if (res != null) {
-              if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
-                return callback({
-                  code: 'ERR',
-                  message: 'Limit reached for today!'
-                });
-              }
-              if (res.date.getTime() !== req.currentDate.getTime() || res.count < 3) {
+              // if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
+              //   return callback({
+              //     code: 'INVALID_REQUEST',
+              //     message: 'Limit reached for today!'
+              //   });
+              // }
+              if (res.date.getTime() !== req.currentDate.getTime() || res.count <= 3) {
                 APP.models.mongo.otp
                   .findByIdAndUpdate(res._id, {
                     otp: otp,
@@ -715,24 +694,24 @@ exports.forgotPassword = (APP, req, callback) => {
 exports.checkOTP = (APP, req, callback) => {
   APP.models.mongo.otp
     .findOne({
+      email: req.body.email,
       otp: req.body.otp
     })
     .then(res => {
+      if (res == null) {
+        return callback({
+          code: 'NOT_FOUND',
+          message: 'Kode OTP salah atau tidak ditemukan'
+        });
+      }
       callback(null, {
-        code: res != null ? 'FOUND' : 'NOT_FOUND',
-        data:
-          res != null
-            ? {
-                row: res
-              }
-            : null,
-        info: {
-          dataCount: res.length,
-          parameter: 'otp'
-        }
+        code: 'FOUND',
+        data: res
       });
     })
     .catch(err => {
+      console.log(err);
+
       callback({
         code: 'ERR_DATABASE',
         data: err
@@ -759,10 +738,8 @@ exports.resetPassword = (APP, req, callback) => {
 
         if (req.body.konf !== req.body.pass) {
           callback({
-            code: 'NOT_MATCH',
-            info: {
-              parameter: 'konfirmasi password'
-            }
+            code: 'INVALID_REQUEST',
+            message: 'Invalid password confirm'
           });
         }
         callback(null, true);
@@ -782,9 +759,17 @@ exports.resetPassword = (APP, req, callback) => {
               if (res === false) return callback(null, true);
 
               callback({
-                code: 'INVALID_PASSWORD',
+                code: 'INVALID_REQUEST',
                 message: 'Password is match with previous password!'
               });
+            });
+          })
+          .catch(err => {
+            console.log('Error checkPassword', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error checkPassword',
+              data: err
             });
           });
       },
@@ -826,15 +811,19 @@ exports.resetPassword = (APP, req, callback) => {
                 });
               })
               .catch(err => {
+                console.log('Error update updatePassword', err);
                 callback({
                   code: 'ERR_DATABASE',
+                  message: 'Error update updatePassword',
                   data: err
                 });
               });
           })
           .catch(err => {
+            console.log('Error findOne updatePassword', err);
             callback({
               code: 'ERR_DATABASE',
+              message: 'Error findOne updatePassword',
               data: err
             });
           });

@@ -38,37 +38,29 @@ exports.login = (APP, req, callback) => {
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'username'
-            }
+            message: 'Missing key, username!'
           });
 
         if (!req.body.pass)
           return callback({
             code: 'MISSING_KEY',
             data: req.body,
-            info: {
-              missingParameter: 'password'
-            }
+            message: 'Missing key, password!'
           });
 
-        // if (!req.body.platform)
-        //   return callback({
-        //     code: 'MISSING_KEY',
-        //     data: req.body,
-        //     info: {
-        //       missingParameter: 'platform'
-        //     }
-        //   });
+        if (!req.body.platform)
+          return callback({
+            code: 'MISSING_KEY',
+            data: req.body,
+            message: 'Missing key, platform'
+          });
 
-        // if (req.body.platform != 'Web')
-        //   return callback({
-        //     code: 'INVALID_KEY',
-        //     data: req.body,
-        //     info: {
-        //       invalidParameter: 'platform'
-        //     }
-        //   });
+        if (req.body.platform != 'Web')
+          return callback({
+            code: 'INVALID_KEY',
+            data: req.body,
+            message: 'Invalid key, username'
+          });
 
         callback(null, true);
       },
@@ -84,7 +76,7 @@ exports.login = (APP, req, callback) => {
             if (rows.length <= 0) {
               return callback({
                 code: 'NOT_FOUND',
-                message: 'No records found'
+                message: 'Invalid Username or Password'
               });
             }
 
@@ -107,8 +99,8 @@ exports.login = (APP, req, callback) => {
             if (res === true) return callback(null, rows);
 
             callback({
-              code: 'INVALID_PASSWORD',
-              message: 'password did not match'
+              code: 'INVALID_REQUEST',
+              message: 'Invalid Username or Password'
             });
           })
           .catch(err => {
@@ -133,7 +125,7 @@ exports.login = (APP, req, callback) => {
 
         APP.models.mongo.token
           .findOne({
-            id_super_admin: rows[0].id
+            id_admin_ceklok: rows[0].id
             // platform: req.body.platform
           })
           .then(res => {
@@ -170,9 +162,10 @@ exports.login = (APP, req, callback) => {
 
               APP.models.mongo.token
                 .create({
-                  id_super_admin: rows[0].id,
+                  id_admin_ceklok: rows[0].id,
                   // platform: req.body.platform,
                   token,
+                  platform: req.body.platform,
                   date: req.customDate,
                   time: req.customTime,
                   elapsed_time: req.elapsedTime || '0'

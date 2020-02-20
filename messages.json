@@ -40,7 +40,7 @@
     "data": {}
   },
   "NOT_FOUND": {
-    "error": false,
+    "error": true,
     "code": "NOT_FOUND",
     "name": "NOT_FOUND",
     "status": 404,

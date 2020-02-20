@@ -1,0 +1,1300 @@
+[
+  {
+    "/test/connection": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "exampleController",
+      "function": "test",
+      "level": 0,
+      "auth": false
+    }
+  },
+  {
+    "/test/tes": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "exampleController",
+      "function": "testing",
+      "level": 0,
+      "auth": true
+    }
+  },
+  {
+    "/auth/employee/register": {
+      "feature_id": 1,
+      "subfeature_id": 3,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "register",
+      "level": 3,
+      "auth": false
+    }
+  },
+  {
+    "/auth/employee/login": {
+      "feature_id": 1,
+      "subfeature_id": 14,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "login",
+      "level": 3,
+      "auth": false
+    }
+  },
+  {
+    "/auth/logout": {
+      "feature_id": 1,
+      "subfeature_id": 15,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "logout",
+      "level": 6,
+      "auth": false
+    }
+  },
+  {
+    "/auth/checkcompany": {
+      "feature_id": 1,
+      "subfeature_id": 9,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "checkExistingCompany",
+      "level": 3,
+      "auth": false
+    }
+  },
+  {
+    "/auth/checkcredentials": {
+      "feature_id": 1,
+      "subfeature_id": 9,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "checkExistingCredentials",
+      "level": 3,
+      "auth": false
+    }
+  },
+  {
+    "/auth/forgotpassword": {
+      "feature_id": 1,
+      "subfeature_id": 16,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "forgotPassword",
+      "level": 6,
+      "auth": false
+    }
+  },
+  {
+    "/auth/checkotp": {
+      "feature_id": 1,
+      "subfeature_id": 16,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "checkOTP",
+      "level": 6,
+      "auth": false
+    }
+  },
+  {
+    "/auth/resetpassword": {
+      "feature_id": 1,
+      "subfeature_id": 16,
+      "method": "post",
+      "controller": "authEmployeeController",
+      "function": "resetPassword",
+      "level": 6,
+      "auth": false
+    }
+  },
+  {
+    "/auth/admin/register": {
+      "feature_id": 1,
+      "subfeature_id": 3,
+      "method": "post",
+      "controller": "authAdminController",
+      "function": "register",
+      "level": 2,
+      "auth": false
+    }
+  },
+  {
+    "/auth/admin/payment": {
+      "feature_id": 3,
+      "subfeature_id": 20,
+      "method": "post",
+      "controller": "authAdminController",
+      "function": "paymentCompany",
+      "level": 2,
+      "auth": false
+    }
+  },
+  {
+    "/auth/admin/login": {
+      "feature_id": 1,
+      "subfeature_id": 14,
+      "method": "post",
+      "controller": "authAdminController",
+      "function": "login",
+      "level": 2,
+      "auth": false
+    }
+  },
+  {
+    "/auth/admin/verifyuser": {
+      "feature_id": 1,
+      "subfeature_id": 1,
+      "method": "post",
+      "controller": "authAdminController",
+      "function": "verifyEmployee",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/auth/ceklok/add": {
+      "feature_id": 1,
+      "subfeature_id": 1,
+      "method": "post",
+      "controller": "authCeklokController",
+      "function": "addSuperAdmin",
+      "level": 1,
+      "auth": false
+    }
+  },
+  {
+    "/auth/ceklok/login": {
+      "feature_id": 1,
+      "subfeature_id": 14,
+      "method": "post",
+      "controller": "authCeklokController",
+      "function": "login",
+      "level": 1,
+      "auth": false
+    }
+  },
+  {
+    "/auth/ceklok/verifycompany": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "authCeklokController",
+      "function": "verifyCompany",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/employee/viewinfo": {
+      "feature_id": 8,
+      "subfeature_id": 32,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "viewEmployeeInfo",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/add": {
+      "feature_id": 8,
+      "subfeature_id": 31,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "addEmployee",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/import": {
+      "feature_id": 8,
+      "subfeature_id": 31,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "importEmployeeData",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/updateinfo": {
+      "feature_id": 8,
+      "subfeature_id": 33,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "updateEmployeeInfo",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/updatestatus": {
+      "feature_id": 8,
+      "subfeature_id": 34,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "updateEmployeeStatus",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/updaterotasi": {
+      "feature_id": 8,
+      "subfeature_id": 35,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "updateEmployeeRotasi",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/violation/get": {
+      "feature_id": 8,
+      "subfeature_id": 37,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "getSuratPeringatan",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/violation/add": {
+      "feature_id": 8,
+      "subfeature_id": 36,
+      "method": "post",
+      "controller": "employeeController",
+      "function": "addSuratPeringatan",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/status/get": {
+      "feature_id": 9,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "employeeStatusController",
+      "function": "get",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/status/insert": {
+      "feature_id": 9,
+      "subfeature_id": 38,
+      "method": "post",
+      "controller": "employeeStatusController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/status/update": {
+      "feature_id": 9,
+      "subfeature_id": 39,
+      "method": "post",
+      "controller": "employeeStatusController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/employee/status/delete": {
+      "feature_id": 9,
+      "subfeature_id": 40,
+      "method": "post",
+      "controller": "employeeStatusController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/checklist/get": {
+      "feature_id": 10,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "checklistController",
+      "function": "get",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/checklist/insert": {
+      "feature_id": 10,
+      "subfeature_id": 41,
+      "method": "post",
+      "controller": "checklistController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/checklist/update": {
+      "feature_id": 10,
+      "subfeature_id": 42,
+      "method": "post",
+      "controller": "checklistController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/checklist/updatestatus": {
+      "feature_id": 10,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "checklistController",
+      "function": "updateStatus",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/checklist/delete": {
+      "feature_id": 10,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "checklistController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/pricing/get": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "pricingController",
+      "function": "get",
+      "level": 1,
+      "auth": false
+    }
+  },
+  {
+    "/pricing/insert": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "pricingController",
+      "function": "insert",
+      "level": 1,
+      "auth": false
+    }
+  },
+  {
+    "/pricing/update": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "pricingController",
+      "function": "update",
+      "level": 1,
+      "auth": false
+    }
+  },
+  {
+    "/pricing/delete": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "pricingController",
+      "function": "delete",
+      "level": 1,
+      "auth": false
+    }
+  },
+  {
+    "/payment/method/get": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "paymentMethodController",
+      "function": "get",
+      "level": 4,
+      "auth": false
+    }
+  },
+  {
+    "/payment/method/insert": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "paymentMethodController",
+      "function": "insert",
+      "level": 4,
+      "auth": false
+    }
+  },
+  {
+    "/payment/method/update": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "paymentMethodController",
+      "function": "update",
+      "level": 4,
+      "auth": false
+    }
+  },
+  {
+    "/payment/method/delete": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "paymentMethodController",
+      "function": "delete",
+      "level": 4,
+      "auth": false
+    }
+  },
+  {
+    "/transaction/company/get": {
+      "feature_id": 1,
+      "subfeature_id": 1,
+      "method": "post",
+      "controller": "transactionController",
+      "function": "getByCompany",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/transaction/get": {
+      "feature_id": 1,
+      "subfeature_id": 1,
+      "method": "post",
+      "controller": "transactionController",
+      "function": "getAllCompany",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/role/get": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "roleController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/role/insert": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "roleController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/role/update": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "roleController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/role/delete": {
+      "feature_id": null,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "roleController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/grade/get": {
+      "feature_id": 6,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "gradeController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/grade/getbyid": {
+      "feature_id": 6,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "gradeController",
+      "function": "getById",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/grade/insert": {
+      "feature_id": 6,
+      "subfeature_id": 25,
+      "method": "post",
+      "controller": "gradeController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/grade/update": {
+      "feature_id": 6,
+      "subfeature_id": 26,
+      "method": "post",
+      "controller": "gradeController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/grade/updatebenefit": {
+      "feature_id": 6,
+      "subfeature_id": 26,
+      "method": "post",
+      "controller": "gradeController",
+      "function": "updateGradeBenefit",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/grade/delete": {
+      "feature_id": 6,
+      "subfeature_id": 27,
+      "method": "post",
+      "controller": "gradeController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/department/get": {
+      "feature_id": 5,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "departmentController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/department/insert": {
+      "feature_id": 5,
+      "subfeature_id": 22,
+      "method": "post",
+      "controller": "departmentController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/department/update": {
+      "feature_id": 5,
+      "subfeature_id": 23,
+      "method": "post",
+      "controller": "departmentController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/department/delete": {
+      "feature_id": 5,
+      "subfeature_id": 24,
+      "method": "post",
+      "controller": "departmentController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/get": {
+      "feature_id": 18,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/insert": {
+      "feature_id": 18,
+      "subfeature_id": 67,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/update": {
+      "feature_id": 18,
+      "subfeature_id": 67,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/delete": {
+      "feature_id": 18,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/custom/insert": {
+      "feature_id": 18,
+      "subfeature_id": 68,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "customInsert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/custom/update": {
+      "feature_id": 18,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "customUpdate",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/benefit/custom/delete": {
+      "feature_id": 18,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "benefitController",
+      "function": "customDelete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/jobtitle/get": {
+      "feature_id": 7,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "jobtitleController",
+      "function": "get",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/jobtitle/insert": {
+      "feature_id": 7,
+      "subfeature_id": 28,
+      "method": "post",
+      "controller": "jobtitleController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/jobtitle/update": {
+      "feature_id": 7,
+      "subfeature_id": 29,
+      "method": "post",
+      "controller": "jobtitleController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/jobtitle/delete": {
+      "feature_id": 7,
+      "subfeature_id": 30,
+      "method": "post",
+      "controller": "jobtitleController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/absence/type/get": {
+      "feature_id": 12,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "absenceTypeController",
+      "function": "get",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/absent/type/insert": {
+      "feature_id": 12,
+      "subfeature_id": 48,
+      "method": "post",
+      "controller": "absentTypeController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/absent/type/update": {
+      "feature_id": 12,
+      "subfeature_id": 49,
+      "method": "post",
+      "controller": "absentTypeController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/absent/type/delete": {
+      "feature_id": 12,
+      "subfeature_id": 50,
+      "method": "post",
+      "controller": "absentTypeController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/absentcuti/insert": {
+      "feature_id": 11,
+      "subfeature_id": 43,
+      "method": "post",
+      "controller": "absentCutiController",
+      "function": "insert",
+      "level": 3,
+      "auth": true
+    }
+  },
+  {
+    "/absentcuti/update": {
+      "feature_id": 11,
+      "subfeature_id": 44,
+      "method": "post",
+      "controller": "absentCutiController",
+      "function": "update",
+      "level": 3,
+      "auth": true
+    }
+  },
+  {
+    "/absentcuti/updatestatus": {
+      "feature_id": 11,
+      "subfeature_id": 46,
+      "method": "post",
+      "controller": "absentCutiController",
+      "function": "updateStatus",
+      "level": 3,
+      "auth": true
+    }
+  },
+  {
+    "/absentcuti/delete": {
+      "feature_id": 11,
+      "subfeature_id": 45,
+      "method": "post",
+      "controller": "absentCutiController",
+      "function": "delete",
+      "level": 3,
+      "auth": true
+    }
+  },
+  {
+    "/absentcuti/history": {
+      "feature_id": 11,
+      "subfeature_id": 47,
+      "method": "post",
+      "controller": "absentCutiController",
+      "function": "get",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/cuti/type/get": {
+      "feature_id": 13,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "cutiKhususController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/cuti/type/insert": {
+      "feature_id": 13,
+      "subfeature_id": 51,
+      "method": "post",
+      "controller": "cutiKhususController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/cuti/type/update": {
+      "feature_id": 13,
+      "subfeature_id": 52,
+      "method": "post",
+      "controller": "cutiKhususController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/cuti/type/delete": {
+      "feature_id": 13,
+      "subfeature_id": 53,
+      "method": "post",
+      "controller": "cutiKhususController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/schedule/get": {
+      "feature_id": 15,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "scheduleController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/schedule/getbyid": {
+      "feature_id": 15,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "scheduleController",
+      "function": "getById",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/schedule/insert": {
+      "feature_id": 15,
+      "subfeature_id": 58,
+      "method": "post",
+      "controller": "scheduleController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/schedule/update": {
+      "feature_id": 15,
+      "subfeature_id": 59,
+      "method": "post",
+      "controller": "scheduleController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/schedule/delete": {
+      "feature_id": 15,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "scheduleController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/branch/insert": {
+      "feature_id": 17,
+      "subfeature_id": 64,
+      "method": "post",
+      "controller": "branchLocationController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/branch/update": {
+      "feature_id": 17,
+      "subfeature_id": 65,
+      "method": "post",
+      "controller": "branchLocationController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/branch/delete": {
+      "feature_id": 17,
+      "subfeature_id": 66,
+      "method": "post",
+      "controller": "branchLocationController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/device/insert": {
+      "feature_id": 16,
+      "subfeature_id": 61,
+      "method": "post",
+      "controller": "deviceController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/device/update": {
+      "feature_id": 16,
+      "subfeature_id": 62,
+      "method": "post",
+      "controller": "deviceController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/device/delete": {
+      "feature_id": 16,
+      "subfeature_id": 63,
+      "method": "post",
+      "controller": "deviceController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/presence/generatepresence": {
+      "feature_id": 38,
+      "subfeature_id": 60,
+      "method": "post",
+      "controller": "presenceController",
+      "function": "generateDailyPresence",
+      "level": 0,
+      "auth": true
+    }
+  },
+  {
+    "/presence/checkinout": {
+      "feature_id": 14,
+      "subfeature_id": 54,
+      "method": "post",
+      "controller": "presenceController",
+      "function": "checkInOutProcess",
+      "level": 3,
+      "auth": true
+    }
+  },
+  {
+    "/presence/history": {
+      "feature_id": 14,
+      "subfeature_id": 55,
+      "method": "post",
+      "controller": "presenceController",
+      "function": "getHistoryCheckInOut",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/presence/checkstatus": {
+      "feature_id": 14,
+      "subfeature_id": 56,
+      "method": "post",
+      "controller": "presenceController",
+      "function": "checkStatus",
+      "level": 3,
+      "auth": true
+    }
+  },
+  {
+    "/presence/setting/get": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "presenceSettingController",
+      "function": "get",
+      "level": 5,
+      "auth": true
+    }
+  },
+  {
+    "/presence/setting/insert": {
+      "feature_id": 14,
+      "subfeature_id": 57,
+      "method": "post",
+      "controller": "presenceSettingController",
+      "function": "insert",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/presence/setting/update": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "presenceSettingController",
+      "function": "update",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/presence/setting/delete": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "presenceSettingController",
+      "function": "delete",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/timezone/setting/get": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "timezoneSettingController",
+      "function": "get",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/timezone/setting/insert": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "timezoneSettingController",
+      "function": "insert",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/timezone/setting/update": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "timezoneSettingController",
+      "function": "update",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/timezone/setting/delete": {
+      "feature_id": 14,
+      "subfeature_id": null,
+      "method": "post",
+      "controller": "timezoneSettingController",
+      "function": "delete",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/company/get": {
+      "feature_id": 20,
+      "subfeature_id": 79,
+      "method": "post",
+      "controller": "companyController",
+      "function": "getListCompany",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/company/getbyid": {
+      "feature_id": 20,
+      "subfeature_id": 81,
+      "method": "post",
+      "controller": "companyController",
+      "function": "getCompanyDetails",
+      "level": 4,
+      "auth": true
+    }
+  },
+  {
+    "/company/update": {
+      "feature_id": 20,
+      "subfeature_id": 80,
+      "method": "post",
+      "controller": "companyController",
+      "function": "editCompanyProfile",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/company/updatestatus": {
+      "feature_id": 20,
+      "subfeature_id": 82,
+      "method": "post",
+      "controller": "companyController",
+      "function": "editCompanyStatus",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/user/add": {
+      "feature_id": 21,
+      "subfeature_id": 83,
+      "method": "post",
+      "controller": "userController",
+      "function": "createUserAdmin",
+      "level": 4,
+      "auth": true
+    }
+  },
+  {
+    "/user/ceklok/add": {
+      "feature_id": 21,
+      "subfeature_id": 83,
+      "method": "post",
+      "controller": "userController",
+      "function": "createUserAdminCeklok",
+      "level": 4,
+      "auth": true
+    }
+  },
+  {
+    "/user/get": {
+      "feature_id": 21,
+      "subfeature_id": 84,
+      "method": "post",
+      "controller": "userController",
+      "function": "getAllListUser",
+      "level": 4,
+      "auth": true
+    }
+  },
+  {
+    "/user/getbyid": {
+      "feature_id": 21,
+      "subfeature_id": 85,
+      "method": "post",
+      "controller": "userController",
+      "function": "getDetailsUser",
+      "level": 4,
+      "auth": true
+    }
+  },
+  {
+    "/user/update": {
+      "feature_id": 21,
+      "subfeature_id": 86,
+      "method": "post",
+      "controller": "userController",
+      "function": "editUserAdminCompany",
+      "level": 2,
+      "auth": true
+    }
+  },
+  {
+    "/user/ceklok/update": {
+      "feature_id": 21,
+      "subfeature_id": 86,
+      "method": "post",
+      "controller": "userController",
+      "function": "editUserAdminCeklok",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/feature/ceklok/add": {
+      "feature_id": 23,
+      "subfeature_id": 89,
+      "method": "post",
+      "controller": "featureController",
+      "function": "addNewFeature",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/feature/ceklok/endpoint/add": {
+      "feature_id": 23,
+      "subfeature_id": 89,
+      "method": "post",
+      "controller": "featureController",
+      "function": "addEndpoint",
+      "level": 1,
+      "auth": true
+    }
+  },
+  {
+    "/subfeature/ceklok/add": {
+      "feature_id": 23,
+      "subfeature_id": 89,
+      "method": "post",
+      "controller": "featureController",
+      "function": "addSubFeature",
+      "level": 1,
+      "auth": true
+    }
+  }
+]

@@ -461,6 +461,18 @@ async.series(
     let n = 0;
 
     keys.map(endpoint => {
+      app.use(endpoint, (req, res, next) => {
+        if (req.body) {
+          if (req.headers['content-type'] === 'application/json') {
+            if (process.env.ENCRYPT === 'true' && req.body.data) {
+              console.log('enkrip broooo');
+              req.body = require('./functions/rsa').decrypt(req.body.data);
+              next();
+            }
+          }
+        }
+        next();
+      });
       if (routes[endpoint].auth) {
         app.use(endpoint, require('./functions/verifyToken'));
       }

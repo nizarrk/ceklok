@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
 const path = require('path');
+const trycatch = require('trycatch');
 
 exports.checkExistingCredentialsAdmin = (APP, req, callback) => {
   async.waterfall(
@@ -639,4 +640,104 @@ exports.editUserAdminCeklok = (APP, req, callback) => {
         data: err
       });
     });
+};
+
+exports.editCompanyStatus = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (!req.body.id) {
+          return callback({
+            code: 'MISSING_KEY',
+            data: req.body,
+            info: {
+              missingParameter: 'id'
+            }
+          });
+        }
+
+        if (!req.body.status) {
+          return callback({
+            code: 'MISSING_KEY',
+            data: req.body,
+            info: {
+              missingParameter: 'status'
+            }
+          });
+        }
+
+        if (!req.files || Object.keys(req.files).length === 0) {
+          return callback({
+            code: 'ERR',
+            message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi'
+          });
+        }
+
+        callback(null, true);
+      },
+
+      function updateStatus(result, callback) {
+        APP.models.mysql.company
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Company tidak ditemukan!'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let statusPath = `./public/uploads/company_${res.company_code}/status/`;
+
+            res
+              .update({
+                status: req.body.status,
+                status_upload: statusPath.slice(8) + fileName + path.extname(req.files.upload.name)
+              })
+              .then(updated => {
+                // upload file
+                if (req.files.upload) {
+                  req.files.upload.mv(statusPath + fileName + path.extname(req.files.upload.name), function(err) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
+                  });
+                }
+
+                callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: updated
+                });
+              })
+              .catch(err => {
+                console.log('Error findOne updateEmployeeStatus', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error findOne updateEmployeeStatus',
+                  data: err
+                });
+              });
+          })
+          .catch(err => {
+            console.log('Error update updateEmployeeStatus', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error update updateEmployeeStatus',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

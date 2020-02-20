@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'pricing',
+    'endpoint',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,40 +11,38 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      code: {
+      feature_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      subfeature_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      feature_name: {
         type: Sequelize.STRING(50)
       },
-      name: {
+      endpoint: {
+        type: Sequelize.STRING(50)
+      },
+      method: {
         type: Sequelize.STRING(45)
       },
-      description: {
+      directory: {
         type: Sequelize.STRING(45)
       },
-      annual_price: {
-        type: Sequelize.INTEGER(45)
+      controller: {
+        type: Sequelize.STRING(50)
       },
-      monthly_price: {
-        type: Sequelize.INTEGER(45)
+      function: {
+        type: Sequelize.STRING(50)
       },
-      annual_minimum: {
-        type: Sequelize.INTEGER(45) // minimum beralangganan per tahun
+      activity: {
+        type: Sequelize.STRING(50)
       },
-      monthly_minimum: {
-        type: Sequelize.INTEGER(45) // minimum beralangganan per bulan
-      },
-      type: {
-        type: Sequelize.INTEGER(1) // 0 = registration pricing, 1 = additional pricing
-      },
-      image: {
-        type: Sequelize.STRING(255)
-      },
-      publication: {
-        type: Sequelize.INTEGER(1), // 0 = unpublished, 1 = published,
-        defaultValue: 1
+      auth: {
+        type: Sequelize.INTEGER(1)
       },
       status: {
-        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif,
-        defaultValue: 1
+        type: Sequelize.INTEGER(1) //0 = non aktif, 1 = aktif
       },
       created_at: {
         allowNull: false,
