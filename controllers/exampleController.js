@@ -172,31 +172,41 @@ exports.test = function(APP, req, callback) {
   //   console.log('is not between');
   // }
 
-  let arr = [];
-  let endpoint = [];
-  let arr2 = [];
-  routes.map((x, index) => {
-    endpoint.push(Object.keys(x));
-  });
-  // console.log(endpoint);
+  // let arr = [];
+  // let endpoint = [];
+  // let arr2 = [];
+  // routes.map((x, index) => {
+  //   endpoint.push(Object.keys(x));
+  // });
+  // // console.log(endpoint);
 
-  endpoint.map((x, index) => {
-    let obj = {};
-    console.log(x);
+  // endpoint.map((x, index) => {
+  //   let obj = {};
+  //   console.log(x);
 
-    obj.endpoint = x[0];
-    obj.feature_id = routes[index][x].feature_id;
-    obj.subfeature_id = routes[index][x].subfeature_id;
-    obj.method = routes[index][x].method;
-    obj.controller = routes[index][x].controller;
-    obj.function = routes[index][x].function;
-    (obj.auth = routes[index][x].auth == true ? 1 : 0), (obj.level = routes[index][x].level);
+  //   obj.endpoint = x[0];
+  //   obj.feature_id = routes[index][x].feature_id;
+  //   obj.subfeature_id = routes[index][x].subfeature_id;
+  //   obj.method = routes[index][x].method;
+  //   obj.controller = routes[index][x].controller;
+  //   obj.function = routes[index][x].function;
+  //   (obj.auth = routes[index][x].auth == true ? 1 : 0), (obj.level = routes[index][x].level);
 
-    arr.push(obj);
-  });
+  //   arr.push(obj);
+  // });
 
-  callback(null, {
-    code: 'OK',
-    data: arr
-  });
+  // callback(null, {
+  //   code: 'OK',
+  //   data: arr
+  // });
+
+  let time = APP.time.timeXday('08:00:00', 5);
+  let kurang = '01:00:00';
+  let durationTime = moment.duration(time);
+  let durationKurang = moment.duration(kurang);
+
+  let real = moment.duration(durationTime - durationKurang);
+
+  let hasil = (real / durationTime) * 100;
+  console.log(hasil);
 };

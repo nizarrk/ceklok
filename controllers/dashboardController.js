@@ -4,7 +4,9 @@ const async = require('async');
 const moment = require('moment');
 
 exports.dashboardEmployee = (APP, req, callback) => {
-  let { employee, presence_monthly, grade, job_title, schedule } = APP.models.company[req.user.db].mysql;
+  let { employee, presence_monthly, presence_setting, grade, job_title, schedule } = APP.models.company[
+    req.user.db
+  ].mysql;
 
   async.waterfall(
     [
@@ -102,39 +104,43 @@ exports.dashboardEmployee = (APP, req, callback) => {
         APP.db.sequelize
           .query(
             `SELECT 
-                        presence.id, presence.user_id, presence.check_in_device_id, 
-                        presence.check_out_device_id, presence.check_in_branch_id, 
-                        presence.check_out_branch_id, presence.date, presence.check_in, 
-                        presence.check_out, presence.total_time, presence.presence_setting_id, 
-                        employee.id AS 'employee_id', 
-                        employee.nik AS 'employee_nik', 
-                        employee.name AS 'employee_name', 		
-                        check_in_device.name AS 'check_in_device_name',
-                        check_in_device.location AS 'check_in_device_location',
-                        check_in_device.major AS 'check_in_device_major',
-                        check_in_device.minor AS 'check_in_device_minor',
-                        check_out_device.name AS 'check_out_device_name',
-                        check_out_device.location AS 'check_out_device_location',
-                        check_in_branch.name AS 'check_in_branch_name',
-                        check_in_branch.address AS 'check_in_branch_address',
-                        check_out_branch.name AS 'check_out_branch_name',
-                        check_out_branch.address AS 'check_out_branch_address' 
-                    FROM 
-                        ${req.user.db}.presence AS presence 
-                    LEFT OUTER JOIN 
-                        ${req.user.db}.employee AS employee ON presence.user_id = employee.id 
-                    LEFT OUTER JOIN 
-                        ${req.user.db}.device AS check_in_device ON presence.check_in_device_id = check_in_device.id 
-                    LEFT OUTER JOIN 
-                        ${req.user.db}.device AS check_out_device ON presence.check_out_device_id = check_out_device.id 
-                    LEFT OUTER JOIN 
-                        ${req.user.db}.branch AS check_in_branch ON presence.check_in_branch_id = check_in_branch.id 
-                    LEFT OUTER JOIN 
-                        ${req.user.db}.branch AS check_out_branch ON presence.check_out_branch_id = check_out_branch.id
-                    WHERE  
-                        ${req.user.db}.presence.date = '${yesterday}' 
-                    AND
-                        ${req.user.db}.presence.user_id = ${req.user.id}`
+                  presence.id, presence.user_id, presence.check_in_device_id, 
+                  presence.check_out_device_id, presence.check_in_branch_id, 
+                  presence.check_out_branch_id, presence.date, presence.check_in, 
+                  presence.check_out, presence.total_time, presence.presence_setting_id,
+                  presence_setting.name AS 'presence_setting_name',
+                  presence_setting.description AS 'presence_setting_description', 
+                  employee.id AS 'employee_id', 
+                  employee.nik AS 'employee_nik', 
+                  employee.name AS 'employee_name', 		
+                  check_in_device.name AS 'check_in_device_name',
+                  check_in_device.location AS 'check_in_device_location',
+                  check_in_device.major AS 'check_in_device_major',
+                  check_in_device.minor AS 'check_in_device_minor',
+                  check_out_device.name AS 'check_out_device_name',
+                  check_out_device.location AS 'check_out_device_location',
+                  check_in_branch.name AS 'check_in_branch_name',
+                  check_in_branch.address AS 'check_in_branch_address',
+                  check_out_branch.name AS 'check_out_branch_name',
+                  check_out_branch.address AS 'check_out_branch_address'
+              FROM 
+                  ${req.user.db}.presence AS presence 
+              LEFT OUTER JOIN 
+                  ${req.user.db}.employee AS employee ON presence.user_id = employee.id 
+              LEFT OUTER JOIN 
+                  ${req.user.db}.device AS check_in_device ON presence.check_in_device_id = check_in_device.id 
+              LEFT OUTER JOIN 
+                  ${req.user.db}.device AS check_out_device ON presence.check_out_device_id = check_out_device.id 
+              LEFT OUTER JOIN 
+                  ${req.user.db}.branch AS check_in_branch ON presence.check_in_branch_id = check_in_branch.id 
+              LEFT OUTER JOIN 
+                  ${req.user.db}.branch AS check_out_branch ON presence.check_out_branch_id = check_out_branch.id
+              LEFT OUTER JOIN 
+                  ${req.user.db}.presence_setting AS presence_setting ON presence.presence_setting_id = presence_setting.id
+              WHERE  
+                  ${req.user.db}.presence.date = '${yesterday}' 
+              AND
+                  ${req.user.db}.presence.user_id = ${req.user.id}`
           )
           .then(res => {
             // if (res[0].length == 0) {

@@ -4,32 +4,53 @@ const async = require('async');
 const moment = require('moment');
 
 exports.generateDailyPresence = (APP, req, callback) => {
+  let { presence_setting, presence, presence_monthly, employee, schedule } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function getPresenceSettings(callback) {
         let status = [];
-        APP.models.company[req.user.db].mysql.presence_setting.findAll().then(res => {
-          if (res == null) {
-            return callback({
-              code: 'NOT_FOUND',
-              message: 'Presence setting tidak ditemukan'
+        presence_setting
+          .findAll()
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Presence setting tidak ditemukan'
+              });
+            }
+            res.map(data => {
+              status.push(data.dataValues);
             });
-          }
-          res.map(data => {
-            status.push(data.dataValues);
+            callback(null, status);
+          })
+          .catch(err => {
+            console.log('Error getPresenceSettings', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getPresenceSettings',
+              data: err
+            });
           });
-          callback(null, status);
-        });
       },
 
       function checkYesterdayPresence(result, callback) {
         let yesterday = moment()
           .subtract(1, 'days')
           .format('YYYY-MM-DD');
-        console.log(yesterday);
 
-        APP.models.company[req.user.db].mysql.presence
+        presence.belongsTo(schedule, {
+          targetKey: 'id',
+          foreignKey: 'schedule_id'
+        });
+
+        presence
           .findAll({
+            include: [
+              {
+                model: schedule,
+                attributes: ['work_time']
+              }
+            ],
             where: {
               presence_setting_id: result[3].id, // 'WA'
               date: {
@@ -48,11 +69,12 @@ exports.generateDailyPresence = (APP, req, callback) => {
             }
 
             res.map((data, index) => {
-              if (data.check_out == '00:00:00') {
-                APP.models.company[req.user.db].mysql.presence
+              if (data.check_in !== '00:00:00' && data.check_out == '00:00:00') {
+                presence
                   .update(
                     {
-                      presence_setting_id: result[2].id // 'NCO'
+                      presence_setting_id: result[2].id, // 'NCO'
+                      total_minus: data.schedule.work_time
                     },
                     {
                       where: {
@@ -62,29 +84,42 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     }
                   )
                   .then(updated => {
-                    if (res.length == index + 1) {
-                      console.log('hasile bro', updated);
-                      callback(null, {
-                        status: result,
-                        data: res,
-                        yesterday: yesterday
-                      });
-                    }
-                  })
-                  .catch(err => {
-                    callback({
-                      code: 'ERR_DATABASE',
-                      message: 'Error update presensi',
-                      data: err
-                    });
+                    console.log('hasile NCO', updated);
                   });
               }
-            });
 
-            callback(null, {
-              status: result,
-              data: res,
-              yesterday: yesterday
+              if (data.check_in == '00:00:00' && data.check_out == '00:00:00') {
+                presence
+                  .update(
+                    {
+                      presence_setting_id: result[4].id, // 'A'
+                      total_minus: data.schedule.work_time
+                    },
+                    {
+                      where: {
+                        id: data.id
+                      }
+                    }
+                  )
+                  .then(updated => {
+                    console.log('hasile A', updated);
+                  });
+              }
+              if (res.length == index + 1) {
+                callback(null, {
+                  status: result,
+                  data: res,
+                  yesterday: yesterday
+                });
+              }
+            });
+          })
+          .catch(err => {
+            console.log('Error checkYesterdayPresence', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error checkYesterdayPresence',
+              data: err
             });
           });
       },
@@ -106,42 +141,13 @@ exports.generateDailyPresence = (APP, req, callback) => {
               '${result.yesterday}' >= date_format(date_start, '%Y-%m-%d') AND '${result.yesterday}' <= date_format(date_end, '%Y-%m-%d')`
             )
             .then(found => {
-              if (found[0].length == 0) {
-                APP.models.company[req.user.db].mysql.presence
-                  .update(
-                    {
-                      presence_setting_id: data.status[4].id // 'A'
-                    },
-                    {
-                      where: {
-                        id: data.id
-                      }
-                    }
-                  )
-                  .then(updated => {
-                    if (result.data.length == index + 1) {
-                      console.log('hasile bro', updated);
-                      // callback(null, updated)
-                    }
-                  })
-                  .catch(err => {
-                    if (result.data.length == index + 1) {
-                      console.log(err);
-                      callback({
-                        code: 'ERR_DATABASE',
-                        message: 'Error update presensi',
-                        data: err
-                      });
-                    }
-                  });
-              }
-
               found[0].map(x => {
                 if (x.type == 0) {
-                  APP.models.company[req.user.db].mysql.presence
+                  presence
                     .update(
                       {
-                        presence_setting_id: data.status[5].id // 'I'
+                        presence_setting_id: result.status[5].id, // 'I'
+                        total_minus: x.time_total
                       },
                       {
                         where: {
@@ -150,10 +156,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       }
                     )
                     .then(updated => {
-                      if (result.data.length == index + 1) {
-                        console.log('hasile bro', updated);
-                        // callback(null, updated)
-                      }
+                      console.log('hasile I', updated);
                     })
                     .catch(err => {
                       if (result.data.length == index + 1) {
@@ -168,10 +171,10 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 }
 
                 if (x.type == 1) {
-                  APP.models.company[req.user.db].mysql.presence
+                  presence
                     .update(
                       {
-                        presence_setting_id: data.status[6].id // 'C'
+                        presence_setting_id: result.status[6].id // 'C'
                       },
                       {
                         where: {
@@ -180,10 +183,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       }
                     )
                     .then(updated => {
-                      if (result.data.length == index + 1) {
-                        console.log('hasile bro', updated);
-                        // callback(null, updated)
-                      }
+                      console.log('hasile C', updated);
                     })
                     .catch(err => {
                       if (result.data.length == index + 1) {
@@ -197,33 +197,51 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     });
                 }
               });
+            })
+            .catch(err => {
+              console.log('Error checkAbsentCuti', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error checkAbsentCuti',
+                data: err
+              });
             });
         });
         callback(null, result);
       },
 
-      function checkTodayPresence(result, callback) {
-        APP.models.company[req.user.db].mysql.presence
-          .findAll({
-            where: {
-              date: new Date()
-            }
-          })
-          .then(res => {
-            if (res.length == 0) {
-              callback(null, result);
-            } else {
-              callback({
-                code: 'INVALID_REQUEST',
-                message: 'Data Presence hari ini sudah di generate'
-              });
-            }
-          });
-      },
+      // function checkTodayPresence(result, callback) {presence
+      //     .findAll({
+      //       where: {
+      //         date: new Date()
+      //       }
+      //     })
+      //     .then(res => {
+      //       if (res.length == 0) {
+      //         callback(null, result);
+      //       } else {
+      //         callback({
+      //           code: 'INVALID_REQUEST',
+      //           message: 'Data Presence hari ini sudah di generate'
+      //         });
+      //       }
+      //     });
+      // },
 
       function getEmployeeData(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
+        employee.belongsTo(schedule, {
+          targetKey: 'id',
+          foreignKey: 'schedule_id'
+        });
+
+        employee
           .findAll({
+            include: [
+              {
+                model: schedule,
+                attributes: ['work_time']
+              }
+            ],
             where: {
               status: 1
             }
@@ -240,6 +258,14 @@ exports.generateDailyPresence = (APP, req, callback) => {
               data: result,
               employee: res
             });
+          })
+          .catch(err => {
+            console.log('Error getEmployeeData', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getEmployeeData',
+              data: err
+            });
           });
       },
 
@@ -255,10 +281,9 @@ exports.generateDailyPresence = (APP, req, callback) => {
           };
           arr.push(obj);
         });
-
-        APP.models.company[req.user.db].mysql.presence
+        presence
           .bulkCreate(arr)
-          .then(res => {
+          .then(() => {
             callback(null, {
               yesterday: result.yesterday,
               employee: result.employee
@@ -279,7 +304,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
       //   let arr = [];
       //   result.employee.map((data, index) => {
       //     let user = {};
-      //     APP.models.company[req.user.db].mysql.presence
+      //    presence
       //     .findAll({
       //       where: {
       //         user_id: data.dataValues.id,
@@ -312,7 +337,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
 
       function createMonthlyPresence(result, callback) {
         let arr = [];
-        APP.models.company[req.user.db].mysql.presence_monthly.findAll().then(res => {
+        presence_monthly.findAll().then(res => {
           if (res.length == 0) {
             result.employee.map((data, index) => {
               let obj = {
@@ -325,12 +350,12 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 total_absent: 0,
                 total_permission: 0,
                 total_cuti: 0,
-                total_day: 0
+                total_day: 0,
+                percentage: 0
               };
               arr.push(obj);
             });
-
-            APP.models.company[req.user.db].mysql.presence_monthly
+            presence_monthly
               .bulkCreate(arr)
               .then(res => {
                 callback(null, {
@@ -353,10 +378,11 @@ exports.generateDailyPresence = (APP, req, callback) => {
               hadir = 0,
               absen = 0,
               cuti = 0,
-              izin = 0;
+              izin = 0,
+              percentage = 0;
 
-            result.employee.map(data => {
-              APP.models.company[req.user.db].mysql.presence
+            result.employee.map((data, index) => {
+              presence
                 .findAll({
                   where: {
                     user_id: data.id,
@@ -366,6 +392,8 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   }
                 })
                 .then(res => {
+                  console.log(res.length);
+
                   // res.map(x => {
                   //   x.presence_setting_id == 1 ? hadir++ : hadir;
                   //   x.presence_setting_id == 5 ? absen++ : absen;
@@ -374,17 +402,21 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   // })
                   // console.log('hadirbrooo', hadir);
 
-                  res.map((data, index) => {
-                    totalTime.push(data.total_time);
-                    totalMinus.push(data.total_minus);
-                    totalOver.push(data.total_over);
+                  res.map(x => {
+                    totalTime.push(x.total_time);
+                    totalMinus.push(x.total_minus);
+                    totalOver.push(x.total_over);
 
-                    data.presence_setting_id == 1 ? hadir++ : hadir;
-                    data.presence_setting_id == 5 ? absen++ : absen;
-                    data.presence_setting_id == 7 ? cuti++ : cuti;
-                    data.presence_setting_id == 6 ? izin++ : izin;
+                    let workTime = moment.duration(APP.time.timeXday(data.schedule.work_time, res.length));
+                    let workMinus = moment.duration(APP.time.timeDuration(totalMinus));
+                    let resultMinus = moment.duration(workTime - workMinus);
+                    percentage = (resultMinus / workTime) * 100;
 
-                    APP.models.company[req.user.db].mysql.presence_monthly
+                    x.presence_setting_id == 1 ? hadir++ : hadir;
+                    x.presence_setting_id == 5 ? absen++ : absen;
+                    x.presence_setting_id == 7 ? cuti++ : cuti;
+                    x.presence_setting_id == 6 ? izin++ : izin;
+                    presence_monthly
                       .update(
                         {
                           // date: moment().format('YYYY-MM-DD'),
@@ -395,11 +427,12 @@ exports.generateDailyPresence = (APP, req, callback) => {
                           total_absent: absen,
                           total_permission: izin,
                           total_cuti: cuti,
-                          total_day: res.length
+                          total_day: res.length,
+                          percentage: percentage
                         },
                         {
                           where: {
-                            user_id: data.user_id
+                            user_id: x.user_id
                           }
                         }
                       )
@@ -411,7 +444,8 @@ exports.generateDailyPresence = (APP, req, callback) => {
                           (absen = 0),
                           (cuti = 0),
                           (izin = 0);
-                        if (res.length == index + 1) {
+
+                        if (result.employee.length == index + 1) {
                           callback(null, {
                             code: 'UPDATE_SUCCESS',
                             data: updated
@@ -433,7 +467,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
             // let userID = arrUserID.filter((item, index) => arrUserID.indexOf(item) === index);
 
             // userID.map(id => {
-            //   APP.models.company[req.user.db].mysql.presence
+            //  presence
             // .findOne({
             //   where: {
             //     user_id: id

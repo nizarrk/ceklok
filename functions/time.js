@@ -36,8 +36,9 @@ exports.timeDuration = time => {
     let dur = moment.duration(total, 'minutes');
 
     return dur.format('HH:mm:ss');
-  }
-  let dur = moment.duration(time, 'minutes');
+  } else {
+    let dur = moment.duration(time, 'minutes');
 
-  return dur.format('HH:mm:ss');
+    return dur.format('HH:mm:ss');
+  }
 };

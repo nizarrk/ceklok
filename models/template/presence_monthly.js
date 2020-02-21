@@ -44,6 +44,9 @@ module.exports = function(sequelize, Sequelize) {
       total_day: {
         type: Sequelize.INTEGER(11)
       },
+      percentage: {
+        type: Sequelize.INTEGER(11)
+      },
       description: {
         type: Sequelize.STRING(45)
       },
