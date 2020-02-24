@@ -35,10 +35,27 @@ exports.timeDuration = time => {
 
     let dur = moment.duration(total, 'minutes');
 
-    return dur.format('HH:mm:ss');
+    let result = dur.format('HH:mm:ss') == '00' ? '00:00:00' : dur.format('HH:mm:ss');
+
+    return result;
   } else {
     let dur = moment.duration(time, 'minutes');
 
-    return dur.format('HH:mm:ss');
+    let result = dur.format('HH:mm:ss') == '00' ? '00:00:00' : dur.format('HH:mm:ss');
+
+    return result;
   }
+};
+
+exports.timeSubstract = (a, b) => {
+  let durA = moment.duration(a, 'minutes');
+  let durB = moment.duration(b, 'minutes');
+  let result = durA.subtract(durB);
+
+  return moment.duration(result).format('HH:mm:ss');
+};
+
+exports.timeToDuration = time => {
+  let dur = moment.duration(time, 'minutes').asMilliseconds();
+  return dur;
 };

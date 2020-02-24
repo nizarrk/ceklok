@@ -178,9 +178,16 @@ exports.dashboardEmployee = (APP, req, callback) => {
 };
 
 exports.dashboardAdminCompany = (APP, req, callback) => {
-  let { employee, presence_monthly, grade, job_title, schedule, feature_active } = APP.models.company[
-    req.user.db
-  ].mysql;
+  let {
+    employee,
+    presence,
+    presence_monthly,
+    presence_setting,
+    grade,
+    job_title,
+    schedule,
+    feature_active
+  } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function getTotalActiveFeature(callback) {
@@ -223,8 +230,9 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
           .findAndCountAll()
           .then(res => {
             callback(null, {
-              feature: result,
-              employee: res
+              feature: result.feature,
+              employee: result.employee,
+              grade: res
             });
           })
           .catch(err => {
@@ -244,6 +252,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
             callback(null, {
               feature: result.feature,
               employee: result.employee,
+              grade: result.grade,
               job_title: res
             });
           })
@@ -252,6 +261,242 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
             callback({
               code: 'ERR_DATABASE',
               message: 'Error getTotalJobTitle',
+              data: err
+            });
+          });
+      },
+
+      function getMostActiveEmployee(result, callback) {
+        let arr = [];
+        presence_monthly.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+        presence_monthly
+          .findAndCountAll({
+            include: [
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name']
+              }
+            ]
+          })
+          .then(res => {
+            res.rows.map((x, i) => {
+              let obj = {};
+
+              obj.user = x.employee.dataValues;
+              obj.total_time = x.total_time;
+              obj.dur_time = APP.time.timeToDuration(x.total_time);
+
+              arr.push(obj);
+            });
+
+            arr.sort(function(a, b) {
+              return b.dur_time - a.dur_time;
+            });
+
+            // let rank = 1;
+            // for (let i = 0; i < arr.length; i++) {
+            //   if (i > 0 && arr[i].dur_time < arr[i - 1].dur_time) {
+            //     rank++;
+            //   }
+            //   arr[i].rank = rank;
+            // }
+
+            callback(null, {
+              feature: result.feature,
+              employee: result.employee,
+              grade: result.grade,
+              job_title: result.job_title,
+              most_active: arr
+            });
+          })
+          .catch(err => {
+            console.log('Error getMostActiveEmployee', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getMostActiveEmployee',
+              data: err
+            });
+          });
+      },
+
+      function getMostUnderPerformedEmployee(result, callback) {
+        let arr = [];
+        presence_monthly.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+        presence_monthly
+          .findAndCountAll({
+            include: [
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name']
+              }
+            ]
+          })
+          .then(res => {
+            res.rows.map((x, i) => {
+              let obj = {};
+
+              obj.user = x.employee.dataValues;
+              obj.total_minus = x.total_minus;
+              obj.dur_minus = APP.time.timeToDuration(x.total_minus);
+
+              arr.push(obj);
+            });
+
+            arr.sort(function(a, b) {
+              return b.dur_minus - a.dur_minus;
+            });
+
+            // let rank = 1;
+            // for (let i = 0; i < arr.length; i++) {
+            //   if (i > 0 && arr[i].dur_minus < arr[i - 1].dur_minus) {
+            //     rank++;
+            //   }
+            //   arr[i].rank = rank;
+            // }
+
+            callback(null, {
+              feature: result.feature,
+              employee: result.employee,
+              grade: result.grade,
+              job_title: result.job_title,
+              most_active: result.most_active,
+              under_performed: arr
+            });
+          })
+          .catch(err => {
+            console.log('Error getMostUnderPerformedEmployee', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getMostUnderPerformedEmployee',
+              data: err
+            });
+          });
+      },
+
+      function getlastCheckInOut(result, callback) {
+        let arr = [];
+        let arr2 = [];
+
+        presence.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+
+        presence
+          .findAndCountAll({
+            include: [
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name']
+              }
+            ],
+            where: {
+              date: moment().format('YYYY-MM-DD')
+            }
+          })
+          .then(res => {
+            res.rows.map((x, i) => {
+              let obj = {};
+              let obj2 = {};
+
+              obj.user = x.employee.dataValues;
+              obj.check_in = x.check_in;
+              obj.dur_checkin = APP.time.timeToDuration(x.check_in);
+              obj2.user = x.employee.dataValues;
+              obj2.check_out = x.check_out;
+              obj2.dur_checkout = APP.time.timeToDuration(x.check_out);
+
+              arr.push(obj);
+              arr2.push(obj2);
+            });
+
+            arr.sort(function(a, b) {
+              return b.dur_checkin - a.dur_checkin;
+            });
+
+            arr2.sort(function(a, b) {
+              return b.dur_checkout - a.dur_checkout;
+            });
+
+            callback(null, {
+              feature: result.feature,
+              employee: result.employee,
+              grade: result.grade,
+              job_title: result.job_title,
+              most_active: result.most_active,
+              under_performed: result.under_performed,
+              last_check_in: arr,
+              last_check_out: arr2
+            });
+          })
+          .catch(err => {
+            console.log('Error getlastCheckInOut', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getlastCheckInOut',
+              data: err
+            });
+          });
+      },
+
+      function getYesterdayPresence(result, callback) {
+        let arr = [];
+
+        presence.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+
+        presence.belongsTo(presence_setting, {
+          targetKey: 'id',
+          foreignKey: 'presence_setting_id'
+        });
+
+        presence
+          .findAndCountAll({
+            include: [
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name']
+              },
+              {
+                model: presence_setting,
+                attributes: ['id', 'name', 'description']
+              }
+            ],
+            where: {
+              date: moment()
+                .subtract(3, 'days')
+                .format('YYYY-MM-DD')
+            }
+          })
+          .then(res => {
+            callback(null, {
+              code: 'OK',
+              data: {
+                feature: result.feature,
+                employee: result.employee,
+                grade: result.grade,
+                job_title: result.job_title,
+                most_active: result.most_active,
+                under_performed: result.under_performed,
+                last_check_in: result.last_check_in,
+                last_check_out: result.last_check_out,
+                yesterday: res.rows
+              }
+            });
+          })
+          .catch(err => {
+            console.log('Error getYesterdayPresence', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getYesterdayPresence',
               data: err
             });
           });

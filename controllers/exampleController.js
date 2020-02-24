@@ -200,13 +200,28 @@ exports.test = function(APP, req, callback) {
   //   data: arr
   // });
 
-  let time = APP.time.timeXday('08:00:00', 5);
-  let kurang = '01:00:00';
-  let durationTime = moment.duration(time);
-  let durationKurang = moment.duration(kurang);
+  // let time = APP.time.timeXday('08:00:00', 5);
+  // let kurang = '01:00:00';
+  // let durationTime = moment.duration(time);
+  // let durationKurang = moment.duration(kurang);
 
-  let real = moment.duration(durationTime - durationKurang);
+  // let real = moment.duration(durationTime - durationKurang);
 
-  let hasil = (real / durationTime) * 100;
-  console.log(hasil);
+  // let hasil = (real / durationTime) * 100;
+
+  let a = moment(req.body.start, 'HH:mm:ss');
+  let b = moment(req.body.end, 'HH:mm:ss');
+  let hasil = a.diff(b, 'minuntes');
+  let minus;
+  let over;
+
+  if (hasil < 0) {
+    minus = APP.time.timeSubstract(req.body.start, req.body.end);
+    over = '00:00:00';
+  }
+  if (hasil > 0) {
+    over = APP.time.timeSubstract(req.body.start, req.body.end);
+    minus = '00:00:00';
+  }
+  console.log(`minus = ${minus}, over = ${over}`);
 };
