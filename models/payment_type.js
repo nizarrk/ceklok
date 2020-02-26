@@ -15,12 +15,24 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.STRING(45)
       },
       description: {
-        type: Sequelize.STRING(45)
+        type: Sequelize.STRING
+      },
+      annual_price: {
+        type: Sequelize.INTEGER(45)
+      },
+      monthly_price: {
+        type: Sequelize.INTEGER(45)
+      },
+      annual_minimum: {
+        type: Sequelize.INTEGER(45) // minimum beralangganan per tahun
+      },
+      monthly_minimum: {
+        type: Sequelize.INTEGER(45) // minimum beralangganan per bulan
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 1
       },
       created_at: {
         allowNull: false,

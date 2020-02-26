@@ -115,6 +115,7 @@ exports.login = (APP, req, callback) => {
         let token = jwt.sign(
           {
             id: rows[0].id,
+            level: 1,
             superadmin: true
           },
           key.key,

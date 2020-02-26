@@ -16,7 +16,7 @@ exports.get = function(APP, req, callback) {
           .catch(err => {
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -42,7 +42,7 @@ exports.get = function(APP, req, callback) {
           .catch(err => {
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -66,6 +66,7 @@ exports.insert = function(APP, req, callback) {
       let params = 'Insert Success'; //This is only example, Object can also be used
       return callback(null, {
         code: 'INSERT_SUCCESS',
+        message: 'Benefit berhasil ditambahkan!',
         data: result.dataValues || params
       });
     })
@@ -88,7 +89,7 @@ exports.insert = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -146,6 +147,7 @@ exports.customInsert = function(APP, req, callback) {
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
               code: 'INSERT_SUCCESS',
+              message: 'Custom Benefit berhasil ditambahkan!',
               data: result.dataValues || params
             });
           })
@@ -170,7 +172,7 @@ exports.customInsert = function(APP, req, callback) {
 
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -198,30 +200,31 @@ exports.update = function(APP, req, callback) {
       }
     )
     .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
 
       let params = 'Update Success'; //This is only example, Object can also be used
       return callback(null, {
         code: 'UPDATE_SUCCESS',
-        data: params
+        message: 'Benefit berhasil diubah!',
+        data: result
       });
     })
     .catch(err => {
       console.log('iki error', err);
 
-      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-        let params = 'Error! Empty Query'; //This is only example, Object can also be used
-        return callback({
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
+      // if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+      //   let params = 'Error! Empty Query'; //This is only example, Object can also be used
+      //   return callback({
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
 
       if (err.original && err.original.code === 'ER_DUP_ENTRY') {
         let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
@@ -233,7 +236,61 @@ exports.update = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
+      });
+    });
+};
+
+exports.updateStatus = function(APP, req, callback) {
+  APP.models.company[req.user.db].mysql.benefit
+    .update(
+      {
+        status: req.body.status
+      },
+      {
+        where: {
+          id: req.body.id
+        }
+      }
+    )
+    .then(result => {
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
+
+      let params = 'Update Success'; //This is only example, Object can also be used
+      return callback(null, {
+        code: 'UPDATE_SUCCESS',
+        message: 'Benefit berhasil diubah!',
+        data: result
+      });
+    })
+    .catch(err => {
+      console.log('iki error', err);
+
+      // if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+      //   let params = 'Error! Empty Query'; //This is only example, Object can also be used
+      //   return callback({
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
+
+      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+        return callback({
+          code: 'DUPLICATE',
+          data: params
+        });
+      }
+
+      return callback({
+        code: 'ERR_DATABASE',
+        data: err
       });
     });
 };
@@ -252,17 +309,18 @@ exports.updateCustom = function(APP, req, callback) {
       }
     )
     .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
 
       let params = 'Update Success'; //This is only example, Object can also be used
       return callback(null, {
         code: 'UPDATE_SUCCESS',
+        message: 'Custom Benefit berhasil ditambahkan!',
         data: params
       });
     })
@@ -285,7 +343,7 @@ exports.updateCustom = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -313,7 +371,7 @@ exports.delete = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -341,7 +399,7 @@ exports.deleteCustom = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };

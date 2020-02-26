@@ -21,6 +21,38 @@ exports.get = function(APP, req, callback) {
       });
     })
     .catch(err => {
+      console.log(err);
+
+      return callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.getById = function(APP, req, callback) {
+  APP.models.company[req.user.db].mysql.department
+    .findOne({
+      where: {
+        id: req.body.id
+      }
+    })
+    .then(rows => {
+      if (rows == null) {
+        return callback({
+          code: 'NOT_FOUND',
+          message: 'Department tidak ditemukan!'
+        });
+      }
+
+      callback(null, {
+        code: 'FOUND',
+        data: rows
+      });
+    })
+    .catch(err => {
+      console.log(err);
+
       return callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)
@@ -38,7 +70,7 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function generateDepartmentCode(callback) {
-        let pad = 'DEP-000';
+        let pad = 'DEP000';
         let kode = '';
 
         APP.models.company[req.user.db].mysql.department
@@ -58,7 +90,7 @@ exports.insert = function(APP, req, callback) {
               console.log(res[0].department_code);
 
               let lastID = res[0].department_code;
-              let replace = lastID.replace('DEP-', '');
+              let replace = lastID.replace('DEP', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;
@@ -81,14 +113,16 @@ exports.insert = function(APP, req, callback) {
             department_code: result,
             name: req.body.name,
             description: req.body.desc,
-            location: req.body.loc
+            location: req.body.loc,
+            action_by: req.user.id
           })
           .save()
           .then(result => {
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
               code: 'INSERT_SUCCESS',
-              data: result.dataValues || params
+              data: result.dataValues || params,
+              message: 'Department berhasil ditambahkan!'
             });
           })
           .catch(err => {
@@ -135,7 +169,62 @@ exports.update = function(APP, req, callback) {
       {
         name: req.body.name,
         description: req.body.desc,
-        location: req.body.loc
+        location: req.body.loc,
+        status: req.body.status
+      },
+      {
+        where: {
+          id: req.body.id
+        }
+      }
+    )
+    .then(result => {
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
+
+      let params = 'Update Success'; //This is only example, Object can also be used
+      return callback(null, {
+        code: 'UPDATE_SUCCESS',
+        data: params,
+        message: 'Department berhasil diupdate!'
+      });
+    })
+    .catch(err => {
+      console.log('iki error', err);
+
+      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+        let params = 'Error! Empty Query'; //This is only example, Object can also be used
+        return callback({
+          code: 'UPDATE_NONE',
+          data: params
+        });
+      }
+
+      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+        return callback({
+          code: 'DUPLICATE',
+          data: params
+        });
+      }
+
+      return callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
+exports.updateStatus = function(APP, req, callback) {
+  APP.models.company[req.user.db].mysql.department
+    .update(
+      {
+        status: req.body.status
       },
       {
         where: {
@@ -155,7 +244,8 @@ exports.update = function(APP, req, callback) {
       let params = 'Update Success'; //This is only example, Object can also be used
       return callback(null, {
         code: 'UPDATE_SUCCESS',
-        data: params
+        data: params,
+        message: 'Department berhasil diupdate!'
       });
     })
     .catch(err => {
@@ -207,7 +297,8 @@ exports.delete = function(APP, req, callback) {
 
       return callback(null, {
         code: 'DELETE_SUCCESS',
-        data: params.where
+        data: params.where,
+        message: 'Department berhasil dihapus!'
       });
     })
     .catch(err => {

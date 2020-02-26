@@ -509,3 +509,137 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
     }
   );
 };
+
+exports.dashboardAdminCeklok = (APP, req, callback) => {
+  let { company, payment, endpoint } = APP.models.mysql;
+  let { _logs } = APP.models.mongo;
+
+  async.waterfall(
+    [
+      function getTotalActiveCompany(callback) {
+        let arr = [];
+        company
+          .findAndCountAll({
+            where: {
+              status: 1
+            }
+          })
+          .then(res => {
+            res.rows.map((x, i) => {
+              let code = x.dataValues.company_code;
+              arr.push(code);
+            });
+            callback(null, {
+              total_company: res.count,
+              company_code: arr
+            });
+          })
+          .catch(err => {
+            console.log('Error getTotalActiveCompany', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getTotalActiveCompany',
+              data: err
+            });
+          });
+      },
+
+      function getTotalEmployee(result, callback) {
+        let num = 0;
+        let company = [];
+
+        Promise.all(
+          result.company_code.map((x, i) => {
+            return APP.models.company[process.env.DBNAME + x].mysql.employee
+              .count()
+              .then(res => {
+                num += res;
+                let obj = {};
+                obj.total = res;
+                obj.company = x;
+
+                company.push(obj);
+
+                return obj;
+              })
+              .catch(err => {
+                console.log('Error getTotalEmployee', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error getTotalEmployee',
+                  data: err
+                });
+              });
+          })
+        ).then(arr => {
+          arr.sort((a, b) => {
+            return b.total - a.total;
+          });
+
+          callback(null, {
+            total_company: result.total_company,
+            company_code: result.company_code,
+            employee: {
+              total: num,
+              company: arr
+            }
+          });
+        });
+      },
+
+      function getFeatureUsage(result, calllback) {
+        let arr = [];
+        let count = {};
+        let all = 0;
+        endpoint
+          .findAndCountAll({
+            attributes: ['endpoint']
+          })
+          .then(res => {
+            res.rows.map((x, i) => {
+              arr.push(x.dataValues.endpoint);
+            });
+
+            Promise.all(
+              arr.map((y, i) => {
+                return _logs
+                  .find({
+                    endpoint: y
+                  })
+                  .then(logs => {
+                    all += logs.length;
+                    count[arr[i]] = logs.length;
+
+                    return true;
+                  })
+                  .catch(err => {
+                    console.log('Error getFeatureUsage', err);
+                    callback({
+                      code: 'ERR_DATABASE',
+                      message: 'Error getFeatureUsage',
+                      data: err
+                    });
+                  });
+              })
+            ).then(() => {
+              callback(null, {
+                code: 'OK',
+                data: {
+                  total_company: result.total_company,
+                  company_code: result.company_code,
+                  employee: result.employee,
+                  feature_access: count,
+                  all_feature_usage: all
+                }
+              });
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};

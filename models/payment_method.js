@@ -14,6 +14,12 @@ module.exports = function(sequelize, Sequelize) {
       payment_type_id: {
         type: Sequelize.INTEGER(11)
       },
+      name: {
+        type: Sequelize.STRING(45)
+      },
+      description: {
+        type: Sequelize.STRING(45)
+      },
       to_bank_name: {
         type: Sequelize.STRING(45)
       },
@@ -22,6 +28,12 @@ module.exports = function(sequelize, Sequelize) {
       },
       to_rek_no: {
         type: Sequelize.STRING(45)
+      },
+      limit: {
+        type: Sequelize.INTEGER(11)
+      },
+      icon: {
+        type: Sequelize.STRING(255)
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

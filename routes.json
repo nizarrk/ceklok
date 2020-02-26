@@ -221,29 +221,71 @@
     "function": "delete",
     "auth": true
   },
+  "/payment/type/get": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "get",
+    "auth": false
+  },
+  "/payment/type/insert": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "addPayment",
+    "auth": true
+  },
+  "/payment/type/update": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "update",
+    "auth": true
+  },
+  "/payment/type/delete": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "delete",
+    "auth": true
+  },
+  "/payment/type/activate": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentActivation",
+    "auth": true
+  },
+  "/payment/type/settings/add": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentSettings",
+    "auth": true
+  },
+  "/payment/type/settings": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentSettingsCompany",
+    "auth": true
+  },
   "/payment/method/get": {
     "method": "post",
-    "controller": "paymentMethodController",
+    "controller": "paymentController",
     "function": "get",
     "auth": false
   },
   "/payment/method/insert": {
     "method": "post",
-    "controller": "paymentMethodController",
-    "function": "insert",
-    "auth": false
+    "controller": "paymentController",
+    "function": "addPaymentMethod",
+    "auth": true
   },
   "/payment/method/update": {
     "method": "post",
-    "controller": "paymentMethodController",
-    "function": "update",
-    "auth": false
+    "controller": "paymentController",
+    "function": "editPaymentMethod",
+    "auth": true
   },
   "/payment/method/delete": {
     "method": "post",
-    "controller": "paymentMethodController",
+    "controller": "paymentController",
     "function": "delete",
-    "auth": false
+    "auth": true
   },
   "/transaction/company/get": {
     "method": "post",
@@ -323,6 +365,12 @@
     "function": "get",
     "auth": true
   },
+  "/department/getbyid": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "getById",
+    "auth": true
+  },
   "/department/insert": {
     "method": "post",
     "controller": "departmentController",
@@ -333,6 +381,12 @@
     "method": "post",
     "controller": "departmentController",
     "function": "update",
+    "auth": true
+  },
+  "/department/updatestatus": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "updateStatus",
     "auth": true
   },
   "/department/delete": {
@@ -359,6 +413,12 @@
     "function": "update",
     "auth": true
   },
+  "/benefit/updatestatus": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "updateStatus",
+    "auth": true
+  },
   "/benefit/delete": {
     "method": "post",
     "controller": "benefitController",
@@ -381,30 +441,6 @@
     "method": "post",
     "controller": "benefitController",
     "function": "customDelete",
-    "auth": true
-  },
-  "/priviledge/get": {
-    "method": "post",
-    "controller": "priviledgeController",
-    "function": "get",
-    "auth": true
-  },
-  "/priviledge/insert": {
-    "method": "post",
-    "controller": "priviledgeController",
-    "function": "insert",
-    "auth": true
-  },
-  "/priviledge/update": {
-    "method": "post",
-    "controller": "priviledgeController",
-    "function": "update",
-    "auth": true
-  },
-  "/priviledge/delete": {
-    "method": "post",
-    "controller": "priviledgeController",
-    "function": "delete",
     "auth": true
   },
   "/jobtitle/get": {
@@ -795,6 +831,12 @@
     "method": "post",
     "controller": "dashboardController",
     "function": "dashboardAdminCompany",
+    "auth": true
+  },
+  "/dashboard/ceklok/get": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardAdminCeklok",
     "auth": true
   }
 }

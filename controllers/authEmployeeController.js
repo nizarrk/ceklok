@@ -452,6 +452,7 @@ exports.login = (APP, req, callback) => {
             id: rows[0].id,
             code: rows[0].company_code,
             db: `ceklok_${rows[0].company_code}`,
+            level: 3,
             admin: false
           },
           key.key,

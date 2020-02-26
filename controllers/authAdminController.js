@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 const dbName = 'ceklok_VST1912090';
+const moment = require('moment');
 
 exports.checkExistingEmailCompany = (APP, req, callback) => {
   APP.models.mysql.company
@@ -212,126 +213,64 @@ exports.checkExistingCredentialsAdmin = (APP, req, callback) => {
 };
 
 exports.register = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function checkCredentialsAdmin(callback) {
-        module.exports.checkExistingCredentialsAdmin(APP, req, callback);
-      },
+  let { company, admin, payment, payment_type, payment_method, payment_detail, pricing } = APP.models.mysql;
+  APP.db.sequelize.transaction().then(t => {
+    async.waterfall(
+      [
+        function checkCredentialsAdmin(callback) {
+          module.exports.checkExistingCredentialsAdmin(APP, req, callback);
+        },
 
-      function checkCredentialsCompany(result, callback) {
-        module.exports.checkExistingCredentialsCompany(APP, req, callback);
-      },
+        function checkCredentialsCompany(result, callback) {
+          module.exports.checkExistingCredentialsCompany(APP, req, callback);
+        },
 
-      function encryptPassword(result, callback) {
-        let pass = APP.validation.password(req.body.admin.pass);
-        if (pass === true) {
-          bcrypt
-            .hash(req.body.admin.pass, 10)
-            .then(hashed => {
-              return callback(null, hashed);
-            })
-            .catch(err => {
-              console.log('iki error bcrypt', err);
+        function encryptPassword(result, callback) {
+          let pass = APP.validation.password(req.body.admin.pass);
+          if (pass === true) {
+            bcrypt
+              .hash(req.body.admin.pass, 10)
+              .then(hashed => {
+                return callback(null, hashed);
+              })
+              .catch(err => {
+                console.log('iki error bcrypt', err);
 
-              callback({
-                code: 'ERR',
-                id: 'ARN99',
-                message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
-                data: err
+                callback({
+                  code: 'ERR',
+                  id: 'ARN99',
+                  message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
+                  data: err
+                });
               });
-            });
-        } else {
-          return callback(pass);
-        }
-      },
+          } else {
+            return callback(pass);
+          }
+        },
 
-      function registerCompany(result, callback) {
-        APP.models.mysql.company
-          .build({
-            pricing_id: req.body.company.pricing,
-            name: req.body.company.name,
-            address: req.body.company.address,
-            kelurahan: req.body.company.kel,
-            kecamatan: req.body.company.kec,
-            city: req.body.company.city,
-            province: req.body.company.prov,
-            zipcode: req.body.company.zip,
-            msisdn: 'default',
-            tlp: req.body.company.telp,
-            email: req.body.company.email,
-            payment_status: 0
-          })
-          .save()
-          .then(res => {
-            callback(null, {
-              pass: result,
-              company: res
-            });
-          })
-          .catch(err => {
-            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-              return callback({
-                code: 'DUPLICATE',
-                id: 'ARQ96',
-                message: 'Kesalahan pada parameter',
-                info: {
-                  parameter: params
-                }
-              });
-            }
-
-            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-              let params = 'Error! Empty Query'; //This is only example, Object can also be used
-              return callback({
-                code: 'UPDATE_NONE',
-                id: 'ARQ96',
-                message: 'Kesalahan pada parameter',
-                info: {
-                  parameter: params
-                }
-              });
-            }
-
-            return callback({
-              code: 'ERR_DATABASE',
-              id: 'ARQ98',
-              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: err
-            });
-          });
-      },
-
-      function registerAdmin(data, callback) {
-        let email = APP.validation.email(req.body.admin.email);
-        let username = APP.validation.username(req.body.admin.username);
-
-        if (email && username) {
-          APP.models.mysql.admin
-            .build({
-              company_id: data.company.id,
-              name: req.body.admin.name,
-              gender: req.body.admin.gender,
-              pob: req.body.admin.pob,
-              dob: req.body.admin.dob,
-              address: req.body.admin.address,
-              kelurahan: req.body.admin.kel,
-              kecamatan: req.body.admin.kec,
-              city: req.body.admin.city,
-              province: req.body.admin.prov,
-              zipcode: req.body.admin.zip,
-              msisdn: 'default',
-              tlp: req.body.admin.telp,
-              email: req.body.admin.email,
-              user_name: req.body.admin.username,
-              password: data.pass,
-              old_password: data.pass
-            })
-            .save()
+        function registerCompany(result, callback) {
+          company
+            .create(
+              {
+                pricing_id: req.body.company.pricing,
+                name: req.body.company.name,
+                address: req.body.company.address,
+                kelurahan: req.body.company.kel,
+                kecamatan: req.body.company.kec,
+                city: req.body.company.city,
+                province: req.body.company.prov,
+                zipcode: req.body.company.zip,
+                msisdn: 'default',
+                tlp: req.body.company.telp,
+                email: req.body.company.email,
+                payment_status: 0
+              },
+              { transaction: t }
+            )
             .then(res => {
               callback(null, {
-                admin: res,
-                company: data.company
+                pass: result,
+                company: res
               });
             })
             .catch(err => {
@@ -366,170 +305,275 @@ exports.register = (APP, req, callback) => {
                 data: err
               });
             });
-        } else {
-          if (email !== true) return callback(email);
-          if (username !== true) return callback(username);
-        }
-      },
+        },
 
-      function paymentUser(data, callback) {
-        APP.models.mysql.payment
-          .create({
-            payment_method_id: req.body.payment.method,
-            pricing_id: req.body.payment.pricing,
-            invoice: new Date().getTime(),
-            company_id: data.company.id,
-            total: req.body.payment.total,
-            status: 0
-          })
-          .then(res => {
-            callback(null, {
-              admin: data.admin.dataValues,
-              company: data.company.dataValues,
-              payment: res.dataValues
-            });
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              id: 'ARQ98',
-              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: err
-            });
-          });
-      },
+        function registerAdmin(data, callback) {
+          let email = APP.validation.email(req.body.admin.email);
+          let username = APP.validation.username(req.body.admin.username);
 
-      function getPaymentInfo(data, callback) {
-        // add payment_method to payment
-        APP.models.mysql.payment.belongsTo(APP.models.mysql.payment_method, {
-          targetKey: 'id',
-          foreignKey: 'payment_method_id'
-        });
-        // add pricing to payment
-        APP.models.mysql.payment.belongsTo(APP.models.mysql.pricing, {
-          targetKey: 'id',
-          foreignKey: 'pricing_id'
-        });
-        // add payment_type to payment_method
-        APP.models.mysql.payment_method.belongsTo(APP.models.mysql.payment_type, {
-          targetKey: 'id',
-          foreignKey: 'payment_type_id'
-        });
-
-        APP.models.mysql.payment
-          .findOne({
-            include: [
-              {
-                model: APP.models.mysql.payment_method
-              },
-              {
-                model: APP.models.mysql.pricing
-              }
-            ],
-            where: {
-              id: data.payment.id
-            }
-          })
-          .then(res => {
-            APP.models.mysql.payment_method
-              .findOne({
-                include: [
-                  {
-                    model: APP.models.mysql.payment_type
-                  }
-                ],
-                where: {
-                  id: res.payment_method_id
-                }
-              })
-              .then(result => {
-                // include payment type to res
-                res.payment_method.dataValues.payment_type = result.payment_type;
+          if (email && username) {
+            admin
+              .create(
+                {
+                  company_id: data.company.id,
+                  name: req.body.admin.name,
+                  gender: req.body.admin.gender,
+                  pob: req.body.admin.pob,
+                  dob: req.body.admin.dob,
+                  address: req.body.admin.address,
+                  kelurahan: req.body.admin.kel,
+                  kecamatan: req.body.admin.kec,
+                  city: req.body.admin.city,
+                  province: req.body.admin.prov,
+                  zipcode: req.body.admin.zip,
+                  msisdn: 'default',
+                  tlp: req.body.admin.telp,
+                  email: req.body.admin.email,
+                  user_name: req.body.admin.username,
+                  password: data.pass,
+                  old_password: data.pass
+                },
+                { transaction: t }
+              )
+              .then(res => {
                 callback(null, {
-                  admin: data.admin,
-                  company: data.company,
-                  paymentInfo: res
+                  admin: res,
+                  company: data.company
                 });
               })
               .catch(err => {
-                console.log('1', err);
-                callback({
+                console.log('Error registerAdmin', err);
+
+                if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+                  let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+                  return callback({
+                    code: 'DUPLICATE',
+                    id: 'ARQ96',
+                    message: 'Kesalahan pada parameter',
+                    info: {
+                      parameter: params
+                    }
+                  });
+                }
+
+                if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+                  let params = 'Error! Empty Query'; //This is only example, Object can also be used
+                  return callback({
+                    code: 'UPDATE_NONE',
+                    id: 'ARQ96',
+                    message: 'Kesalahan pada parameter',
+                    info: {
+                      parameter: params
+                    }
+                  });
+                }
+
+                return callback({
                   code: 'ERR_DATABASE',
                   id: 'ARQ98',
                   message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                   data: err
                 });
               });
-          })
-          .catch(err => {
-            console.log('2', err);
-            callback({
-              code: 'ERR_DATABASE',
-              id: 'ARQ98',
-              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: err
+          } else {
+            if (email !== true) return callback(email);
+            if (username !== true) return callback(username);
+          }
+        },
+
+        function getPricingInfo(data, callback) {
+          pricing
+            .findOne({
+              where: {
+                id: req.body.payment.pricing
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                return callback({
+                  code: 'NOT_FOUND',
+                  message: 'Pricing tidak ditemukan!'
+                });
+              }
+
+              let total =
+                req.body.payment.type == '1' ? res.monthly_price : req.body.payment.type == '2' ? res.annual_price : 0;
+
+              let subscription =
+                req.body.payment.type == '1'
+                  ? res.monthly_minimum
+                  : req.body.payment.type == '2'
+                  ? res.annual_minimum
+                  : 0;
+
+              callback(null, {
+                admin: data.admin,
+                company: data.company,
+                paymentInfo: {
+                  total: total,
+                  subscription: subscription
+                }
+              });
             });
+        },
+
+        function paymentUser(data, callback) {
+          let invoice = `REG${moment().format('YYYYMMDD')}/${req.otp}`;
+
+          payment
+            .create(
+              {
+                payment_method_id: req.body.payment.method,
+                // pricing_id: req.body.payment.pricing,
+                invoice: invoice,
+                company_id: data.company.id,
+                name: 'Invoice Registrasi',
+                description: 'Invoice untuk bukti registrasi company',
+                subscription_type: req.body.payment.type,
+                subscription: data.paymentInfo.subscription,
+                total: data.paymentInfo.total,
+                status: 0
+              },
+              { transaction: t }
+            )
+            .then(res => {
+              callback(null, {
+                admin: data.admin.dataValues,
+                company: data.company.dataValues,
+                payment: res.dataValues
+              });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'ARQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        },
+
+        function paymentDetail(data, callback) {
+          payment_detail
+            .create(
+              {
+                transaction_type_id: 1, // 1 = traksaksi registrasi
+                payment_id: data.payment.id,
+                item_id: req.body.payment.pricing,
+                invoice: data.payment.invoice
+              },
+              { transaction: t }
+            )
+            .then(res => {
+              t.commit();
+
+              callback(null, {
+                admin: data.admin,
+                company: data.company,
+                payment: {
+                  data: data.payment,
+                  detail: res.dataValues
+                }
+              });
+            });
+        },
+
+        function getPaymentInfo(data, callback) {
+          // add payment_detail to payment
+          payment.hasMany(payment_detail, {
+            sourceKey: 'id',
+            foreignKey: 'payment_id'
           });
-      },
-
-      function createInvoice(data, callback) {
-        console.log(data);
-        APP.models.mysql.invoice
-          .create({
-            payment_id: data.paymentInfo.id,
-            invoice: data.paymentInfo.invoice,
-            name: "Company's Invoice",
-            description: 'Invoice of Pricing that choosed by company',
-            to_rek_name: data.paymentInfo.payment_method.to_rek_name,
-            to_rek_no: data.paymentInfo.payment_method.to_rek_no
-          })
-          .then(res => {
-            callback(null, {
-              payment: data.paymentInfo,
-              company: data.company,
-              admin: data.admin,
-              invoice: res
-            });
-          })
-          .catch(err => {
-            console.log('3', err);
-
-            callback({
-              code: 'ERR_DATABASE',
-              id: 'ARQ98',
-              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-              data: err
-            });
+          // add payment_method to payment
+          payment.belongsTo(payment_method, {
+            targetKey: 'id',
+            foreignKey: 'payment_method_id'
           });
-      },
+          // add pricing to payment
+          payment_detail.belongsTo(pricing, {
+            targetKey: 'id',
+            foreignKey: 'item_id'
+          });
+          // add payment_type to payment_method
+          payment_method.belongsTo(payment_type, {
+            targetKey: 'id',
+            foreignKey: 'payment_type_id'
+          });
 
-      function sendInvoice(data, callback) {
-        //send to email
-        APP.mailer.sendMail({
-          subject: 'Invoice',
-          to: data.company.email,
-          data: {
-            payment: data.payment,
-            company: data.company,
-            invoice: data.invoice
-          },
-          file: 'invoice.html'
-        });
+          payment
+            .findOne({
+              include: [
+                {
+                  model: payment_detail,
+                  include: [
+                    {
+                      model: pricing
+                    }
+                  ]
+                },
+                {
+                  model: payment_method,
+                  include: [
+                    {
+                      model: payment_type
+                    }
+                  ]
+                }
+              ],
+              where: {
+                id: data.payment.data.id
+              }
+            })
+            .then(res => {
+              callback(null, {
+                admin: data.admin,
+                company: data.company,
+                payment: res
+              });
+            })
+            .catch(err => {
+              console.log('2', err);
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'ARQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        },
 
-        callback(null, {
-          code: 'INSERT_SUCCESS',
-          id: 'ARP00',
-          message: 'Registrasi Sukses!',
-          data: data
-        });
+        function sendInvoice(data, callback) {
+          console.log(data);
+
+          //send to email
+          APP.mailer.sendMail({
+            subject: 'Invoice',
+            to: data.company.email,
+            data: {
+              payment: data.payment,
+              company: data.company
+            },
+            file: 'invoice.html'
+          });
+
+          callback(null, {
+            code: 'INSERT_SUCCESS',
+            id: 'ARP00',
+            message: 'Registrasi Sukses!',
+            data: data
+          });
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          t.rollback();
+          return callback(err);
+        }
+
+        callback(null, result);
       }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
-
-      callback(null, result);
-    }
-  );
+    );
+  });
 };
 
 exports.paymentCompany = (APP, req, callback) => {
@@ -741,6 +785,7 @@ exports.login = (APP, req, callback) => {
             company: rows[0].company_id,
             code: rows[0].company_code,
             db: `ceklok_${rows[0].company_code}`,
+            level: 2,
             admin: true
           },
           key.key,

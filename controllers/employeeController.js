@@ -1192,7 +1192,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'VLT-000';
+        let pad = 'VLT000';
         let kode = '';
 
         APP.models.company[req.user.db].mysql.violation
@@ -1212,7 +1212,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
               console.log(res[0].code);
 
               let lastID = res[0].code;
-              let replace = lastID.replace('VLT-', '');
+              let replace = lastID.replace('VLT', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;
@@ -1243,10 +1243,6 @@ exports.addSuratPeringatan = (APP, req, callback) => {
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
             let docPath = `./public/uploads/company_${req.user.code}/employee/doc/`;
-
-            if (!fs.existsSync(docPath)) {
-              mkdirp.sync(docPath);
-            }
 
             callback(null, {
               code: result,

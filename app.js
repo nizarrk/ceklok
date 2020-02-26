@@ -18,6 +18,7 @@ const path = require('path');
 const moment = require('moment');
 const ip = require('ip');
 const msisdn = require('express-msisdn');
+const randomString = require('crypto-random-string');
 
 // Your Database configurations.
 const db = require('./db.js');
@@ -287,24 +288,57 @@ function resOutput(APP, req, res, params, status) {
       function logging(message, callback) {
         req.elapsedTime = new Date().getTime() - req.startTime;
 
-        resLog(
-          APP,
-          {
-            body: {
-              request: req.body ? JSON.stringify(req.body) : null,
-              response: output ? JSON.stringify(output) : null,
-              status: message.company.status || 200,
-              endpoint: req.originalUrl,
-              date: req.customDate,
-              time: req.customTime,
-              elapsed_time: req.elapsedTime || '0'
+        db.sequelize.models.endpoint
+          .findOne({
+            where: {
+              endpoint: req.originalUrl
             }
-          },
-          err => {
-            if (err) console.log(err);
-            callback(null, message);
-          }
-        );
+          })
+          .then(res => {
+            let profile =
+              res == null || res.auth == 0
+                ? {
+                    id: 0,
+                    code: 0,
+                    level: 0
+                  }
+                : req.user;
+
+            resLog(
+              APP,
+              {
+                body: {
+                  request: req.body ? JSON.stringify(req.body) : null,
+                  response: output ? JSON.stringify(output) : null,
+                  status: message.company.status || 200,
+                  ip:
+                    req.connection.remoteAddress === '::1'
+                      ? '127.0.0.1'
+                      : req.connection.remoteAddress.replace('::', '').replace('ffff:', ''),
+                  feature_id: res !== null ? res.feature_id : '',
+                  subfeature_id: res !== null ? res.subfeature_id : '',
+                  endpoint: req.originalUrl,
+                  user_id: profile.id,
+                  level: profile.level,
+                  company: profile.code,
+                  date: req.customDate,
+                  time: req.customTime,
+                  elapsed_time: req.elapsedTime || '0'
+                }
+              },
+              err => {
+                if (err) console.log(err);
+                callback(null, message);
+              }
+            );
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
       },
       function printing(message, callback) {
         if (process.env.APP_LOG !== 'true') return callback(null, message);
@@ -434,6 +468,14 @@ async.series(
         .format('YYYY-MM-DD HH:mm:ss')
         .toUpperCase();
       req.startTime = new Date().getTime();
+      req.connection.remoteAddress === '::1'
+        ? (req.ipClient = '127.0.0.1')
+        : req.connection.remoteAddress === undefined
+        ? (req.ipClient = '127.0.0.1')
+        : (req.ipClient = req.connection.remoteAddress.replace('::', '').replace('ffff:', ''));
+      req.randomString = randomString({ length: 64 });
+      req.randomNumber = randomString({ length: 16, characters: '1234567890' });
+      req.otp = randomString({ length: 6, characters: '1234567890' });
 
       next();
     });

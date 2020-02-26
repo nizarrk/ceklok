@@ -11,23 +11,29 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      transaction_type_id: {
-        type: Sequelize.INTEGER(11)
-      },
       payment_method_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      pricing_id: {
         type: Sequelize.INTEGER(11)
       },
       company_id: {
         type: Sequelize.INTEGER(11)
+      },
+      name: {
+        type: Sequelize.STRING(45)
+      },
+      description: {
+        type: Sequelize.STRING(45)
       },
       date: {
         type: Sequelize.DATEONLY
       },
       invoice: {
         type: Sequelize.STRING(45)
+      },
+      subscription_type: {
+        type: Sequelize.INTEGER(11) // 0 = default, 1 = bulanan, 2 = tahunan, 3 = one time
+      },
+      subscription: {
+        type: Sequelize.INTEGER(11)
       },
       from_bank_name: {
         type: Sequelize.STRING(45)

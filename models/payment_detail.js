@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'pricing',
+    'payment_detail',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,45 +11,20 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      code: {
-        type: Sequelize.STRING(50)
+      payment_id: {
+        type: Sequelize.INTEGER(11)
       },
-      name: {
+      transaction_type_id: {
+        type: Sequelize.INTEGER(11)
+      },
+      item_id: {
+        type: Sequelize.INTEGER(11) //bergantung pada transaction type yang dipilih
+      },
+      invoice: {
         type: Sequelize.STRING(45)
-      },
-      description: {
-        type: Sequelize.STRING(45)
-      },
-      one_time_price: {
-        type: Sequelize.INTEGER(11)
-      },
-      annual_price: {
-        type: Sequelize.INTEGER(11)
-      },
-      monthly_price: {
-        type: Sequelize.INTEGER(11)
-      },
-      one_time_minimum: {
-        type: Sequelize.INTEGER(11) // minimum beralangganan one time
-      },
-      annual_minimum: {
-        type: Sequelize.INTEGER(11) // minimum beralangganan per tahun
-      },
-      monthly_minimum: {
-        type: Sequelize.INTEGER(11) // minimum beralangganan per bulan
-      },
-      type: {
-        type: Sequelize.INTEGER(1) // 0 = registration pricing, 1 = additional pricing
-      },
-      image: {
-        type: Sequelize.STRING(255)
-      },
-      publication: {
-        type: Sequelize.INTEGER(1), // 0 = unpublished, 1 = published,
-        defaultValue: 1
       },
       status: {
-        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif,
+        type: Sequelize.INTEGER(1), // 0 = non-aktif, 1 = aktif
         defaultValue: 1
       },
       created_at: {

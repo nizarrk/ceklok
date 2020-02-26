@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'endpoint',
+    'payment_type_setting',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,35 +11,11 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      feature_id: {
+      payment_type_setting_id: {
         type: Sequelize.INTEGER(11)
       },
-      subfeature_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      feature_name: {
-        type: Sequelize.STRING(50)
-      },
-      endpoint: {
-        type: Sequelize.STRING(50)
-      },
-      method: {
+      value: {
         type: Sequelize.STRING(45)
-      },
-      directory: {
-        type: Sequelize.STRING(45)
-      },
-      controller: {
-        type: Sequelize.STRING(50)
-      },
-      function: {
-        type: Sequelize.STRING(50)
-      },
-      subfeature_name: {
-        type: Sequelize.STRING(50)
-      },
-      auth: {
-        type: Sequelize.INTEGER(1)
       },
       status: {
         type: Sequelize.INTEGER(1) //0 = non aktif, 1 = aktif

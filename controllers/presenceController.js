@@ -376,31 +376,12 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       totalMinus[data.id].push(x.total_minus);
                       totalOver[data.id].push(x.total_over);
 
-                      let timeCompare = moment(APP.time.timeDuration(totalTime[data.id]), 'HH:mm:ss').diff(
-                        moment(APP.time.timeXday(data.schedule.work_time, found.length), 'HH:mm:ss')
-                      );
                       let workTime = moment.duration(APP.time.timeXday(data.schedule.work_time, found.length));
                       let workTotal = moment.duration(APP.time.timeDuration(totalTime[data.id]));
                       let workMinus = moment.duration(APP.time.timeDuration(totalMinus[data.id]));
                       let workOver = moment.duration(APP.time.timeDuration(totalOver[data.id]));
                       let resultMinus = moment.duration(workTime - workMinus);
                       percentage[data.id] = (resultMinus / workTime) * 100;
-
-                      if (timeCompare < 0) {
-                        workMinus = APP.time.timeSubstract(
-                          APP.time.timeDuration(totalTime[data.id]),
-                          APP.time.timeXday(data.schedule.work_time, found.length)
-                        );
-                        workOver = '00:00:00';
-                      }
-
-                      if (timeCompare > 0) {
-                        workOver = APP.time.timeSubstract(
-                          APP.time.timeDuration(totalTime[data.id]),
-                          APP.time.timeXday(data.schedule.work_time, found.length)
-                        );
-                        workMinus = '00:00:00';
-                      }
 
                       x.presence_setting_id == 1 ? hadir[data.id]++ : hadir[data.id]; // H
                       x.presence_setting_id == 2 ? absen[data.id]++ : absen[data.id]; // NCI
@@ -427,6 +408,32 @@ exports.generateDailyPresence = (APP, req, callback) => {
 
                       // push index yang terakhir aja
                       if (index2 + 1 == found.length) {
+                        let timeCompare = moment.duration(
+                          APP.time.timeSubstract(
+                            APP.time.timeDuration(totalTime[data.id]),
+                            APP.time.timeXday(data.schedule.work_time, found.length)
+                          )
+                        );
+
+                        if (timeCompare < 0) {
+                          console.log('masuk if < 0');
+
+                          workMinus = APP.time.timeSubstract(
+                            APP.time.timeDuration(totalTime[data.id]),
+                            APP.time.timeXday(data.schedule.work_time, found.length)
+                          );
+                          workOver = '00:00:00';
+                        }
+
+                        if (timeCompare > 0) {
+                          console.log('masuk if > 0');
+                          workOver = APP.time.timeSubstract(
+                            APP.time.timeDuration(totalTime[data.id]),
+                            APP.time.timeXday(data.schedule.work_time, found.length)
+                          );
+                          workMinus = '00:00:00';
+                        }
+
                         arr.push({
                           id: x.id,
                           user_id: x.user_id,
