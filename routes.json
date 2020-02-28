@@ -224,8 +224,14 @@
   "/payment/type/get": {
     "method": "post",
     "controller": "paymentController",
-    "function": "get",
-    "auth": false
+    "function": "paymentTypeList",
+    "auth": true
+  },
+  "/payment/type/getbyid": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentTypeDetail",
+    "auth": true
   },
   "/payment/type/insert": {
     "method": "post",
@@ -351,6 +357,12 @@
     "method": "post",
     "controller": "gradeController",
     "function": "updateGradeBenefit",
+    "auth": true
+  },
+  "/grade/updatestatus": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "updateStatus",
     "auth": true
   },
   "/grade/delete": {
@@ -837,6 +849,24 @@
     "method": "post",
     "controller": "dashboardController",
     "function": "dashboardAdminCeklok",
+    "auth": true
+  },
+  "/profile/update": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "updateProfile",
+    "auth": true
+  },
+  "/profile/update/photo": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "updateProfilePhoto",
+    "auth": true
+  },
+  "/profile/update/password": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "resetPassword",
     "auth": true
   }
 }

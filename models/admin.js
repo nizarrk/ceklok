@@ -65,6 +65,12 @@ module.exports = function(sequelize, Sequelize) {
       email: {
         type: Sequelize.STRING(45)
       },
+      photo: {
+        type: Sequelize.STRING(255)
+      },
+      initial_login: {
+        type: Sequelize.INTEGER(1)
+      },
       status: {
         type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
         allowNull: false,

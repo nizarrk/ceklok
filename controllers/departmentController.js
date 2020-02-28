@@ -87,9 +87,9 @@ exports.insert = function(APP, req, callback) {
               callback(null, kode);
             } else {
               console.log('ada');
-              console.log(res[0].department_code);
+              console.log(res[0].code);
 
-              let lastID = res[0].department_code;
+              let lastID = res[0].code;
               let replace = lastID.replace('DEP', '');
               console.log(replace);
 
@@ -110,7 +110,7 @@ exports.insert = function(APP, req, callback) {
       function insertDepartment(result, callback) {
         APP.models.company[req.user.db].mysql.department
           .build({
-            department_code: result,
+            code: result,
             name: req.body.name,
             description: req.body.desc,
             location: req.body.loc,

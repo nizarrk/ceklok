@@ -11,7 +11,7 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      department_code: {
+      code: {
         type: Sequelize.STRING(45)
       },
       name: {

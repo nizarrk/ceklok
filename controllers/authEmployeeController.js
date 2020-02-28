@@ -4,6 +4,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
+const trycatch = require('trycatch');
+const path = require('path');
+const fs = require('fs');
 
 const generateEmployeeCode = async (APP, req, index) => {
   let tgl = new Date().getDate().toString();
@@ -54,7 +57,8 @@ const generateEmployeeCode = async (APP, req, index) => {
 };
 
 exports.checkExistingTelp = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
+  APP.models.company[db].mysql.employee
     .findAll({
       where: {
         tlp: req.body.telp
@@ -95,7 +99,9 @@ exports.checkExistingTelp = (APP, req, callback) => {
 };
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
+
+  APP.models.company[db].mysql.employee
     .findAll({
       where: {
         email: req.body.email
@@ -136,7 +142,9 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
+
+  APP.models.company[db].mysql.employee
     .findAll({
       where: {
         company_code: req.body.company,
@@ -586,6 +594,7 @@ exports.forgotPassword = (APP, req, callback) => {
           })
           .then(res => {
             if (res != null) {
+              // dimatiin dulu by request
               // if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
               //   return callback({
               //     code: 'INVALID_REQUEST',

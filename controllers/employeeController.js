@@ -436,9 +436,9 @@ exports.importEmployeeData = (APP, req, callback) => {
             let fileName = new Date().toISOString().replace(/:|\./g, '');
             let importPath = `./public/uploads/company_${req.user.code}/employee/import/`;
 
-            if (!fs.existsSync(importPath)) {
-              mkdirp.sync(importPath);
-            }
+            // if (!fs.existsSync(importPath)) {
+            //   mkdirp.sync(importPath);
+            // }
 
             if (req.files.import) {
               req.files.import.mv(importPath + fileName + path.extname(req.files.import.name), function(err) {

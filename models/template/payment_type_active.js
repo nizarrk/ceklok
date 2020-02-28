@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'admin_app',
+    'payment_type_active',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,31 +11,17 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      user_name: {
-        type: Sequelize.STRING(45)
+      payment_type_id: {
+        type: Sequelize.INTEGER(11)
       },
-      password: {
-        type: Sequelize.STRING(45)
+      date_start: {
+        type: Sequelize.DATEONLY
       },
-      name: {
-        type: Sequelize.STRING(45)
-      },
-      tlp: {
-        type: Sequelize.STRING(45)
-      },
-      email: {
-        type: Sequelize.STRING(45)
-      },
-      photo: {
-        type: Sequelize.STRING(255)
-      },
-      initial_login: {
-        type: Sequelize.INTEGER(1)
+      date_end: {
+        type: Sequelize.DATEONLY
       },
       status: {
-        type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
-        allowNull: false,
-        defaultValue: 0
+        type: Sequelize.INTEGER(1) //0 = non aktif, 1 = aktif
       },
       created_at: {
         allowNull: false,

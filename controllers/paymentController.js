@@ -4,10 +4,260 @@ const async = require('async');
 const path = require('path');
 const moment = require('moment');
 
+exports.paymentTypeList = (APP, req, callback) => {
+  let { payment_type } = APP.models.mysql;
+
+  async.waterfall(
+    [
+      function checkLevel(callback) {
+        if (req.user.level === 1) {
+          callback(null, {});
+        } else if (req.user.level === 2) {
+          callback(null, {
+            status: 1
+          });
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'PLQ97',
+            message: 'User level invalid'
+          });
+        }
+      },
+
+      function getList(data, callback) {
+        payment_type
+          .findAll({
+            attributes: ['id', 'name', 'description', 'status'],
+            where: data !== {} ? data : 1 + 1
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                id: 'PLQ97',
+                message: 'Data tidak ditemukan'
+              });
+            } else {
+              callback(null, res);
+            }
+          })
+          .catch(err => {
+            console.log('Error PLQ98', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'PLQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( getList )'
+            });
+          });
+      },
+
+      function setStatus(data, callback) {
+        let arr = [];
+
+        Promise.all(
+          data.map((x, i) => {
+            if (req.user.level === 2) {
+              let { payment_type_active } = APP.models.company[req.user.db].mysql;
+
+              return payment_type_active
+                .findAll({
+                  where: {
+                    payment_type_id: x.id
+                  }
+                })
+                .then(res => {
+                  arr.push({
+                    id: x.id,
+                    name: x.name,
+                    description: x.description,
+                    status: res.length > 0 ? true : false
+                  });
+
+                  return true;
+                });
+            } else {
+              arr.push({
+                id: x.id,
+                name: x.name,
+                description: x.description,
+                status: false
+              });
+
+              return true;
+            }
+          })
+        )
+          .then(() => {
+            callback(null, {
+              code: 'FOUND',
+              id: 'PLP00',
+              message: 'Data ditemukan',
+              data: arr
+            });
+          })
+          .catch(err => {
+            console.log('Error setStatus', err);
+            callback({
+              code: 'ERR',
+              message: 'Error setStatus',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.paymentTypeDetail = (APP, req, callback) => {
+  let { payment_type, payment_method } = APP.models.mysql;
+
+  async.waterfall(
+    [
+      function checkParams(callback) {
+        if (req.body.id) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'PLQ96',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function getByLevel(data, callback) {
+        if (req.user.level === 1) {
+          payment_type.hasMany(payment_method, {
+            sourceKey: 'id',
+            foreignKey: 'payment_type_id'
+          });
+
+          payment_type
+            .findAll({
+              include: [
+                {
+                  model: payment_method,
+                  attributes: ['id', 'name', 'description']
+                }
+              ],
+              where: {
+                id: req.body.id
+              }
+            })
+            .then(res => {
+              if (res.length == 0) {
+                callback({
+                  code: 'NOT_FOUND',
+                  id: 'PLP00',
+                  message: 'Data tidak ditemukan'
+                });
+              } else {
+                callback(null, {
+                  code: 'FOUND',
+                  id: 'PLQ97',
+                  data: res
+                });
+              }
+            })
+            .catch(err => {
+              console.log('Error PLQ98', err);
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'PLQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( get payment )',
+                data: err
+              });
+            });
+        } else if (req.user.level === 2) {
+          APP.db.sequelize
+            .query(
+              `SELECT 
+                a.id, a.payment_type_id, b.name, b.description, c.name AS 'payment_method_name', c.description AS 'payment_method_description'
+              FROM 
+                ${req.user.db}.payment_type_active AS a 
+              JOIN 
+                ceklok.payment_type AS b 
+              ON
+                a.payment_type_id = b.id
+              LEFT JOIN
+                ${req.user.db}.payment_method_active AS c
+              ON
+                c.payment_type_active_id = b.id`
+            )
+            .then(res => {
+              if (res[0].length == 0) {
+                callback({
+                  code: 'NOT_FOUND',
+                  id: 'PLP00',
+                  message: 'Data tidak ditemukan'
+                });
+              } else {
+                callback(null, {
+                  code: 'FOUND',
+                  id: 'PLQ97',
+                  data: res[0]
+                });
+              }
+            });
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.paymentTypeListCompany = (APP, req, callback) => {
+  APP.db.sequelize
+    .query(
+      `SELECT 
+      a.id, a.payment_type_id, b.name, b.description 
+    FROM 
+      ${req.user.db}.payment_type_active AS a 
+    JOIN 
+      ceklok.payment_type AS b 
+    ON
+      a.payment_type_id = b.id
+  `
+    )
+    .then(res => {
+      if (res[0].length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          id: 'PLP05',
+          message: 'Data tidak ditemukan'
+        });
+      } else {
+        callback({
+          code: 'FOUND',
+          id: 'PLAP0',
+          data: res[0]
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABSE',
+        id: 'PLQ98',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( get payment type )',
+        data: err
+      });
+    });
+};
+
 exports.addPayment = (APP, req, callback) => {
   let { payment_type } = APP.models.mysql;
   let { name, desc, monthly, annual, monthlymin, annualmin } = req.body;
-  let { user_id } = req.user;
 
   async.waterfall(
     [
@@ -32,7 +282,7 @@ exports.addPayment = (APP, req, callback) => {
             monthly_price: annual,
             monthly_minimum: monthlymin,
             annual_minimum: annualmin,
-            action_by: user_id
+            action_by: req.user.id
           })
           .then(res => {
             callback(null, {
@@ -45,6 +295,65 @@ exports.addPayment = (APP, req, callback) => {
             callback({
               code: 'ERR_DATABASE',
               id: 'APQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.editPayment = (APP, req, callback) => {
+  let { payment_type } = APP.models.mysql;
+  let { name, desc, monthly, annual, monthlymin, annualmin, id } = req.body;
+
+  async.waterfall(
+    [
+      function checkParam(callback) {
+        if (name && desc && monthly && annual && monthlymin && annualmin) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'APQ96',
+            message: 'Kesalahan pada parameter ( All )'
+          });
+        }
+      },
+      function create(data, callback) {
+        payment_type
+          .update(
+            {
+              name: name,
+              description: desc,
+              annual_price: monthly,
+              monthly_price: annual,
+              monthly_minimum: monthlymin,
+              annual_minimum: annualmin,
+              action_by: req.user.id
+            },
+            {
+              where: { id: id }
+            }
+          )
+          .then(() => {
+            callback(null, {
+              code: 'OK',
+              no: 'EPP00',
+              message: 'Data berhasil di update',
+              data: req.body
+            });
+          })
+          .catch(err => {
+            callback({
+              code: 'DATABASE_ERR',
+              no: 'EPN99',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: err
             });
@@ -275,6 +584,7 @@ exports.editPaymentMethod = (APP, req, callback) => {
 exports.paymentActivation = (APP, req, callback) => {
   // let {  dbsql , user_id , comm_id } = req.profile;
   let { payment, payment_detail, payment_method, payment_type, admin } = APP.models.mysql;
+  let { payment_type_active } = APP.models.company[req.user.db].mysql;
   // let { comm_payment_type } = app.models.community[dbsql].mysql;
   let { method, payment_type_id, type, company } = req.body;
 
@@ -391,26 +701,25 @@ exports.paymentActivation = (APP, req, callback) => {
             });
           });
       },
-      // function insert(data, callback) {
-      //     comm_payment_type
-      //         .create({
-      //             payment_title: data.payment_title,
-      //             description: data.description,
-      //             status: 2,
-      //             created_by: user_id,
-      //         })
-      //         .then(() =>{
-      //             callback(null, data);
-      //         })
-      //         .catch(err =>{
-      //            callback({
-      //                 code: 'ERR_DATABASE',
-      //                 id: 'CMQ98',
-      //                 message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( insert payment type )',
-      //                 data: err
-      //             });
-      //         });
-      // },
+      function insertPaymentActive(data, callback) {
+        payment_type_active
+          .create({
+            payment_type_id: data.id,
+            created_by: req.user.id
+          })
+          .then(() => {
+            callback(null, data);
+          })
+          .catch(err => {
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'CMQ98',
+              message:
+                'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( insert payment type )',
+              data: err
+            });
+          });
+      },
       function insertPayment(data, callback) {
         let invoice = `PAY${moment().format('YYYYMMDD')}/${req.user.company}/${req.otp}`;
 
@@ -541,11 +850,11 @@ exports.paymentSettingsCompany = (APP, req, callback) => {
 
   async.waterfall(
     [
-      function checkMaster(callback) {
+      function checkPaymentType(callback) {
         payment_type_setting_master
           .findOne({
             where: {
-              id: req.body.master
+              id: req.body.type
             }
           })
           .then(res => {
@@ -556,13 +865,21 @@ exports.paymentSettingsCompany = (APP, req, callback) => {
               });
             }
             callback(null, true);
+          })
+          .catch(err => {
+            console.log('Error checkPaymentType', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error checkPaymentType',
+              data: err
+            });
           });
       },
 
       function addSettings(data, callback) {
         payment_type_setting
           .create({
-            payment_type_setting_id: req.body.master,
+            payment_type_setting_id: req.body.type,
             value: req.body.value
           })
           .then(res => {
