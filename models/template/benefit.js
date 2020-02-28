@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      code: {
+        type: Sequelize.STRING(45)
+      },
       name: {
         type: Sequelize.STRING(45)
       },

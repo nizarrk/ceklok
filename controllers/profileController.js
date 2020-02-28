@@ -362,6 +362,15 @@ exports.updateProfilePhoto = (APP, req, callback) => {
       function uploadPath(callback) {
         trycatch(
           () => {
+            let directory =
+              req.user.level === 1
+                ? 'Admin CEKLOK/'
+                : req.user.level === 2
+                ? `company_${req.user.code}/admin`
+                : req.user.level === 3
+                ? `company_${req.user.code}/employee`
+                : '';
+
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
                 code: 'INVALID_REQUEST',
@@ -370,7 +379,7 @@ exports.updateProfilePhoto = (APP, req, callback) => {
             }
 
             let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let imagePath = `./public/uploads/company_${req.user.code}/employee/${req.user.id}/`;
+            let imagePath = `./public/uploads/${directory}/`;
 
             callback(null, imagePath + fileName + path.extname(req.files.image.name));
           },
@@ -388,9 +397,20 @@ exports.updateProfilePhoto = (APP, req, callback) => {
       },
 
       function updateProfileData(data, callback) {
-        let { employee } = APP.models.company[req.user.db].mysql;
+        let query;
+        if (req.user.level === 1) {
+          query = APP.models.mysql.admin_app;
+        } else if (req.user.level === 2) {
+          query = APP.models.mysql.admin;
+        } else if (req.user.level === 3) {
+          query = APP.models.company[req.user.db].mysql.employee;
+        } else {
+          callback({
+            code: 'INVALID_REQUEST'
+          });
+        }
 
-        employee
+        query
           .update(
             {
               photo: data.slice(8)
@@ -419,6 +439,14 @@ exports.updateProfilePhoto = (APP, req, callback) => {
               id: 'ETP00',
               message: 'Foto Profile berhasil diubah'
             });
+          })
+          .catch(err => {
+            console.log('Error updateProfile', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'ETQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami (updateProfile)'
+            });
           });
       }
     ],
@@ -430,56 +458,95 @@ exports.updateProfilePhoto = (APP, req, callback) => {
   );
 };
 
-exports.resetPassword = (APP, req, callback) => {
+exports.changePassword = (APP, req, callback) => {
+  let query;
+  if (req.user.level === 1) {
+    query = APP.models.mysql.admin_app;
+  } else if (req.user.level === 2) {
+    query = APP.models.mysql.admin;
+  } else if (req.user.level === 3) {
+    query = APP.models.company[req.user.db].mysql.employee;
+  } else {
+    callback({
+      code: 'INVALID_REQUEST'
+    });
+  }
   async.waterfall(
     [
-      function checkBody(callback) {
-        let password = APP.validation.password(req.body.pass);
-        let konfirm = APP.validation.password(req.body.konf);
+      function checkParams(callback) {
+        if (req.body.old && req.body.pass && req.body.konf) {
+          let password = APP.validation.password(req.body.pass);
+          let konfirm = APP.validation.password(req.body.konf);
 
-        if (password != true) {
-          return callback(password);
-        }
+          if (password != true) {
+            return callback(password);
+          }
 
-        if (konfirm != true) {
-          console.log('konfirm');
+          if (konfirm != true) {
+            console.log('konfirm');
 
-          return callback(konfirm);
-        }
+            return callback(konfirm);
+          }
 
-        if (req.body.konf !== req.body.pass) {
+          if (req.body.konf !== req.body.pass) {
+            return callback({
+              code: 'INVALID_REQUEST',
+              id: 'ETQ96',
+              message: 'Kesalahan pada parameter, password dan konfirm tidak sesuai'
+            });
+          }
+
+          callback(null, true);
+        } else {
           callback({
             code: 'INVALID_REQUEST',
-            message: 'Invalid password confirm'
+            id: 'ETQ96',
+            message: 'Kesalahan pada parameter'
           });
         }
-        callback(null, true);
       },
 
       function checkPassword(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+        query
           .findOne({
             where: {
-              email: req.body.email
+              id: req.user.id
             }
           })
           .then(res => {
-            bcrypt.compare(req.body.pass, res.password).then(res => {
-              console.log(res);
-
-              if (res === false) return callback(null, true);
-
+            if (res == null) {
               callback({
-                code: 'INVALID_REQUEST',
-                message: 'Password is match with previous password!'
+                code: 'NOT_FOUND',
+                id: 'CPQ97',
+                message: 'Data Tidak ditemukan'
               });
-            });
+            } else {
+              let oldpass = bcrypt.compareSync(req.body.old, res.password);
+              let newpass = bcrypt.compareSync(req.body.pass, res.password);
+
+              if (!oldpass) {
+                return callback({
+                  code: 'INVALID_REQUEST',
+                  id: 'ETQ96',
+                  message: 'Kesalahan pada parameter, password lama tidak sesuai'
+                });
+              } else if (newpass) {
+                return callback({
+                  code: 'INVALID_REQUEST',
+                  id: 'CPP01',
+                  message: 'Password sudah pernah digunakan, gunakan password lain'
+                });
+              } else {
+                callback(null, true);
+              }
+            }
           })
           .catch(err => {
             console.log('Error checkPassword', err);
             callback({
               code: 'ERR_DATABASE',
-              message: 'Error checkPassword',
+              id: 'CPQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
               data: err
             });
           });
@@ -497,38 +564,26 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function updatePassword(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
-          .findOne({
-            where: {
-              email: req.body.email
+        query
+          .update(
+            {
+              password: result,
+              updated_at: new Date(),
+              action_by: req.user.id
+            },
+            {
+              where: {
+                id: req.user.id
+              }
             }
-          })
-          .then(res => {
-            if (res == null) {
-              callback({
-                code: 'NOT_FOUND',
-                data: null
-              });
-            }
-            res
-              .update({
-                password: result,
-                updated_at: new Date()
-              })
-              .then(res => {
-                callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: res
-                });
-              })
-              .catch(err => {
-                console.log('Error update updatePassword', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  message: 'Error update updatePassword',
-                  data: err
-                });
-              });
+          )
+          .then(updated => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              id: 'CPP00',
+              message: 'Password berhasil diubah',
+              data: updated
+            });
           })
           .catch(err => {
             console.log('Error findOne updatePassword', err);

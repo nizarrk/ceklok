@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": false
+    "auth": true
   },
   "/test/tes": {
     "method": "post",
@@ -461,6 +461,12 @@
     "function": "get",
     "auth": true
   },
+  "/jobtitle/getbyid": {
+    "method": "post",
+    "controller": "jobtitleController",
+    "function": "getById",
+    "auth": true
+  },
   "/jobtitle/insert": {
     "method": "post",
     "controller": "jobtitleController",
@@ -471,6 +477,12 @@
     "method": "post",
     "controller": "jobtitleController",
     "function": "update",
+    "auth": true
+  },
+  "/jobtitle/updatestatus": {
+    "method": "post",
+    "controller": "jobtitleController",
+    "function": "updateStatus",
     "auth": true
   },
   "/jobtitle/delete": {
@@ -866,7 +878,31 @@
   "/profile/update/password": {
     "method": "post",
     "controller": "profileController",
-    "function": "resetPassword",
+    "function": "changePassword",
+    "auth": true
+  },
+  "/letter/insert": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "insert",
+    "auth": true
+  },
+  "/letter/get": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "get",
+    "auth": true
+  },
+  "/letter/getById": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "getById",
+    "auth": true
+  },
+  "/letter/update": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "update",
     "auth": true
   }
 }

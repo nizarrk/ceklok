@@ -1,13 +1,16 @@
 'use strict';
 
-module.exports = async (APP, db, table, prefix) => {
+module.exports = async (query, prefix) => {
   try {
     let pad = `${prefix}000`;
     let kode = '';
 
-    let res = await APP.db.sequelize.query(`SELECT * FROM ${db}.${table} ORDER BY id DESC LIMIT 1`);
+    let res = await query.findAll({
+      limit: 1,
+      order: [['id', 'DESC']]
+    });
 
-    if (res[0].length == 0) {
+    if (res.length == 0) {
       console.log('kosong');
       let str = '' + 1;
       kode = pad.substring(0, pad.length - str.length) + str;
@@ -15,9 +18,9 @@ module.exports = async (APP, db, table, prefix) => {
       return kode;
     } else {
       console.log('ada');
-      console.log(res[0][0].code);
+      console.log(res[0].code);
 
-      let lastID = res[0][0].code;
+      let lastID = res[0].code;
       let replace = lastID.replace(prefix, '');
       console.log(replace);
 

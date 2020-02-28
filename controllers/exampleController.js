@@ -234,97 +234,11 @@ exports.test = function(APP, req, callback) {
   // );
 
   // console.log(timeCompare);
-  let { company, admin, payment, payment_type, payment_method, payment_detail, pricing } = APP.models.mysql;
-  // add payment_detail to payment
-  payment.hasMany(payment_detail, {
-    sourceKey: 'id',
-    foreignKey: 'payment_id'
-  });
-  // add payment_method to payment
-  payment.belongsTo(payment_method, {
-    targetKey: 'id',
-    foreignKey: 'payment_method_id'
-  });
-  // add pricing to payment
-  payment_detail.belongsTo(pricing, {
-    targetKey: 'id',
-    foreignKey: 'item_id'
-  });
-  // add payment_type to payment_method
-  payment_method.belongsTo(payment_type, {
-    targetKey: 'id',
-    foreignKey: 'payment_type_id'
-  });
 
-  payment
-    .findOne({
-      include: [
-        {
-          model: payment_detail,
-          include: [
-            {
-              model: pricing
-            }
-          ]
-        },
-        {
-          model: payment_method,
-          include: [
-            {
-              model: payment_type
-            }
-          ]
-        }
-      ],
-      where: {
-        id: 22
-      }
-    })
-    .then(res => {
-      // t.commit();
-      callback(null, {
-        code: 'OK',
-        data: {
-          payment: res
-        }
-      });
-      // payment_method
-      //   .findOne({
-      //     include: [
-      //       {
-      //         model: payment_type
-      //       }
-      //     ],
-      //     where: {
-      //       id: res.payment_method_id
-      //     }
-      //   }, {transaction: t})
-      //   .then(result => {
-      //     // include payment type to res
-      //     res.payment_method.dataValues.payment_type = result.payment_type;
-      //     callback(null, {
-      //       admin: data.admin,
-      //       company: data.company,
-      //       payment: res
-      //     });
-      //   })
-      //   .catch(err => {
-      //     console.log('1', err);
-      //     callback({
-      //       code: 'ERR_DATABASE',
-      //       id: 'ARQ98',
-      //       message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-      //       data: err
-      //     });
-      //   });
-    })
-    .catch(err => {
-      console.log('2', err);
-      callback({
-        code: 'ERR_DATABASE',
-        id: 'ARQ98',
-        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-        data: err
-      });
-    });
+  let { letter } = APP.models.company[req.user.db].mysql;
+
+  let tes = APP.generateCode(letter, 'L');
+  Promise.resolve(tes).then(cok => {
+    console.log(cok);
+  });
 };

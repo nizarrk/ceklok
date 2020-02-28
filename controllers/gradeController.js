@@ -43,6 +43,10 @@ exports.getById = (APP, req, callback) => {
         {
           model: grade_benefit,
           attributes: ['id'],
+          required: false,
+          where: {
+            status: 1
+          },
           include: [
             {
               model: benefit,
@@ -104,86 +108,90 @@ exports.getById = (APP, req, callback) => {
 };
 
 exports.insert = function(APP, req, callback) {
-  APP.db.sequelize.transaction().then(t => {
-    async.waterfall(
-      [
-        function generateCode(callback) {
-          let pad = 'G000';
-          let kode = '';
+  async.waterfall(
+    [
+      function generateCode(callback) {
+        let pad = 'G000';
+        let kode = '';
 
-          APP.models.company[req.user.db].mysql.grade
-            .findAll({
-              limit: 1,
-              order: [['id', 'DESC']]
-            })
-            .then(res => {
-              if (res.length == 0) {
-                console.log('kosong');
-                let str = '' + 1;
-                kode = pad.substring(0, pad.length - str.length) + str;
+        APP.models.company[req.user.db].mysql.grade
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            if (res.length == 0) {
+              console.log('kosong');
+              let str = '' + 1;
+              kode = pad.substring(0, pad.length - str.length) + str;
 
-                callback(null, kode);
-              } else {
-                console.log('ada');
-                console.log(res[0].code);
+              callback(null, kode);
+            } else {
+              console.log('ada');
+              console.log(res[0].code);
 
-                let lastID = res[0].code;
-                let replace = lastID.replace('G', '');
-                console.log(replace);
+              let lastID = res[0].code;
+              let replace = lastID.replace('G', '');
+              console.log(replace);
 
-                let str = parseInt(replace) + 1;
-                kode = pad.substring(0, pad.length - str.toString().length) + str;
+              let str = parseInt(replace) + 1;
+              kode = pad.substring(0, pad.length - str.toString().length) + str;
 
-                callback(null, kode);
-              }
-            })
-            .catch(err => {
-              console.log(err);
+              callback(null, kode);
+            }
+          })
+          .catch(err => {
+            console.log(err);
 
-              callback({
-                code: 'ERR_DATABASE',
-                data: err
-              });
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
             });
-        },
+          });
+      },
 
-        function insertGrading(result, callback) {
-          APP.models.company[req.user.db].mysql.grade
-            .build({
-              code: result,
-              name: req.body.name,
-              description: req.body.desc
-            })
-            .save()
-            .then(result => {
-              let params = 'Insert Success'; //This is only example, Object can also be used
-              return callback(null, result.dataValues);
-            })
-            .catch(err => {
-              if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-                let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-                return callback({
-                  code: 'DUPLICATE',
-                  data: params
-                });
-              }
-
-              if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-                let params = 'Error! Empty Query'; //This is only example, Object can also be used
-                return callback({
-                  code: 'UPDATE_NONE',
-                  data: params
-                });
-              }
-
+      function insertGrading(result, callback) {
+        APP.models.company[req.user.db].mysql.grade
+          .create({
+            code: result,
+            name: req.body.name,
+            description: req.body.desc
+          })
+          .then(result => {
+            let params = 'Insert Success'; //This is only example, Object can also be used
+            return callback(null, result.dataValues);
+          })
+          .catch(err => {
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
               return callback({
-                code: 'ERR_DATABASE',
-                data: JSON.stringify(err)
+                code: 'DUPLICATE',
+                data: params
               });
-            });
-        },
+            }
 
-        function insertGradeBenefit(result, callback) {
+            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
+              return callback({
+                code: 'UPDATE_NONE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
+          });
+      },
+
+      function insertGradeBenefit(result, callback) {
+        if (req.body.benefit === null) {
+          callback(null, {
+            code: 'UPDATE_SUCCESS',
+            message: 'Benefit Grade berhasil diubah!'
+          });
+        } else {
           let benefit = req.body.benefit.split(',');
           let arr = [];
 
@@ -213,17 +221,15 @@ exports.insert = function(APP, req, callback) {
               });
             });
         }
-      ],
-      (err, result) => {
-        if (err) {
-          t.rollback();
-          return callback(err);
-        }
-        t.commit();
-        callback(null, result);
       }
-    );
-  });
+    ],
+    (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null, result);
+    }
+  );
 };
 
 exports.update = function(APP, req, callback) {
@@ -284,7 +290,7 @@ exports.update = function(APP, req, callback) {
         },
 
         function updateGradeBenefit(data, callback) {
-          if (req.body.benefit == '') {
+          if (req.body.benefit === null) {
             callback(null, {
               code: 'UPDATE_SUCCESS',
               message: 'Benefit Grade berhasil diubah!'
@@ -297,15 +303,12 @@ exports.update = function(APP, req, callback) {
             Promise.all(
               benefit.map((x, index) => {
                 return grade_benefit
-                  .findOne(
-                    {
-                      where: {
-                        grade_id: req.body.id,
-                        benefit_id: x
-                      }
-                    },
-                    { transaction: t }
-                  )
+                  .findOne({
+                    where: {
+                      grade_id: req.body.id,
+                      benefit_id: x
+                    }
+                  })
                   .then(res => {
                     if (res == null) {
                       insert.push({
@@ -313,10 +316,15 @@ exports.update = function(APP, req, callback) {
                         grade_id: req.body.id
                       });
 
-                      return grade_benefit.bulkCreate(insert).then(() => {
-                        console.log(`id ${x} inserted`);
-                        return true;
-                      });
+                      return grade_benefit
+                        .create({
+                          benefit_id: x,
+                          grade_id: req.body.id
+                        })
+                        .then(() => {
+                          console.log(`id ${x} inserted`);
+                          return true;
+                        });
                     }
                     return res
                       .update({
