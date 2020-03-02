@@ -235,10 +235,12 @@ exports.test = function(APP, req, callback) {
 
   // console.log(timeCompare);
 
-  let { letter } = APP.models.company[req.user.db].mysql;
+  // let { letter } = APP.models.company[req.user.db].mysql;
 
-  let tes = APP.generateCode(letter, 'L');
-  Promise.resolve(tes).then(cok => {
-    console.log(cok);
-  });
+  // let tes = APP.generateCode(letter, 'L');
+  // Promise.resolve(tes).then(tes => {
+  //   console.log(tes);
+  // });
+
+  console.log(new Date());
 };

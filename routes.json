@@ -35,6 +35,12 @@
     "function": "verifyEmployee",
     "auth": true
   },
+  "/employee/getlist": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "listEmployee",
+    "auth": true
+  },
   "/employee/viewinfo": {
     "method": "post",
     "controller": "employeeController",
@@ -902,6 +908,42 @@
   "/letter/update": {
     "method": "post",
     "controller": "letterController",
+    "function": "update",
+    "auth": true
+  },
+  "/letter/ref/get": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "get",
+    "auth": true
+  },
+  "/letter/ref/add": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "insert",
+    "auth": true
+  },
+  "/letter/ref/updatestatus": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "insert",
+    "auth": true
+  },
+  "/template/get": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "get",
+    "auth": true
+  },
+  "/template/insert": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "insert",
+    "auth": true
+  },
+  "/template/update": {
+    "method": "post",
+    "controller": "bankTemplateController",
     "function": "update",
     "auth": true
   }

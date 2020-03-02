@@ -104,7 +104,7 @@ exports.insert = (APP, req, callback) => {
   async.waterfall(
     [
       function checkParams(callback) {
-        if (department_id && name && desc) {
+        if (department_id && name && desc && code) {
           callback(null, true);
         } else {
           callback({
@@ -192,20 +192,21 @@ exports.insert = (APP, req, callback) => {
 exports.update = (APP, req, callback) => {
   let { letter } = APP.models.company[req.user.db].mysql;
   let { id, name, desc, status } = req.body;
+  console.log(req.body);
 
   async.waterfall(
     [
-      // function checkParams(callback) {
-      //     if (id && name && desc && status) {
-      //         callback(null, true);
-      //     } else {
-      //         callback({
-      //             code: 'INVALID_REQUEST',
-      //             id: 'EKQ96',
-      //             message: 'Kesalahan pada parameter'
-      //         })
-      //     }
-      // },
+      function checkParams(callback) {
+        if (id && name && desc && status) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'EKQ96',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
 
       function updateLetterCode(result, callback) {
         letter

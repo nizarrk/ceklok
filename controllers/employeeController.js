@@ -173,6 +173,38 @@ const checkEmployeeEntry = (APP, req, callback) => {
   );
 };
 
+exports.listEmployee = (APP, req, callback) => {
+  let { employee, grade } = APP.models.company[req.user.db].mysql;
+
+  employee.belongsTo(grade, {
+    targetKey: 'id',
+    foreignKey: 'grade_id'
+  });
+
+  employee
+    .findAll({
+      include: [
+        {
+          model: grade,
+          attributes: ['id', 'name', 'description']
+        }
+      ]
+    })
+    .then(res => {
+      if (res.length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Employee list tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      }
+    });
+};
+
 exports.viewEmployeeInfo = (APP, req, callback) => {
   if (req.user.admin) {
     APP.models.company[req.user.db].mysql.employee
@@ -285,8 +317,8 @@ exports.addEmployee = (APP, req, callback) => {
         if (email && username) {
           APP.models.company[req.user.db].mysql.employee
             .build({
-              priviledge_id: req.body.priviledge,
-              role_id: req.body.role,
+              // priviledge_id: req.body.priviledge,
+              // role_id: req.body.role,
               grade_id: req.body.grade,
               department_id: req.body.department,
               job_title_id: req.body.job,
@@ -298,7 +330,8 @@ exports.addEmployee = (APP, req, callback) => {
                   ? data.status.leave_permission - (data.status.leave_permission - (12 - (new Date().getMonth() + 1)))
                   : 0,
               employee_code: data.data.kode,
-              company_code: req.body.company,
+              company_code: req.user.code,
+              nik: req.body.nik,
               name: req.body.name,
               gender: req.body.gender,
               pob: req.body.pob,

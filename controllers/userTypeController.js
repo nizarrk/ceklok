@@ -24,47 +24,45 @@ exports.get = function(APP, req, callback) {
 };
 
 exports.createUserType = function(APP, req, callback) {
-  let { user_type, user_type_feature } = APP.models.mysql;
+  let { user_type, user_type_feature } =
+    req.user.level === 1
+      ? APP.models.mysql
+      : req.user.level === 2
+      ? APP.models.company[req.user.db].mysql
+      : callback({
+          code: 'INVALID_REQUEST',
+          message: 'User Level Undefined'
+        });
+
+  let { name, desc, subfeature_id } = req.body;
 
   APP.db.sequelize.transaction().then(t => {
     async.waterfall(
       [
-        function generateCode(callback) {
-          let pad = 'PRV000';
-          let kode = '';
+        function checkParams(callback) {
+          if (name && desc && subfeature_id) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'AKQ96',
+              message: 'Kesalahan pada parameter'
+            });
+          }
+        },
 
-          user_type
-            .findAll({
-              limit: 1,
-              order: [['id', 'DESC']]
-            })
-            .then(res => {
-              if (res.length == 0) {
-                console.log('kosong');
-                let str = '' + 1;
-                kode = pad.substring(0, pad.length - str.length) + str;
-
-                callback(null, kode);
-              } else {
-                console.log('ada');
-                console.log(res[0].code);
-
-                let lastID = res[0].code;
-                let replace = lastID.replace('PRV', '');
-                console.log(replace);
-
-                let str = parseInt(replace) + 1;
-                kode = pad.substring(0, pad.length - str.toString().length) + str;
-
-                callback(null, kode);
-              }
+        function generateCode(result, callback) {
+          let kode = APP.generateCode(user_type, 'PRV');
+          Promise.resolve(kode)
+            .then(x => {
+              callback(null, x);
             })
             .catch(err => {
               console.log(err);
-
               callback({
-                code: 'ERR_DATABASE',
-                data: err
+                code: 'ERR',
+                id: 'AKP01',
+                message: 'Terjadi Kesalahan, mohon coba kembali'
               });
             });
         },
@@ -74,8 +72,8 @@ exports.createUserType = function(APP, req, callback) {
             .build(
               {
                 code: result,
-                name: req.body.name,
-                description: req.body.desc
+                name: name,
+                description: desc
               },
               { transaction: t }
             )
@@ -112,7 +110,7 @@ exports.createUserType = function(APP, req, callback) {
         },
 
         function insertUserTypeFeature(result, callback) {
-          let subfeature = req.body.subfeature.split(',');
+          let subfeature = subfeature_id.split(',');
           let arr = [];
 
           subfeature.map(id => {
@@ -125,7 +123,7 @@ exports.createUserType = function(APP, req, callback) {
             arr.push(obj);
           });
           user_type_feature
-            .bulkCreate(arr, { transaction: t })
+            .bulkCreate(arr)
             .then(res => {
               callback(null, {
                 code: 'INSERT_SUCCESS',
