@@ -38,7 +38,7 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'CT-000';
+        let pad = 'CT000';
         let kode = '';
 
         APP.models.company[req.user.db].mysql.cuti_type
@@ -58,7 +58,7 @@ exports.insert = function(APP, req, callback) {
               console.log(res[0].code);
 
               let lastID = res[0].code;
-              let replace = lastID.replace('CT-', '');
+              let replace = lastID.replace('CT', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;

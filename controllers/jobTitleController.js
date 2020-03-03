@@ -259,12 +259,12 @@ exports.delete = function(APP, req, callback) {
       if (!deleted)
         return callback(null, {
           code: 'DELETE_NONE',
-          data: params.where
+          data: deleted
         });
 
       return callback(null, {
         code: 'DELETE_SUCCESS',
-        data: params.where
+        data: deleted
       });
     })
     .catch(err => {

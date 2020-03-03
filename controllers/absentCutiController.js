@@ -446,6 +446,7 @@ exports.insert = function(APP, req, callback) {
             code: data.kode,
             type: req.body.type,
             absent_cuti_type_id: req.body.typeid,
+            absent_cuti_type_code: req.body.codeid,
             user_id: req.user.admin == true ? req.body.user : req.user.id,
             date_start: req.body.datestart,
             date_end: data.dateend ? data.dateend : req.body.dateend,

@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'absent_cuti',
+    'broadcast',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -11,54 +11,28 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
-      absent_cuti_type_id: {
-        type: Sequelize.INTEGER(11)
-      },
-      absent_cuti_type_code: {
-        type: Sequelize.INTEGER(255)
-      },
       user_id: {
         type: Sequelize.INTEGER(11)
       },
       code: {
         type: Sequelize.STRING(45)
       },
-      type: {
-        type: Sequelize.INTEGER(1) // 0 = absen, 1 = cuti
+      name: {
+        type: Sequelize.STRING(45)
       },
       description: {
         type: Sequelize.STRING(45)
       },
-      date_start: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
-      date_end: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
-      time_start: {
-        type: Sequelize.TIME
-      },
-      time_end: {
-        type: Sequelize.TIME
-      },
-      time_total: {
-        type: Sequelize.STRING
-      },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
-        defaultValue: 0
-      },
-      count: {
-        type: Sequelize.INTEGER(11)
+        defaultValue: 1
       },
       upload: {
-        type: Sequelize.STRING(45)
-      },
-      notes: {
         type: Sequelize.STRING
+      },
+      type: {
+        type: Sequelize.INTEGER(1) // 0 = single, 1 = bulk
       },
       created_at: {
         allowNull: false,
@@ -70,7 +44,12 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
-      action_by: {
+      created_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      updated_by: {
         type: Sequelize.INTEGER(10),
         defaultValue: 0,
         allowNull: false

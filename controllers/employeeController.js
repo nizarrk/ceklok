@@ -206,9 +206,152 @@ exports.listEmployee = (APP, req, callback) => {
 };
 
 exports.viewEmployeeInfo = (APP, req, callback) => {
+  let {
+    employee,
+    department,
+    grade,
+    grade_benefit,
+    benefit,
+    benefit_custom,
+    job_title,
+    status_contract,
+    violation,
+    absent_cuti,
+    absent_type,
+    cuti_type,
+    presence
+  } = APP.models.company[req.user.db].mysql;
+
+  employee.belongsTo(grade, {
+    targetKey: 'id',
+    foreignKey: 'grade_id'
+  });
+
+  grade.hasMany(grade_benefit, {
+    sourceKey: 'id',
+    foreignKey: 'grade_id'
+  });
+
+  grade_benefit.belongsTo(benefit, {
+    targetKey: 'id',
+    foreignKey: 'benefit_id'
+  });
+
+  employee.hasMany(benefit_custom, {
+    sourceKey: 'id',
+    foreignKey: 'employee_id'
+  });
+
+  employee.belongsTo(department, {
+    targetKey: 'id',
+    foreignKey: 'department_id'
+  });
+
+  employee.belongsTo(job_title, {
+    targetKey: 'id',
+    foreignKey: 'job_title_id'
+  });
+
+  employee.belongsTo(status_contract, {
+    targetKey: 'id',
+    foreignKey: 'status_contract_id'
+  });
+
+  employee.hasMany(violation, {
+    sourceKey: 'id',
+    foreignKey: 'employee_id'
+  });
+
+  employee.hasMany(absent_cuti, {
+    sourceKey: 'id',
+    foreignKey: 'user_id'
+  });
+
+  absent_cuti.belongsTo(absent_type, {
+    targetKey: 'code',
+    foreignKey: 'absent_cuti_type_code',
+    as: 'absent_type'
+  });
+
+  absent_cuti.belongsTo(cuti_type, {
+    targetKey: 'code',
+    foreignKey: 'absent_cuti_type_code',
+    as: 'cuti_type'
+  });
+
+  employee.hasMany(presence, {
+    sourceKey: 'id',
+    foreignKey: 'user_id'
+  });
+
   if (req.user.admin) {
-    APP.models.company[req.user.db].mysql.employee
+    employee
       .findOne({
+        include: [
+          {
+            model: grade,
+            attributes: ['id', 'code', 'name', 'description'],
+            include: [
+              {
+                model: grade_benefit,
+                attributes: ['id', 'grade_id', 'benefit_id'],
+                include: [
+                  {
+                    model: benefit,
+                    attributes: ['id', 'code', 'name', 'description']
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            model: benefit_custom,
+            attributes: ['id', 'name', 'description', 'upload']
+          },
+          {
+            model: department,
+            attributes: ['id', 'code', 'name', 'description']
+          },
+          {
+            model: job_title,
+            attributes: ['id', 'code', 'name', 'description']
+          },
+          {
+            model: status_contract,
+            attributes: ['id', 'code', 'name', 'description']
+          },
+          {
+            model: violation,
+            attributes: ['id', 'code', 'sequence', 'description', 'doc_upload']
+          },
+          {
+            model: absent_cuti,
+            attributes: [
+              'id',
+              'absent_cuti_type_id',
+              'code',
+              'type',
+              'date_start',
+              'date_end',
+              'time_start',
+              'time_end',
+              'time_total'
+            ],
+            include: [
+              {
+                model: absent_type,
+                as: 'absent_type'
+              },
+              {
+                model: cuti_type,
+                as: 'cuti_type'
+              }
+            ]
+          },
+          {
+            model: presence
+          }
+        ],
         where: {
           id: req.body.id
         }
@@ -218,13 +361,16 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
           callback({
             code: 'NOT_FOUND'
           });
+        } else {
+          callback(null, {
+            code: 'FOUND',
+            data: res
+          });
         }
-        callback(null, {
-          code: 'FOUND',
-          data: res
-        });
       })
       .catch(err => {
+        console.log(err);
+
         callback({
           code: 'ERR_DATABASE',
           data: err
@@ -323,7 +469,7 @@ exports.addEmployee = (APP, req, callback) => {
               department_id: req.body.department,
               job_title_id: req.body.job,
               benefit_id: req.body.benefit,
-              status_contract_id: req.body.cotract,
+              status_contract_id: req.body.contract,
               schedule_id: req.body.schedule,
               total_cuti:
                 data.status.type === 1 && data.status.leave_setting === 1
@@ -454,6 +600,8 @@ exports.addEmployee = (APP, req, callback) => {
 };
 
 exports.importEmployeeData = (APP, req, callback) => {
+  console.log(req.files);
+
   async.waterfall(
     [
       function uploadDocuments(callback) {

@@ -926,7 +926,7 @@
   "/letter/ref/updatestatus": {
     "method": "post",
     "controller": "letterRefController",
-    "function": "insert",
+    "function": "updateStatus",
     "auth": true
   },
   "/template/get": {
@@ -945,6 +945,24 @@
     "method": "post",
     "controller": "bankTemplateController",
     "function": "update",
+    "auth": true
+  },
+  "/broadcast/letter/get": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "get",
+    "auth": true
+  },
+  "/broadcast/letter/add": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "broadcastLetter",
+    "auth": true
+  },
+  "/broadcast/letter/resend": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "resendBroadcastLetter",
     "auth": true
   }
 }
