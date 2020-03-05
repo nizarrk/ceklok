@@ -368,92 +368,114 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     }
                   })
                   .then(found => {
-                    console.log(index + 1);
-                    console.log('jumlah : ', found.length);
-
-                    found.map((x, index2) => {
-                      totalTime[data.id].push(x.total_time);
-                      totalMinus[data.id].push(x.total_minus);
-                      totalOver[data.id].push(x.total_over);
-
-                      let workTime = moment.duration(APP.time.timeXday(data.schedule.work_time, found.length));
-                      let workTotal = moment.duration(APP.time.timeDuration(totalTime[data.id]));
-                      let workMinus = moment.duration(APP.time.timeDuration(totalMinus[data.id]));
-                      let workOver = moment.duration(APP.time.timeDuration(totalOver[data.id]));
-                      let resultMinus = moment.duration(workTime - workMinus);
-                      percentage[data.id] = (resultMinus / workTime) * 100;
-
-                      x.presence_setting_id == 1 ? hadir[data.id]++ : hadir[data.id]; // H
-                      x.presence_setting_id == 2 ? absen[data.id]++ : absen[data.id]; // NCI
-                      x.presence_setting_id == 3 ? absen[data.id]++ : absen[data.id]; // NCO
-                      x.presence_setting_id == 5 ? absen[data.id]++ : absen[data.id]; // A
-                      x.presence_setting_id == 7 ? cuti[data.id]++ : cuti[data.id]; // C
-                      x.presence_setting_id == 6 ? izin[data.id]++ : izin[data.id]; // I
-
-                      // console.log('id :', x.id);
-                      // console.log('id user :', x.user_id);
-
-                      // console.log({
-                      //   total_time: totalTime[data.id],
-                      //   total_minus:totalMinus[data.id],
-                      //   total_over: totalOver[data.id],
-                      //   total_present: hadir[data.id],
-                      //   total_absent: absen[data.id],
-                      //   total_permission: izin[data.id],
-                      //   total_cuti: cuti[data.id],
-                      //   total_day: found.length,
-                      //   percentage: percentage[data.id],
-                      //   totalllll: totalMinus
-                      // });
-
-                      // push index yang terakhir aja
-                      if (index2 + 1 == found.length) {
-                        let timeCompare = moment.duration(
-                          APP.time.timeSubstract(
-                            APP.time.timeDuration(totalTime[data.id]),
-                            APP.time.timeXday(data.schedule.work_time, found.length)
-                          )
-                        );
-
-                        if (timeCompare < 0) {
-                          console.log('masuk if < 0');
-
-                          workMinus = APP.time.timeSubstract(
-                            APP.time.timeDuration(totalTime[data.id]),
-                            APP.time.timeXday(data.schedule.work_time, found.length)
-                          );
-                          workOver = '00:00:00';
-                        }
-
-                        if (timeCompare > 0) {
-                          console.log('masuk if > 0');
-                          workOver = APP.time.timeSubstract(
-                            APP.time.timeDuration(totalTime[data.id]),
-                            APP.time.timeXday(data.schedule.work_time, found.length)
-                          );
-                          workMinus = '00:00:00';
-                        }
-
-                        arr.push({
-                          id: x.id,
-                          user_id: x.user_id,
-                          date: moment().format('YYYY-MM-DD'),
-                          total_time: APP.time.timeDuration(totalTime[data.id]),
-                          total_minus: workMinus.replace('-', ''), // replace buat hilangin minus
-                          total_over: workOver,
-                          total_present: hadir[data.id],
-                          total_absent: absen[data.id],
-                          total_permission: izin[data.id],
-                          total_cuti: cuti[data.id],
-                          total_day: found.length,
-                          percentage: percentage[data.id]
+                    if (found.length == 0) {
+                      presence_monthly
+                        .findOne({
+                          where: {
+                            user_id: data.id
+                          }
+                        })
+                        .then(res => {
+                          if (res == null) {
+                            presence_monthly
+                              .create({
+                                user_id: data.id,
+                                date: moment().format('YYYY-MM-DD'),
+                                total_time: '00:00:00',
+                                total_minus: '00:00:00',
+                                total_over: '00:00:00',
+                                total_present: 0,
+                                total_absent: 0,
+                                total_permission: 0,
+                                total_cuti: 0,
+                                total_day: 0,
+                                percentage: 0
+                              })
+                              .then(res => {
+                                console.log('new employee insert');
+                                console.log(res.user_id);
+                                if (result.employee.length == index + 1) {
+                                  callback(null, arr);
+                                }
+                              });
+                          } else {
+                            if (result.employee.length == index + 1) {
+                              callback(null, arr);
+                            }
+                          }
                         });
-                      }
+                    } else {
+                      console.log(index + 1);
+                      console.log('jumlah : ', found.length);
 
-                      if (result.employee.length == index + 1 && found.length == index2 + 1) {
-                        callback(null, arr);
-                      }
-                    });
+                      found.map((x, index2) => {
+                        totalTime[data.id].push(x.total_time);
+                        totalMinus[data.id].push(x.total_minus);
+                        totalOver[data.id].push(x.total_over);
+
+                        let workTime = moment.duration(APP.time.timeXday(data.schedule.work_time, found.length));
+                        let workTotal = moment.duration(APP.time.timeDuration(totalTime[data.id]));
+                        let workMinus = moment.duration(APP.time.timeDuration(totalMinus[data.id]));
+                        let workOver = moment.duration(APP.time.timeDuration(totalOver[data.id]));
+                        let resultMinus = moment.duration(workTime - workMinus);
+                        percentage[data.id] = (resultMinus / workTime) * 100;
+
+                        x.presence_setting_id == 1 ? hadir[data.id]++ : hadir[data.id]; // H
+                        x.presence_setting_id == 2 ? absen[data.id]++ : absen[data.id]; // NCI
+                        x.presence_setting_id == 3 ? absen[data.id]++ : absen[data.id]; // NCO
+                        x.presence_setting_id == 5 ? absen[data.id]++ : absen[data.id]; // A
+                        x.presence_setting_id == 7 ? cuti[data.id]++ : cuti[data.id]; // C
+                        x.presence_setting_id == 6 ? izin[data.id]++ : izin[data.id]; // I
+
+                        // push index yang terakhir aja
+                        if (index2 + 1 == found.length) {
+                          let timeCompare = moment.duration(
+                            APP.time.timeSubstract(
+                              APP.time.timeDuration(totalTime[data.id]),
+                              APP.time.timeXday(data.schedule.work_time, found.length)
+                            )
+                          );
+
+                          if (timeCompare < 0) {
+                            console.log('masuk if < 0');
+
+                            workMinus = APP.time.timeSubstract(
+                              APP.time.timeDuration(totalTime[data.id]),
+                              APP.time.timeXday(data.schedule.work_time, found.length)
+                            );
+                            workOver = '00:00:00';
+                          }
+
+                          if (timeCompare > 0) {
+                            console.log('masuk if > 0');
+                            workOver = APP.time.timeSubstract(
+                              APP.time.timeDuration(totalTime[data.id]),
+                              APP.time.timeXday(data.schedule.work_time, found.length)
+                            );
+                            workMinus = '00:00:00';
+                          }
+
+                          arr.push({
+                            id: x.id,
+                            user_id: x.user_id,
+                            date: moment().format('YYYY-MM-DD'),
+                            total_time: APP.time.timeDuration(totalTime[data.id]),
+                            total_minus: workMinus.replace('-', ''), // replace buat hilangin minus
+                            total_over: workOver,
+                            total_present: hadir[data.id],
+                            total_absent: absen[data.id],
+                            total_permission: izin[data.id],
+                            total_cuti: cuti[data.id],
+                            total_day: found.length,
+                            percentage: percentage[data.id]
+                          });
+                        }
+
+                        if (result.employee.length == index + 1 && found.length == index2 + 1) {
+                          callback(null, arr);
+                        }
+                      });
+                    }
                   });
               });
             }

@@ -950,7 +950,13 @@
   "/broadcast/letter/get": {
     "method": "post",
     "controller": "broadcastLetterController",
-    "function": "get",
+    "function": "broadcastList",
+    "auth": true
+  },
+  "/broadcast/letter/getbyid": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "broadcastDetail",
     "auth": true
   },
   "/broadcast/letter/add": {
@@ -963,6 +969,36 @@
     "method": "post",
     "controller": "broadcastLetterController",
     "function": "resendBroadcastLetter",
+    "auth": true
+  },
+  "/overtime/add": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeRequest",
+    "auth": true
+  },
+  "/overtime/updatestatus": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeApproval",
+    "auth": true
+  },
+  "/overtime/finish": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "finishingOvertime",
+    "auth": true
+  },
+  "/overtime/get": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "viewOvertimeData",
+    "auth": true
+  },
+  "/overtime/getbyid": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "viewDetailOvertimeData",
     "auth": true
   }
 }

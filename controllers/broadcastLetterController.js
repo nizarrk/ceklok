@@ -3,6 +3,7 @@
 const async = require('async');
 const trycatch = require('trycatch');
 const path = require('path');
+const moment = require('moment');
 
 exports.broadcastLetter = (APP, req, callback) => {
   let { broadcast, employee } = APP.models.company[req.user.db].mysql;
@@ -239,7 +240,18 @@ exports.resendBroadcastLetter = (APP, req, callback) => {
                 message: 'Data Tidak ditemukan'
               });
             } else {
-              callback(null, res.dataValues);
+              if (
+                res.counter === 1 &&
+                moment(res.created_at).format('YYYY-MM-DD') == moment(req.currentDate.getTime()).format('YYYY-MM-DD')
+              ) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  id: '?',
+                  message: 'Sudah melakukan rebroadcast hari ini, ulangi lagi besok!'
+                });
+              } else {
+                callback(null, res.dataValues);
+              }
             }
           });
       },
@@ -272,8 +284,8 @@ exports.resendBroadcastLetter = (APP, req, callback) => {
           .update(
             {
               updated_at: new Date(),
-              updated_by: req.user.id
-              // counter: ?
+              updated_by: req.user.id,
+              counter: 1
             },
             {
               where: {
@@ -339,4 +351,160 @@ exports.resendBroadcastLetter = (APP, req, callback) => {
       callback(null, result);
     }
   );
+};
+
+exports.broadcastList = (APP, req, callback) => {
+  if (req.user.level === 2 || req.user.level === 3) {
+    let start = req.body.datestart + ' 00:00:00';
+    let end = req.body.dateend + ' 23:59:59';
+    console.log(req.body);
+
+    let where =
+      req.body.datestart && req.body.dateend ? `WHERE b.created_at BETWEEN '${start}' AND '${end}'` : 'WHERE 1 + 1';
+
+    APP.db.sequelize
+      .query(
+        `SELECT 
+        b.*, e.id AS 'recipient_id', e.name AS 'recipient', g.name AS 'recipient_grade_name', a.name AS 'created_by_name', a2.name AS 'updated_by_name'
+      FROM 
+        ${req.user.db}.broadcast
+      AS
+        b
+      JOIN
+        ${req.user.db}.employee
+      AS
+        e
+      ON
+        b.user_id = e.id
+      LEFT JOIN
+        ${req.user.db}.grade
+      AS
+        g
+      ON
+        e.grade_id = g.id
+      LEFT JOIN
+        ceklok.admin
+      AS
+        a
+      ON
+        b.created_by = a.id 
+      LEFT JOIN
+        ceklok.admin
+      AS
+        a2
+      ON
+        b.updated_by = a2.id 
+      ${where}
+      `
+      )
+      .then(res => {
+        if (res[0].length == 0) {
+          callback({
+            code: 'NOT_FOUND',
+            id: 'LSQ97',
+            message: 'Data Tidak ditemukan'
+          });
+        } else {
+          callback(null, {
+            code: 'FOUND',
+            id: 'LSP00',
+            message: 'List surat berhasil ditemukan',
+            data: res[0]
+          });
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        callback({
+          code: 'ERR_DATABASE',
+          id: 'LSQ98',
+          message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami'
+        });
+      });
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
+};
+
+exports.broadcastDetail = (APP, req, callback) => {
+  if (!req.body.id) {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: 'DSQ96',
+      message: 'Kesalahan pada parameter'
+    });
+  } else {
+    if (req.user.level === 2 || req.user.level === 3) {
+      APP.db.sequelize
+        .query(
+          `SELECT 
+          b.*, e.id AS 'recipient_id', e.name AS 'recipient', g.name AS 'recipient_grade_name', a.name AS 'created_by_name', a2.name AS 'updated_by_name'
+        FROM 
+          ${req.user.db}.broadcast
+        AS
+          b
+        JOIN
+          ${req.user.db}.employee
+        AS
+          e
+        ON
+          b.user_id = e.id
+        LEFT JOIN
+          ${req.user.db}.grade
+        AS
+          g
+        ON
+          e.grade_id = g.id
+        LEFT JOIN
+          ceklok.admin
+        AS
+          a
+        ON
+          b.created_by = a.id 
+        LEFT JOIN
+          ceklok.admin
+        AS
+          a2
+        ON
+          b.updated_by = a2.id
+        WHERE
+          b.id = ${req.body.id}
+        `
+        )
+        .then(res => {
+          if (res[0].length == 0) {
+            callback({
+              code: 'NOT_FOUND',
+              id: 'DSQ97',
+              message: 'Data Tidak ditemukan'
+            });
+          } else {
+            callback(null, {
+              code: 'FOUND',
+              id: 'DSP00',
+              message: 'Detail Surat berhasil ditemukan',
+              data: res[0][0]
+            });
+          }
+        })
+        .catch(err => {
+          console.log(err);
+          callback({
+            code: 'ERR_DATABASE',
+            id: 'DSQ98',
+            message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami'
+          });
+        });
+    } else {
+      callback({
+        code: 'INVALID_REQUEST',
+        id: '?',
+        message: 'Invalid user level'
+      });
+    }
+  }
 };

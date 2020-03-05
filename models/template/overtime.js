@@ -2,7 +2,7 @@
 
 module.exports = function(sequelize, Sequelize) {
   let Model = sequelize.define(
-    'broadcast',
+    'overtime',
     {
       id: {
         type: Sequelize.INTEGER(11),
@@ -10,6 +10,9 @@ module.exports = function(sequelize, Sequelize) {
         primaryKey: true,
         allowNull: false,
         unique: true
+      },
+      department_id: {
+        type: Sequelize.INTEGER(11)
       },
       user_id: {
         type: Sequelize.INTEGER(11)
@@ -23,19 +26,36 @@ module.exports = function(sequelize, Sequelize) {
       description: {
         type: Sequelize.STRING(45)
       },
-      status: {
-        type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
-        allowNull: false,
-        defaultValue: 1
+      date_start: {
+        type: Sequelize.DATE,
+        allowNull: false
+      },
+      date_end: {
+        type: Sequelize.DATE,
+        allowNull: false
+      },
+      time_start: {
+        type: Sequelize.TIME
+      },
+      time_end: {
+        type: Sequelize.TIME
+      },
+      time_total: {
+        type: Sequelize.TIME
+      },
+      notes: {
+        type: Sequelize.STRING
+      },
+      result: {
+        type: Sequelize.STRING
       },
       upload: {
         type: Sequelize.STRING
       },
-      type: {
-        type: Sequelize.INTEGER(1) // 0 = single, 1 = bulk
-      },
-      counter: {
-        type: Sequelize.INTEGER(10)
+      status: {
+        type: Sequelize.INTEGER(1), //0 = pending, 1 = approved, 2 = rejected, 3 = finished
+        allowNull: false,
+        defaultValue: 0
       },
       created_at: {
         allowNull: false,
@@ -46,6 +66,14 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
+      },
+      approved_at: {
+        type: Sequelize.DATE
+      },
+      approved_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
       },
       created_by: {
         type: Sequelize.INTEGER(10),

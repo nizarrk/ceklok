@@ -202,6 +202,13 @@ exports.listEmployee = (APP, req, callback) => {
           data: res
         });
       }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
     });
 };
 
@@ -269,14 +276,14 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
 
   absent_cuti.belongsTo(absent_type, {
     targetKey: 'code',
-    foreignKey: 'absent_cuti_type_code',
-    as: 'absent_type'
+    foreignKey: 'absent_cuti_type_code'
+    // as: 'absent_type'
   });
 
   absent_cuti.belongsTo(cuti_type, {
     targetKey: 'code',
-    foreignKey: 'absent_cuti_type_code',
-    as: 'cuti_type'
+    foreignKey: 'absent_cuti_type_code'
+    // as: 'cuti_type'
   });
 
   employee.hasMany(presence, {
@@ -339,12 +346,12 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
             ],
             include: [
               {
-                model: absent_type,
-                as: 'absent_type'
+                model: absent_type
+                // as: 'absent_type'
               },
               {
-                model: cuti_type,
-                as: 'cuti_type'
+                model: cuti_type
+                // as: 'cuti_type'
               }
             ]
           },
@@ -412,28 +419,25 @@ exports.addEmployee = (APP, req, callback) => {
         let randomPass = Math.random()
           .toString(36)
           .slice(-8);
-        let pass = APP.validation.password(randomPass);
-        if (pass === true) {
-          bcrypt
-            .hash(randomPass, 10)
-            .then(hashed => {
-              return callback(null, {
-                kode: result,
-                pass: randomPass,
-                encryptedPass: hashed
-              });
-            })
-            .catch(err => {
-              console.log('error pas enkrip', err);
+        // let pass = APP.validation.password(randomPass);
 
-              callback({
-                code: 'ERR',
-                data: err
-              });
+        bcrypt
+          .hash(randomPass, 10)
+          .then(hashed => {
+            return callback(null, {
+              kode: result,
+              pass: randomPass,
+              encryptedPass: hashed
             });
-        } else {
-          return callback(pass);
-        }
+          })
+          .catch(err => {
+            console.log('error pas enkrip', err);
+
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
       },
 
       function hitungCuti(data, callback) {
@@ -672,7 +676,7 @@ exports.importEmployeeData = (APP, req, callback) => {
               .toString(36)
               .slice(-8);
 
-            res.status = 1;
+            res.status = 0;
             res.dob = new Date(`${year}-${month}-${tgl}`);
             res.company_code = req.user.code;
             res.password = bcrypt.hashSync(res.plainPassword, 10);

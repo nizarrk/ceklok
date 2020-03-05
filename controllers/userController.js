@@ -200,29 +200,25 @@ exports.createUserAdmin = (APP, req, callback) => {
         let randomPass = Math.random()
           .toString(36)
           .slice(-8);
-        let pass = APP.validation.password(randomPass);
-        if (pass === true) {
-          bcrypt
-            .hash(randomPass, 10)
-            .then(hashed => {
-              return callback(null, {
-                pass: randomPass,
-                encryptedPass: hashed
-              });
-            })
-            .catch(err => {
-              console.log('iki error bcrypt', err);
-
-              callback({
-                code: 'ERR',
-                id: 'ARN99',
-                message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
-                data: err
-              });
+        // let pass = APP.validation.password(randomPass);
+        bcrypt
+          .hash(randomPass, 10)
+          .then(hashed => {
+            return callback(null, {
+              pass: randomPass,
+              encryptedPass: hashed
             });
-        } else {
-          return callback(pass);
-        }
+          })
+          .catch(err => {
+            console.log('iki error bcrypt', err);
+
+            callback({
+              code: 'ERR',
+              id: 'ARN99',
+              message: 'Jaringan bermasalah harap coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
       },
 
       function addingNewUser(data, callback) {
@@ -249,7 +245,8 @@ exports.createUserAdmin = (APP, req, callback) => {
               email: req.body.email,
               user_name: req.body.username,
               password: data.encryptedPass,
-              old_password: data.encryptedPass
+              old_password: data.encryptedPass,
+              status: 1
             })
             .save()
             .then(res => {
@@ -418,7 +415,7 @@ exports.createUserAdminCeklok = (APP, req, callback) => {
         }
       },
 
-      function sendInvoice(data, callback) {
+      function sendMail(data, callback) {
         //send to email
         APP.mailer.sendMail({
           subject: 'Account Created',

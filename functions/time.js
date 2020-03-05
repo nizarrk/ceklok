@@ -30,16 +30,16 @@ exports.timeDuration = time => {
     let total = 0;
 
     time.map(x => {
-      total += moment.duration(x).asMinutes();
+      total += moment.duration(x);
     });
 
-    let dur = moment.duration(total, 'minutes');
+    let dur = moment.duration(total);
 
     let result = dur.format('HH:mm:ss') == '00' ? '00:00:00' : dur.format('HH:mm:ss');
 
     return result;
   } else {
-    let dur = moment.duration(time, 'minutes');
+    let dur = moment.duration(time);
 
     let result = dur.format('HH:mm:ss') == '00' ? '00:00:00' : dur.format('HH:mm:ss');
 

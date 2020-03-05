@@ -279,7 +279,8 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
                 model: employee,
                 attributes: ['id', 'nik', 'name']
               }
-            ]
+            ],
+            limit: 5
           })
           .then(res => {
             res.rows.map((x, i) => {
@@ -335,7 +336,8 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
                 model: employee,
                 attributes: ['id', 'nik', 'name']
               }
-            ]
+            ],
+            limit: 5
           })
           .then(res => {
             res.rows.map((x, i) => {
@@ -398,7 +400,8 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
             ],
             where: {
               date: moment().format('YYYY-MM-DD')
-            }
+            },
+            limit: 1
           })
           .then(res => {
             res.rows.map((x, i) => {
@@ -407,9 +410,11 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
 
               obj.user = x.employee.dataValues;
               obj.check_in = x.check_in;
+              obj.date = x.date;
               obj.dur_checkin = APP.time.timeToDuration(x.check_in);
               obj2.user = x.employee.dataValues;
               obj2.check_out = x.check_out;
+              obj2.date = x.date;
               obj2.dur_checkout = APP.time.timeToDuration(x.check_out);
 
               arr.push(obj);
@@ -472,25 +477,172 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
             ],
             where: {
               date: moment()
-                .subtract(3, 'days')
+                .subtract(1, 'days')
                 .format('YYYY-MM-DD')
             }
           })
           .then(res => {
             callback(null, {
-              code: 'OK',
-              data: {
-                feature: result.feature,
-                employee: result.employee,
-                grade: result.grade,
-                job_title: result.job_title,
-                most_active: result.most_active,
-                under_performed: result.under_performed,
-                last_check_in: result.last_check_in,
-                last_check_out: result.last_check_out,
-                yesterday: res.rows
-              }
+              feature: result.feature,
+              employee: result.employee,
+              grade: result.grade,
+              job_title: result.job_title,
+              most_active: result.most_active,
+              under_performed: result.under_performed,
+              last_check_in: result.last_check_in,
+              last_check_out: result.last_check_out,
+              yesterday: res
             });
+          })
+          .catch(err => {
+            console.log('Error getYesterdayPresence', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getYesterdayPresence',
+              data: err
+            });
+          });
+      },
+
+      function countTodayPresence(result, callback) {
+        presence.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+
+        presence.belongsTo(presence_setting, {
+          targetKey: 'id',
+          foreignKey: 'presence_setting_id'
+        });
+
+        presence
+          .findAndCountAll({
+            include: [
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name']
+              },
+              {
+                model: presence_setting,
+                attributes: ['id', 'name', 'description']
+              }
+            ],
+            where: {
+              date: moment().format('YYYY-MM-DD')
+            }
+          })
+          .then(res => {
+            let wa = 0;
+            let nci = 0;
+            let nco = 0;
+            let hadir = 0;
+            let cuti = 0;
+            let absen = 0;
+            let izin = 0;
+
+            Promise.all(
+              res.rows.map(x => {
+                let obj = {};
+
+                obj.hadir = x.presence_setting_id == 1 ? hadir++ : hadir; // H
+                obj.nci = x.presence_setting_id == 2 ? nci++ : nci; // NCI
+                obj.nco = x.presence_setting_id == 3 ? nco++ : nco; // NCO
+                obj.wa = x.presence_setting_id == 4 ? wa++ : wa; // WA
+                obj.absen = x.presence_setting_id == 5 ? absen++ : absen; // A
+                obj.cuti = x.presence_setting_id == 7 ? cuti++ : cuti; // C
+                obj.izin = x.presence_setting_id == 6 ? izin++ : izin; // I
+
+                return obj;
+              })
+            )
+              .then(arr => {
+                callback(null, {
+                  feature: result.feature,
+                  employee: result.employee,
+                  grade: result.grade,
+                  job_title: result.job_title,
+                  most_active: result.most_active,
+                  under_performed: result.under_performed,
+                  last_check_in: result.last_check_in,
+                  last_check_out: result.last_check_out,
+                  yesterday: result.yesterday,
+                  today: arr[arr.length - 1]
+                });
+              })
+              .catch(err => {
+                console.log('Error countTodayPresence', err);
+                callback({
+                  code: 'ERR',
+                  message: 'Error countTodayPresence',
+                  data: err
+                });
+              });
+          })
+          .catch(err => {
+            console.log('Error getYesterdayPresence', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getYesterdayPresence',
+              data: err
+            });
+          });
+      },
+
+      function getMonthlyPresence(result, callback) {
+        console.log(result.today);
+
+        let hadir = 0;
+        let cuti = 0;
+        let absen = 0;
+        let izin = 0;
+
+        presence_monthly
+          .findAndCountAll()
+          .then(res => {
+            Promise.all(
+              res.rows.map(x => {
+                hadir += x.total_present;
+                cuti += x.total_cuti;
+                absen += x.total_absent;
+                izin += x.total_permission;
+
+                let obj = {};
+
+                obj.hadir = hadir;
+                obj.absen = absen;
+                obj.cuti = cuti;
+                obj.izin = izin;
+                obj.day = x.total_day;
+
+                return obj;
+              })
+            )
+              .then(arr => {
+                callback(null, {
+                  code: 'OK',
+                  data: {
+                    feature: result.feature,
+                    employee: result.employee,
+                    grade: result.grade,
+                    job_title: result.job_title,
+                    most_active: result.most_active,
+                    under_performed: result.under_performed,
+                    last_check_in: result.last_check_in,
+                    last_check_out: result.last_check_out,
+                    yesterday: result.yesterday,
+                    today: result.today,
+                    monthly: arr[arr.length - 1]
+                  }
+                });
+              })
+              .catch(err => {
+                console.log('Error countTodayPresence', err);
+                callback({
+                  code: 'ERR',
+                  message: 'Error countTodayPresence',
+                  data: err
+                });
+              });
           })
           .catch(err => {
             console.log('Error getYesterdayPresence', err);

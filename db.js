@@ -84,7 +84,7 @@ if (process.env.MYSQL === 'true') {
           timezone: '+07:00'
         };
   const sequelize = new Sequelize(process.env.MYSQL_NAME, process.env.MYSQL_USER, process.env.MYSQL_PASS, options);
-
+  sequelize.dialect.supports.schemas = true; // add this line
   // generate db for each company
   const customSequelize = dbname => {
     return new Sequelize(dbname, process.env.MYSQL_USER, process.env.MYSQL_PASS, options);

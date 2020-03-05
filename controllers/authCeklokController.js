@@ -265,6 +265,8 @@ exports.verifyCompany = (APP, req, callback) => {
         },
 
         function updatePaymentStatus(data, callback) {
+          console.log('siji');
+
           APP.models.mysql.payment
             .findOne(
               {
@@ -293,7 +295,7 @@ exports.verifyCompany = (APP, req, callback) => {
                   message: 'Company have not verify their payment!'
                 });
               }
-
+              console.log('loro');
               res
                 .update(
                   {
@@ -303,6 +305,7 @@ exports.verifyCompany = (APP, req, callback) => {
                   { transaction: t }
                 )
                 .then(result => {
+                  console.log('telu');
                   // Use the mv() method to place the file somewhere on your server
                   req.files.image.mv(data.path, function(err) {
                     if (err) {
@@ -335,6 +338,8 @@ exports.verifyCompany = (APP, req, callback) => {
         },
 
         function generateCompanyCode(result, callback) {
+          console.log('papat');
+
           let tgl = new Date().getDate().toString();
           if (tgl.length == 1) {
             tgl = '0' + new Date().getDate().toString();
@@ -401,6 +406,8 @@ exports.verifyCompany = (APP, req, callback) => {
         },
 
         function updateCompany(data, callback) {
+          console.log('limo');
+
           APP.models.mysql.company
             .findOne(
               {
@@ -443,6 +450,8 @@ exports.verifyCompany = (APP, req, callback) => {
         },
 
         function updateAdmin(data, callback) {
+          console.log('enem');
+
           APP.models.mysql.admin
             .findOne(
               {
@@ -453,6 +462,8 @@ exports.verifyCompany = (APP, req, callback) => {
               { transaction: t }
             )
             .then(res => {
+              console.log('pitu');
+
               res
                 .update(
                   {
@@ -462,6 +473,8 @@ exports.verifyCompany = (APP, req, callback) => {
                   { transaction: t }
                 )
                 .then(result => {
+                  console.log('wolu');
+
                   callback(null, {
                     payment: data.payment,
                     company: data.company,
@@ -493,9 +506,14 @@ exports.verifyCompany = (APP, req, callback) => {
             targetKey: 'id',
             foreignKey: 'payment_method_id'
           });
-          APP.models.mysql.payment.belongsTo(APP.models.mysql.pricing, {
+          APP.models.mysql.payment_detail.belongsTo(APP.models.mysql.pricing, {
             targetKey: 'id',
-            foreignKey: 'pricing_id'
+            foreignKey: 'item_id'
+          });
+
+          APP.models.mysql.payment.hasMany(APP.models.mysql.payment_detail, {
+            sourceKey: 'id',
+            foreignKey: 'payment_id'
           });
 
           APP.models.mysql.payment
@@ -506,7 +524,12 @@ exports.verifyCompany = (APP, req, callback) => {
                     model: APP.models.mysql.payment_method
                   },
                   {
-                    model: APP.models.mysql.pricing
+                    model: APP.models.mysql.payment_detail,
+                    include: [
+                      {
+                        model: APP.models.mysql.pricing
+                      }
+                    ]
                   }
                 ],
                 where: {
@@ -533,6 +556,8 @@ exports.verifyCompany = (APP, req, callback) => {
               });
             })
             .catch(err => {
+              console.log('Error sendEmail', err);
+
               callback({
                 code: 'ERR_DATABASE',
                 data: err
