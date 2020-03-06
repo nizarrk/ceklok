@@ -1000,5 +1000,17 @@
     "controller": "overtimeController",
     "function": "viewDetailOvertimeData",
     "auth": true
+  },
+  "/overtime/setting/add": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeSettings",
+    "auth": true
+  },
+  "/overtime/setting": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeSettingsCompany",
+    "auth": true
   }
 }

@@ -5,7 +5,7 @@ const moment = require('moment');
 const path = require('path');
 
 exports.overtimeRequest = (APP, req, callback) => {
-  let { overtime, grade, department, employee } = APP.models.company[req.user.db].mysql;
+  let { overtime, grade, department, employee, overtime_setting } = APP.models.company[req.user.db].mysql;
   let { department_id, datestart, dateend, details } = req.body;
   async.waterfall(
     [
@@ -31,6 +31,45 @@ exports.overtimeRequest = (APP, req, callback) => {
             message: 'Kesalahan pada parameter'
           });
         }
+      },
+
+      function checkGrade(data, callback) {
+        overtime_setting.belongsTo(grade, {
+          targetKey: 'id',
+          foreignKey: 'value'
+        });
+
+        overtime_setting
+          .findOne({
+            include: [
+              {
+                model: grade,
+                attributes: ['id', 'name', 'description']
+              }
+            ],
+            where: {
+              overtime_setting_id: 1
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                id: 'IRQ97',
+                message: 'Setting Tidak ditemukan'
+              });
+            } else {
+              if (res.grade.id == req.user.grade) {
+                callback(null, true);
+              } else {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  id: '?',
+                  message: 'Grade tidak sesuai untuk melakukan request overtime!'
+                });
+              }
+            }
+          });
       },
 
       function checkDepartment(data, callback) {
@@ -617,6 +656,145 @@ exports.viewDetailOvertimeData = (APP, req, callback) => {
           });
         });
     }
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
+};
+
+exports.overtimeSettings = (APP, req, callback) => {
+  if (req.user.level === 1) {
+    let { overtime_setting_master } = APP.models.mysql;
+    let { settings } = req.body;
+
+    if (!settings) {
+      callback({
+        code: 'INVALID_REQUEST',
+        id: 'SOQ96',
+        message: 'Kesalahan pada parameter'
+      });
+    } else {
+      Promise.all(
+        settings.map((x, index) => {
+          let obj = {};
+
+          obj.name = settings[index].name;
+          obj.description = settings[index].desc;
+
+          return obj;
+        })
+      ).then(arr => {
+        overtime_setting_master
+          .bulkCreate(arr)
+          .then(res => {
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              id: 'SOP00',
+              message: 'Setting Overtime berhasil diubah',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log('Error addSetting', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'SOQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
+      });
+    }
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
+};
+
+exports.overtimeSettingsCompany = (APP, req, callback) => {
+  if (req.user.level === 2) {
+    let { overtime_setting_master } = APP.models.mysql;
+    let { overtime_setting } = APP.models.company[req.user.db].mysql;
+    let { type, value } = req.body;
+
+    async.waterfall(
+      [
+        function checkParam(callback) {
+          if (type && value) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'SOQ96',
+              message: 'Kesalahan pada parameter'
+            });
+          }
+        },
+
+        function checkovertimeType(data, callback) {
+          overtime_setting_master
+            .findOne({
+              where: {
+                id: type
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                return callback({
+                  code: 'NOT_FOUND',
+                  message: 'overtime_setting_master tidak ditemukan'
+                });
+              }
+              callback(null, true);
+            })
+            .catch(err => {
+              console.log('Error checkovertimeType', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error checkovertimeType',
+                data: err
+              });
+            });
+        },
+
+        function addSettings(data, callback) {
+          overtime_setting
+            .create({
+              overtime_setting_id: type,
+              value: value
+            })
+            .then(res => {
+              callback(null, {
+                code: 'INSERT_SUCCESS',
+                id: 'SOP00',
+                message: 'Setting Overtime berhasil diubah',
+                data: res
+              });
+            })
+            .catch(err => {
+              console.log('Error addSetting', err);
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'SOQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          return callback(err);
+        }
+        callback(null, result);
+      }
+    );
   } else {
     callback({
       code: 'INVALID_REQUEST',

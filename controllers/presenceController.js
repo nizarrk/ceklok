@@ -608,7 +608,7 @@ exports.checkInOutProcess = (APP, req, callback) => {
               FROM ${req.user.db}.branch
             ) AS x
             WHERE 
-              x.distance <= (x.radius / 1000)`
+              x.distance <= x.radius`
           )
           .then(res => {
             if (res[0].length == 0) {

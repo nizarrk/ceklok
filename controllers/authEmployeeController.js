@@ -403,7 +403,7 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+        APP.models.company[process.env.DBNAME + req.body.company.toUpperCase()].mysql.employee
           .findAll({
             where: {
               user_name: req.body.username,
@@ -460,6 +460,7 @@ exports.login = (APP, req, callback) => {
             id: rows[0].id,
             code: rows[0].company_code,
             db: `ceklok_${rows[0].company_code}`,
+            grade: rows[0].grade_id,
             level: 3,
             admin: false
           },

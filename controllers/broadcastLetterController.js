@@ -6,7 +6,7 @@ const path = require('path');
 const moment = require('moment');
 
 exports.broadcastLetter = (APP, req, callback) => {
-  let { broadcast, employee } = APP.models.company[req.user.db].mysql;
+  let { letter_broadcast, employee } = APP.models.company[req.user.db].mysql;
   let { name, desc, recipient } = req.body;
 
   async.waterfall(
@@ -55,7 +55,7 @@ exports.broadcastLetter = (APP, req, callback) => {
       },
 
       function generateCode(data, callback) {
-        let kode = APP.generateCode(broadcast, 'BL');
+        let kode = APP.generateCode(letter_broadcast, 'BL');
         Promise.resolve(kode)
           .then(x => {
             callback(null, {
@@ -121,7 +121,7 @@ exports.broadcastLetter = (APP, req, callback) => {
           })
         )
           .then(arr => {
-            broadcast
+            letter_broadcast
               .bulkCreate(arr)
               .then(res => {
                 // upload file
@@ -209,7 +209,7 @@ exports.broadcastLetter = (APP, req, callback) => {
 };
 
 exports.resendBroadcastLetter = (APP, req, callback) => {
-  let { broadcast, employee } = APP.models.company[req.user.db].mysql;
+  let { letter_broadcast, employee } = APP.models.company[req.user.db].mysql;
 
   async.waterfall(
     [
@@ -226,7 +226,7 @@ exports.resendBroadcastLetter = (APP, req, callback) => {
       },
 
       function getCurrentData(data, callback) {
-        broadcast
+        letter_broadcast
           .findOne({
             where: {
               id: req.body.id
@@ -280,7 +280,7 @@ exports.resendBroadcastLetter = (APP, req, callback) => {
       },
 
       function updateBroadcastLetter(data, callback) {
-        broadcast
+        letter_broadcast
           .update(
             {
               updated_at: new Date(),
@@ -367,7 +367,7 @@ exports.broadcastList = (APP, req, callback) => {
         `SELECT 
         b.*, e.id AS 'recipient_id', e.name AS 'recipient', g.name AS 'recipient_grade_name', a.name AS 'created_by_name', a2.name AS 'updated_by_name'
       FROM 
-        ${req.user.db}.broadcast
+        ${req.user.db}.letter_broadcast
       AS
         b
       JOIN
@@ -444,7 +444,7 @@ exports.broadcastDetail = (APP, req, callback) => {
           `SELECT 
           b.*, e.id AS 'recipient_id', e.name AS 'recipient', g.name AS 'recipient_grade_name', a.name AS 'created_by_name', a2.name AS 'updated_by_name'
         FROM 
-          ${req.user.db}.broadcast
+          ${req.user.db}.letter_broadcast
         AS
           b
         JOIN
