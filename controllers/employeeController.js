@@ -213,180 +213,299 @@ exports.listEmployee = (APP, req, callback) => {
 };
 
 exports.viewEmployeeInfo = (APP, req, callback) => {
-  let {
-    employee,
-    department,
-    grade,
-    grade_benefit,
-    benefit,
-    benefit_custom,
-    job_title,
-    status_contract,
-    violation,
-    absent_cuti,
-    absent_type,
-    cuti_type,
-    presence
-  } = APP.models.company[req.user.db].mysql;
+  if (req.user.level === 2 || req.user.level === 3) {
+    let {
+      employee,
+      department,
+      grade,
+      grade_benefit,
+      benefit,
+      benefit_custom,
+      benefit_active,
+      job_title,
+      status_contract,
+      violation,
+      absent_cuti,
+      absent_type,
+      cuti_type,
+      presence,
+      presence_setting,
+      branch,
+      device
+    } = APP.models.company[req.user.db].mysql;
 
-  employee.belongsTo(grade, {
-    targetKey: 'id',
-    foreignKey: 'grade_id'
-  });
+    async.waterfall(
+      [
+        function checkBenefitAvaibility(callback) {
+          benefit_active.belongsTo(benefit, {
+            targetKey: 'id',
+            foreignKey: 'benefit_id'
+          });
 
-  grade.hasMany(grade_benefit, {
-    sourceKey: 'id',
-    foreignKey: 'grade_id'
-  });
-
-  grade_benefit.belongsTo(benefit, {
-    targetKey: 'id',
-    foreignKey: 'benefit_id'
-  });
-
-  employee.hasMany(benefit_custom, {
-    sourceKey: 'id',
-    foreignKey: 'employee_id'
-  });
-
-  employee.belongsTo(department, {
-    targetKey: 'id',
-    foreignKey: 'department_id'
-  });
-
-  employee.belongsTo(job_title, {
-    targetKey: 'id',
-    foreignKey: 'job_title_id'
-  });
-
-  employee.belongsTo(status_contract, {
-    targetKey: 'id',
-    foreignKey: 'status_contract_id'
-  });
-
-  employee.hasMany(violation, {
-    sourceKey: 'id',
-    foreignKey: 'employee_id'
-  });
-
-  employee.hasMany(absent_cuti, {
-    sourceKey: 'id',
-    foreignKey: 'user_id'
-  });
-
-  absent_cuti.belongsTo(absent_type, {
-    targetKey: 'code',
-    foreignKey: 'absent_cuti_type_code'
-    // as: 'absent_type'
-  });
-
-  absent_cuti.belongsTo(cuti_type, {
-    targetKey: 'code',
-    foreignKey: 'absent_cuti_type_code'
-    // as: 'cuti_type'
-  });
-
-  employee.hasMany(presence, {
-    sourceKey: 'id',
-    foreignKey: 'user_id'
-  });
-
-  if (req.user.admin) {
-    employee
-      .findOne({
-        include: [
-          {
-            model: grade,
-            attributes: ['id', 'code', 'name', 'description'],
-            include: [
-              {
-                model: grade_benefit,
-                attributes: ['id', 'grade_id', 'benefit_id'],
-                include: [
-                  {
-                    model: benefit,
-                    attributes: ['id', 'code', 'name', 'description']
+          benefit_active
+            .findAll({
+              include: [
+                {
+                  model: benefit,
+                  attributes: ['id', 'name', 'description']
+                }
+              ]
+            })
+            .then(res => {
+              Promise.all(
+                res.map(x => {
+                  if (x.benefit == null) {
+                    console.log(`id ${x.id} = null`);
+                    return x.id;
+                  } else {
+                    console.log(`id ${x.id} = ADA`);
                   }
-                ]
-              }
-            ]
-          },
-          {
-            model: benefit_custom,
-            attributes: ['id', 'name', 'description', 'upload']
-          },
-          {
-            model: department,
-            attributes: ['id', 'code', 'name', 'description']
-          },
-          {
-            model: job_title,
-            attributes: ['id', 'code', 'name', 'description']
-          },
-          {
-            model: status_contract,
-            attributes: ['id', 'code', 'name', 'description']
-          },
-          {
-            model: violation,
-            attributes: ['id', 'code', 'sequence', 'description', 'doc_upload']
-          },
-          {
-            model: absent_cuti,
-            attributes: [
-              'id',
-              'absent_cuti_type_id',
-              'code',
-              'type',
-              'date_start',
-              'date_end',
-              'time_start',
-              'time_end',
-              'time_total'
-            ],
-            include: [
-              {
-                model: absent_type
-                // as: 'absent_type'
-              },
-              {
-                model: cuti_type
-                // as: 'cuti_type'
-              }
-            ]
-          },
-          {
-            model: presence
-          }
-        ],
-        where: {
-          id: req.body.id
-        }
-      })
-      .then(res => {
-        if (res == null) {
-          callback({
-            code: 'NOT_FOUND'
-          });
-        } else {
-          callback(null, {
-            code: 'FOUND',
-            data: res
-          });
-        }
-      })
-      .catch(err => {
-        console.log(err);
+                })
+              )
+                .then(arr => {
+                  benefit_active
+                    .destroy({
+                      where: {
+                        id: arr
+                      }
+                    })
+                    .then(deleted => {
+                      callback(null, deleted);
+                    })
+                    .catch(err => {
+                      console.log('Error destroy checkBenefitAvaibility', err);
+                      callback({
+                        code: 'ERR_DATABASE',
+                        id: '',
+                        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                        data: err
+                      });
+                    });
+                })
+                .catch(err => {
+                  console.log('Error checkBenefitAvaibility', err);
+                  callback({
+                    code: 'ERR',
+                    id: '?',
+                    message: 'Terjadi Kesalahan, mohon coba kembali',
+                    data: err
+                  });
+                });
+            });
+        },
 
-        callback({
-          code: 'ERR_DATABASE',
-          data: err
-        });
-      });
+        function getEmployeeInfo(result, callback) {
+          employee.belongsTo(grade, {
+            targetKey: 'id',
+            foreignKey: 'grade_id'
+          });
+
+          // grade.hasMany(grade_benefit, {
+          //   sourceKey: 'id',
+          //   foreignKey: 'grade_id'
+          // });
+
+          // grade_benefit.belongsTo(benefit, {
+          //   targetKey: 'id',
+          //   foreignKey: 'benefit_id'
+          // });
+
+          employee.hasMany(benefit_custom, {
+            sourceKey: 'id',
+            foreignKey: 'employee_id'
+          });
+
+          employee.hasMany(benefit_active, {
+            sourceKey: 'id',
+            foreignKey: 'employee_id'
+          });
+
+          benefit_active.belongsTo(benefit, {
+            targetKey: 'id',
+            foreignKey: 'benefit_id'
+          });
+
+          employee.belongsTo(department, {
+            targetKey: 'id',
+            foreignKey: 'department_id'
+          });
+
+          employee.belongsTo(job_title, {
+            targetKey: 'id',
+            foreignKey: 'job_title_id'
+          });
+
+          employee.belongsTo(status_contract, {
+            targetKey: 'id',
+            foreignKey: 'status_contract_id'
+          });
+
+          employee.hasMany(violation, {
+            sourceKey: 'id',
+            foreignKey: 'employee_id'
+          });
+
+          employee.hasMany(absent_cuti, {
+            sourceKey: 'id',
+            foreignKey: 'user_id'
+          });
+
+          absent_cuti.belongsTo(absent_type, {
+            targetKey: 'code',
+            foreignKey: 'absent_cuti_type_code'
+            // as: 'absent_type'
+          });
+
+          absent_cuti.belongsTo(cuti_type, {
+            targetKey: 'code',
+            foreignKey: 'absent_cuti_type_code'
+            // as: 'cuti_type'
+          });
+
+          employee.hasMany(presence, {
+            sourceKey: 'id',
+            foreignKey: 'user_id'
+          });
+
+          presence.belongsTo(presence_setting, {
+            targetKey: 'id',
+            foreignKey: 'presence_setting_id'
+          });
+
+          employee
+            .findOne({
+              include: [
+                {
+                  model: grade,
+                  attributes: ['id', 'code', 'name', 'description']
+                  // include: [
+                  //   {
+                  //     model: grade_benefit,
+                  //     attributes: ['id', 'grade_id', 'benefit_id'],
+                  //     include: [
+                  //       {
+                  //         model: benefit,
+                  //         attributes: ['id', 'code', 'name', 'description']
+                  //       }
+                  //     ]
+                  //   }
+                  // ]
+                },
+                {
+                  model: benefit_custom,
+                  attributes: ['id', 'name', 'description', 'upload']
+                },
+                {
+                  model: benefit_active,
+                  attributes: ['id', 'employee_id', 'benefit_id', 'status'],
+                  include: [
+                    {
+                      model: benefit,
+                      attributes: ['id', 'name', 'description']
+                    }
+                  ]
+                },
+                {
+                  model: department,
+                  attributes: ['id', 'code', 'name', 'description']
+                },
+                {
+                  model: job_title,
+                  attributes: ['id', 'code', 'name', 'description']
+                },
+                {
+                  model: status_contract,
+                  attributes: ['id', 'code', 'name', 'description']
+                },
+                {
+                  model: violation,
+                  attributes: ['id', 'code', 'sequence', 'description', 'doc_upload']
+                },
+                {
+                  model: absent_cuti,
+                  attributes: [
+                    'id',
+                    'absent_cuti_type_id',
+                    'code',
+                    'type',
+                    'date_start',
+                    'date_end',
+                    'time_start',
+                    'time_end',
+                    'time_total'
+                  ],
+                  include: [
+                    {
+                      model: absent_type
+                      // as: 'absent_type'
+                    },
+                    {
+                      model: cuti_type
+                      // as: 'cuti_type'
+                    }
+                  ]
+                },
+                {
+                  model: presence,
+                  attributes: [
+                    'id',
+                    'check_in_device_id',
+                    'check_out_device_id',
+                    'check_in_branch_id',
+                    'check_out_branch_id',
+                    'date',
+                    'check_in',
+                    'check_out',
+                    'total_time',
+                    'total_minus',
+                    'total_over',
+                    'presence_setting_id'
+                  ],
+                  include: [
+                    {
+                      model: presence_setting,
+                      attributes: ['id', 'name', 'description']
+                    }
+                  ]
+                }
+              ],
+              where: {
+                id: req.body.id
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                callback({
+                  code: 'NOT_FOUND'
+                });
+              } else {
+                callback(null, {
+                  code: 'FOUND',
+                  data: res
+                });
+              }
+            })
+            .catch(err => {
+              console.log(err);
+
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        }
+      ],
+      (err, result) => {
+        if (err) return callback(err);
+
+        callback(null, result);
+      }
+    );
   } else {
-    callback(null, {
-      code: 'OK',
-      message: 'sek belum tau diisi apa'
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
     });
   }
 };
@@ -803,13 +922,63 @@ exports.importEmployeeData = (APP, req, callback) => {
 };
 
 exports.updateEmployeeInfo = (APP, req, callback) => {
+  let { employee, benefit_active } = APP.models.company[req.user.db].mysql;
+  let {
+    id,
+    nik,
+    name,
+    gender,
+    pob,
+    dob,
+    address,
+    kel,
+    kec,
+    city,
+    prov,
+    zip,
+    telp,
+    email,
+    contract,
+    username,
+    benefit
+  } = req.body;
   async.waterfall(
     [
-      function checkEmployeeStatus(callback) {
-        APP.models.company[req.user.db].mysql.employee
+      function checkparams(callback) {
+        if (
+          id &&
+          nik &&
+          name &&
+          gender &&
+          pob &&
+          dob &&
+          address &&
+          kel &&
+          kec &&
+          city &&
+          prov &&
+          zip &&
+          telp &&
+          email &&
+          username &&
+          contract &&
+          benefit
+        ) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '?',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function checkEmployeeStatus(result, callback) {
+        employee
           .findOne({
             where: {
-              id: req.body.id,
+              id: id,
               status: 1
             }
           })
@@ -820,112 +989,111 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
               });
             }
 
-            callback(null, res);
+            callback(null, res.dataValues);
           });
       },
 
-      function uploadDocuments(result, callback) {
+      function uploadPath(result, callback) {
         trycatch(
           () => {
-            if (req.body.benefit == result.benefit_id && req.body.contract == result.status_contract_id) {
-              return callback(null, {
-                benefit: result.benefit_upload,
-                contract: result.status_contract_upload
-              });
-            }
-            if (!req.files || Object.keys(req.files).length === 0) {
-              return callback({
-                code: 'ERR',
-                message: 'No files were uploaded.'
-              });
-            }
-
             let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let benefitPath = `./public/uploads/company_${req.user.code}/employee/benefit/`;
             let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
 
-            // if (!fs.existsSync(benefitPath)) {
-            //   mkdirp.sync(benefitPath);
-            // }
-
-            // if (!fs.existsSync(contractPath)) {
-            //   mkdirp.sync(contractPath);
-            // }
-
-            if (req.files.benefit_upload) {
-              req.files.benefit_upload.mv(
-                benefitPath + fileName + path.extname(req.files.benefit_upload.name),
-                function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
-                }
-              );
-            }
-
-            if (req.files.contract_upload) {
-              req.files.contract_upload.mv(
-                contractPath + fileName + path.extname(req.files.contract_upload.name),
-                function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
-                }
-              );
-            }
-
             callback(null, {
-              benefit: req.files.benefit_upload
-                ? benefitPath.slice(8) + fileName + path.extname(req.files.benefit_upload.name)
-                : result.benefit_upload,
-              contract: req.files.contract_upload
-                ? contractPath.slice(8) + fileName + path.extname(req.files.contract_upload.name)
-                : result.contract_upload
+              contract: contractPath + fileName + path.extname(req.files.contract_upload.name)
             });
           },
-          err => {
-            console.log(err);
-
-            callback({
-              code: 'ERR',
-              data: err
+          () => {
+            callback(null, {
+              contract: result.contract_upload
             });
           }
         );
       },
 
+      function activateBenefit(result, callback) {
+        if (benefit == null) {
+          callback(null, result);
+        } else {
+          let benefits = benefit.split(',');
+
+          benefit_active
+            .findAll({
+              where: {
+                employee_id: id,
+                benefit_id: benefits
+              }
+            })
+            .then(res => {
+              Promise.all(
+                res.map(x => {
+                  return benefit_active
+                    .update(
+                      {
+                        status: x.status == 0 ? 1 : 0
+                      },
+                      {
+                        where: {
+                          benefit_id: x.benefit_id,
+                          employee_id: x.employee_id
+                        }
+                      }
+                    )
+                    .then(updated => {
+                      return updated;
+                    });
+                })
+              )
+                .then(arr => {
+                  callback(null, result);
+                })
+                .catch(err => {
+                  callback({
+                    code: 'ERR',
+                    data: err
+                  });
+                });
+            });
+        }
+      },
+
       function updateEmployeeInfo(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
+        employee
           .findOne({
             where: {
-              id: req.body.id
+              id: id
             }
           })
           .then(res => {
             res
               .update({
-                benefit_id: req.body.benefit,
-                benefit_upload: result.benefit,
-                name: req.body.name,
-                gender: req.body.gender,
-                pob: req.body.pob,
-                dob: req.body.dob,
-                address: req.body.address,
-                kelurahan: req.body.kel,
-                kecamatan: req.body.kec,
-                city: req.body.city,
-                province: req.body.prov,
-                zipcode: req.body.zip,
+                name: name,
+                gender: gender,
+                pob: pob,
+                dob: dob,
+                address: address,
+                kelurahan: kel,
+                kecamatan: kec,
+                city: city,
+                province: prov,
+                zipcode: zip,
                 msisdn: 'default',
-                tlp: req.body.telp,
-                email: req.body.email,
-                user_name: req.body.username,
-                status_contract_id: req.body.contract,
-                status_contract_upload: result.contract
+                tlp: telp,
+                email: email,
+                user_name: username,
+                status_contract_id: contract,
+                status_contract_upload: result.contract.slice(8)
               })
               .then(updated => {
+                //upload file
+                if (req.files.contract_upload) {
+                  req.files.contract_upload.mv(result.contract, function(err) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
+                  });
+                }
                 callback(null, { result, updated });
               })
               .catch(err => {
@@ -1001,159 +1169,219 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
 };
 
 exports.updateEmployeeStatus = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function checkEmployeeStatus(callback) {
-        APP.models.company[req.user.db].mysql.employee
-          .findOne({
-            where: {
-              id: req.body.id,
-              status: 1
-            }
-          })
-          .then(res => {
-            if (res == null) {
-              return callback({
-                code: 'NOT_FOUND'
-              });
-            }
+  if (req.user.level === 2) {
+    let { employee, checklist, checklist_employee } = APP.models.company[req.user.db].mysql;
+    let { id, checklist_id, status, desc } = req.body;
 
-            callback(null, res);
-          });
-      },
-
-      function uploadDocuments(result, callback) {
-        trycatch(
-          () => {
-            if (!req.files || Object.keys(req.files).length === 0) {
-              return callback({
-                code: 'ERR',
-                message: 'No files were uploaded.'
-              });
-            }
-
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let statusPath = `./public/uploads/company_${req.user.code}/employee/status/`;
-
-            if (!fs.existsSync(statusPath)) {
-              mkdirp.sync(statusPath);
-            }
-
-            if (req.files.status_upload) {
-              req.files.status_upload.mv(statusPath + fileName + path.extname(req.files.status_upload.name), function(
-                err
-              ) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
-            callback(null, {
-              status: req.files.status_upload
-                ? statusPath + fileName + path.extname(req.files.status_upload.name)
-                : result.status_upload
-            });
-          },
-          err => {
-            console.log(err);
-
+    async.waterfall(
+      [
+        function checkParams(callback) {
+          if (id && checklist_id && status) {
+            callback(null, true);
+          } else {
             callback({
-              code: 'ERR',
-              data: err
+              code: 'INVALID_REQUEST',
+              id: '?',
+              message: 'Kesalahan pada parameter'
             });
           }
-        );
-      },
+        },
 
-      function updateEmployeeStatus(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
-          .findOne({
-            where: {
-              id: req.body.id
-            }
-          })
-          .then(res => {
-            res
-              .update({
-                status: req.body.status,
-                status_upload: result.status
-              })
-              .then(updated => {
-                callback(null, { result, updated });
-              })
-              .catch(err => {
+        function checkEmployeeStatus(result, callback) {
+          employee
+            .findOne({
+              where: {
+                id: id,
+                status: 1
+              }
+            })
+            .then(res => {
+              if (res == null) {
                 callback({
-                  code: 'ERR_DATABASE',
-                  data: err
+                  code: 'NOT_FOUND'
                 });
+              } else {
+                callback(null, res.dataValues);
+              }
+            });
+        },
+
+        function checkChecklist(result, callback) {
+          let arrChecklist = checklist_id.split(',');
+          checklist
+            .findAll({
+              where: {
+                id: arrChecklist
+              }
+            })
+            .then(res => {
+              if (res.length === arrChecklist.length) {
+                callback(null, {
+                  employee: result,
+                  checklist: res
+                });
+              } else {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  id: '?',
+                  message: 'Kesalahan pada parameter checklist'
+                });
+              }
+            });
+        },
+
+        function insertEmployeeChecklist(result, callback) {
+          trycatch(
+            () => {
+              if (!req.files || Object.keys(req.files).length === 0) {
+                return callback({
+                  code: 'ERR',
+                  message: 'No files were uploaded.'
+                });
+              }
+
+              Promise.all(
+                result.checklist.map((x, i) => {
+                  let obj = {};
+                  let fileName = x.code + '_' + result.employee.nik;
+                  let statusPath = `./public/uploads/company_${req.user.code}/employee/status/`;
+
+                  obj.checklist_id = x.id;
+                  obj.employee_id = id;
+                  obj.description = desc;
+                  obj.upload = statusPath.slice(8) + fileName + path.extname(req.files.status_upload[i].name);
+
+                  req.files.status_upload[i].mv(
+                    statusPath + fileName + path.extname(req.files.status_upload[i].name),
+                    function(err) {
+                      if (err)
+                        return callback({
+                          code: 'ERR'
+                        });
+                    }
+                  );
+
+                  return obj;
+                })
+              )
+                .then(arr => {
+                  checklist_employee
+                    .bulkCreate(arr)
+                    .then(res => {
+                      callback(null, result);
+                    })
+                    .catch(err => {
+                      console.log('err bulkCreate', err);
+                      callback({
+                        code: 'ERR',
+                        data: err
+                      });
+                    });
+                })
+                .catch(err => {
+                  console.log(err);
+                  callback({
+                    code: 'ERR',
+                    data: err
+                  });
+                });
+            },
+            err => {
+              console.log(err);
+
+              callback({
+                code: 'ERR',
+                data: err
               });
-          })
-          .catch(err => {
-            console.log(err);
-            callback({
-              code: 'ERR_DATABASE',
-              data: err
-            });
-          });
-      },
+            }
+          );
+        },
 
-      function updateEmployeeHistory(result, callback) {
-        APP.models.mongo.employee_history
-          .create({
-            id: result.updated.id,
-            priviledge: result.updated.priviledge_id,
-            role: result.updated.role_id,
-            department: result.updated.department_id,
-            job_title: result.updated.job_title_id,
-            grade: result.updated.grade_id,
-            benefit: result.updated.benefit_id,
-            benefit_upload: result.result.benefit,
-            company_code: result.updated.company_code,
-            employee_code: result.updated.employee_code,
-            username: result.updated.user_name,
-            password: result.updated.password,
-            name: result.updated.name,
-            gender: result.updated.gender,
-            pob: result.updated.pob,
-            dob: result.updated.dob,
-            address: result.updated.address,
-            kelurahan: result.updated.kelurahan,
-            kecamatan: result.updated.kecamatan,
-            city: result.updated.city,
-            province: result.updated.province,
-            zipcode: result.updated.zipcode,
-            msisdn: result.updated.msisdn,
-            tlp: result.updated.tlp,
-            email: result.updated.email,
-            status: result.updated.status,
-            status_upload: result.result.status,
-            endpoint: req.originalUrl,
-            date: req.currentDate,
-            time: req.customTime,
-            elapsed_time: req.elapsedTime || '0'
-          })
-          .then(res => {
-            callback(null, {
-              code: 'UPDATE_SUCCESS',
-              data: res
+        function updateEmployeeStatus(result, callback) {
+          employee
+            .update(
+              {
+                status: status
+              },
+              {
+                where: {
+                  id: id
+                }
+              }
+            )
+            .then(updated => {
+              callback(null, { result, updated });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
             });
-          })
-          .catch(err => {
-            callback({
-              code: 'ERR_DATABASE',
-              data: err
+        },
+
+        function updateEmployeeHistory(result, callback) {
+          APP.models.mongo.employee_history
+            .create({
+              id: result.updated.id,
+              priviledge: result.updated.priviledge_id,
+              role: result.updated.role_id,
+              department: result.updated.department_id,
+              job_title: result.updated.job_title_id,
+              grade: result.updated.grade_id,
+              benefit: result.updated.benefit_id,
+              benefit_upload: result.result.benefit,
+              company_code: result.updated.company_code,
+              employee_code: result.updated.employee_code,
+              username: result.updated.user_name,
+              password: result.updated.password,
+              name: result.updated.name,
+              gender: result.updated.gender,
+              pob: result.updated.pob,
+              dob: result.updated.dob,
+              address: result.updated.address,
+              kelurahan: result.updated.kelurahan,
+              kecamatan: result.updated.kecamatan,
+              city: result.updated.city,
+              province: result.updated.province,
+              zipcode: result.updated.zipcode,
+              msisdn: result.updated.msisdn,
+              tlp: result.updated.tlp,
+              email: result.updated.email,
+              status: result.updated.status,
+              status_upload: result.result.status,
+              endpoint: req.originalUrl,
+              date: req.currentDate,
+              time: req.customTime,
+              elapsed_time: req.elapsedTime || '0'
+            })
+            .then(res => {
+              callback(null, {
+                code: 'UPDATE_SUCCESS',
+                data: res
+              });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
             });
-          });
+        }
+      ],
+      (err, result) => {
+        if (err) return callback(err);
+
+        callback(null, result);
       }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
-
-      callback(null, result);
-    }
-  );
+    );
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
 };
 
 exports.updateEmployeeRotasi = (APP, req, callback) => {

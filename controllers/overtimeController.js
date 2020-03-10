@@ -33,44 +33,44 @@ exports.overtimeRequest = (APP, req, callback) => {
         }
       },
 
-      function checkGrade(data, callback) {
-        overtime_setting.belongsTo(grade, {
-          targetKey: 'id',
-          foreignKey: 'value'
-        });
+      // function checkGrade(data, callback) {
+      //   overtime_setting.belongsTo(grade, {
+      //     targetKey: 'id',
+      //     foreignKey: 'value'
+      //   });
 
-        overtime_setting
-          .findOne({
-            include: [
-              {
-                model: grade,
-                attributes: ['id', 'name', 'description']
-              }
-            ],
-            where: {
-              overtime_setting_id: 1
-            }
-          })
-          .then(res => {
-            if (res == null) {
-              callback({
-                code: 'NOT_FOUND',
-                id: 'IRQ97',
-                message: 'Setting Tidak ditemukan'
-              });
-            } else {
-              if (res.grade.id == req.user.grade) {
-                callback(null, true);
-              } else {
-                callback({
-                  code: 'INVALID_REQUEST',
-                  id: '?',
-                  message: 'Grade tidak sesuai untuk melakukan request overtime!'
-                });
-              }
-            }
-          });
-      },
+      //   overtime_setting
+      //     .findOne({
+      //       include: [
+      //         {
+      //           model: grade,
+      //           attributes: ['id', 'name', 'description']
+      //         }
+      //       ],
+      //       where: {
+      //         overtime_setting_id: 1
+      //       }
+      //     })
+      //     .then(res => {
+      //       if (res == null) {
+      //         callback({
+      //           code: 'NOT_FOUND',
+      //           id: 'IRQ97',
+      //           message: 'Setting Tidak ditemukan'
+      //         });
+      //       } else {
+      //         if (res.grade.id == req.user.grade) {
+      //           callback(null, true);
+      //         } else {
+      //           callback({
+      //             code: 'INVALID_REQUEST',
+      //             id: '?',
+      //             message: 'Grade tidak sesuai untuk melakukan request overtime!'
+      //           });
+      //         }
+      //       }
+      //     });
+      // },
 
       function checkDepartment(data, callback) {
         department

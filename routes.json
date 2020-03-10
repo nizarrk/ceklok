@@ -827,6 +827,12 @@
     "function": "displayFeatureCompany",
     "auth": true
   },
+  "/feature/connect": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "connectNewFeatureCompany",
+    "auth": true
+  },
   "/feature/ceklok/add": {
     "method": "post",
     "controller": "featureController",
@@ -855,6 +861,12 @@
     "method": "post",
     "controller": "dashboardController",
     "function": "dashboardEmployee",
+    "auth": true
+  },
+  "/dashboard/employee/presencedetail": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardEmployeePresenceDetail",
     "auth": true
   },
   "/dashboard/company/get": {

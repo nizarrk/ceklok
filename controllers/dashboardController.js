@@ -97,9 +97,7 @@ exports.dashboardEmployee = (APP, req, callback) => {
       },
 
       function getLastCheckInOut(result, callback) {
-        let yesterday = moment()
-          .subtract(1, 'days')
-          .format('YYYY-MM-DD');
+        let today = moment().format('YYYY-MM-DD');
 
         APP.db.sequelize
           .query(
@@ -138,9 +136,12 @@ exports.dashboardEmployee = (APP, req, callback) => {
               LEFT OUTER JOIN 
                   ${req.user.db}.presence_setting AS presence_setting ON presence.presence_setting_id = presence_setting.id
               WHERE  
-                  ${req.user.db}.presence.date = '${yesterday}' 
+                  ${req.user.db}.presence.date NOT IN ('${today}') 
               AND
-                  ${req.user.db}.presence.user_id = ${req.user.id}`
+                  ${req.user.db}.presence.user_id = ${req.user.id}
+              ORDER BY 
+                  ${req.user.db}.presence.id
+              DESC LIMIT 1`
           )
           .then(res => {
             // if (res[0].length == 0) {
@@ -175,6 +176,42 @@ exports.dashboardEmployee = (APP, req, callback) => {
       callback(null, result);
     }
   );
+};
+
+exports.dashboardEmployeePresenceDetail = (APP, req, callback) => {
+  if (req.user.level === 3) {
+    let { presence, presence_setting, presence_monthly } = APP.models.company[req.user.db].mysql;
+    async.waterfall(
+      [
+        function getPresenceDaily(callback) {
+          presence
+            .findAndCountAll({
+              where: {
+                user_id: req.user.id
+              },
+              attributes: ['id', 'user_id', 'check_in', 'check_out', 'total_time']
+            })
+            .then(res => {
+              callback(null, {
+                code: 'OK',
+                data: res
+              });
+            });
+        }
+      ],
+      (err, result) => {
+        if (err) return callback(err);
+
+        callback(null, result);
+      }
+    );
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
 };
 
 exports.dashboardAdminCompany = (APP, req, callback) => {
