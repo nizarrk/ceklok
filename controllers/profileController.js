@@ -161,6 +161,68 @@ const checkExistingCredentials = (APP, data, req, callback) => {
   );
 };
 
+exports.getProfileDetail = (APP, req, callback) => {
+  async.waterfall(
+    [
+      function checkLevel(callback) {
+        if (req.user.level === 1) {
+          let { admin_app } = APP.models.mysql;
+          callback(null, admin_app);
+        } else if (req.user.level === 2) {
+          let { admin } = APP.models.mysql;
+          callback(null, admin);
+        } else if (req.user.level === 3) {
+          let { employee } = APP.models.company[req.user.db].mysql;
+          callback(null, employee);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '',
+            message: 'Invalid user level'
+          });
+        }
+      },
+
+      function getDetails(query, callback) {
+        query
+          .findOne({
+            where: {
+              id: req.user.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                id: '',
+                message: 'User tidak ditemukan'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                data: res
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: '',
+              message: '',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.updateProfile = (APP, req, callback) => {
   let { name, pob, dob, address, kel, kec, zip, prov, city, gender, telp, username, email } = req.body;
   async.waterfall(

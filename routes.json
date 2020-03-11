@@ -881,6 +881,12 @@
     "function": "dashboardAdminCeklok",
     "auth": true
   },
+  "/profile/getbyid": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "getProfileDetail",
+    "auth": true
+  },
   "/profile/update": {
     "method": "post",
     "controller": "profileController",
@@ -1023,6 +1029,12 @@
     "method": "post",
     "controller": "overtimeController",
     "function": "overtimeSettingsCompany",
+    "auth": true
+  },
+  "/inbox/send": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "sendMessage",
     "auth": true
   }
 }

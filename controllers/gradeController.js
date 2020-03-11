@@ -50,7 +50,8 @@ exports.getById = (APP, req, callback) => {
           include: [
             {
               model: benefit,
-              attributes: ['id', 'name', 'description']
+              attributes: ['id', 'name', 'description'],
+              required: true
             }
           ]
         }
