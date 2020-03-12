@@ -25,7 +25,8 @@ module.exports = function(sequelize, Sequelize) {
         defaultValue: 0 // 0 = cuti reguler, 1 = cuti khusus
       },
       days: {
-        type: Sequelize.INTEGER(11)
+        type: Sequelize.INTEGER(11),
+        defaultValue: 0
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif

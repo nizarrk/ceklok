@@ -351,6 +351,8 @@ exports.editPayment = (APP, req, callback) => {
             });
           })
           .catch(err => {
+            console.log(err);
+
             callback({
               code: 'DATABASE_ERR',
               no: 'EPN99',
@@ -483,15 +485,15 @@ exports.editPaymentMethod = (APP, req, callback) => {
   async.waterfall(
     [
       function checkParams(callback) {
-        // if ( name && desc && bank_name && rek_no && rek_name && limit && id ) {
-        callback(null, true);
-        // } else {
-        //     callback({
-        //       code: 'INVALID_REQUEST',
-        //       id: "EPQ96",
-        //       message: 'Kesalahan paremeter ( All )'
-        //     })
-        // }
+        if (name && desc && bank_name && rek_no && rek_name && limit && id) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'EPQ96',
+            message: 'Kesalahan paremeter ( All )'
+          });
+        }
       },
 
       function checkUpload(result, callback) {
@@ -552,6 +554,7 @@ exports.editPaymentMethod = (APP, req, callback) => {
             callback(null, result);
           })
           .catch(err => {
+            console.log(err);
             callback({
               code: 'ERR_DATABASE',
               id: 'EPQ96',

@@ -499,6 +499,69 @@ exports.addSubFeatureSettings = (APP, req, callback) => {
     });
 };
 
+exports.subfeatureSettingsCompany = (APP, req, callback) => {
+  let { subfeature_setting_master } = APP.models.mysql;
+  let { subfeature_setting } = APP.models.company[req.user.db].mysql;
+
+  async.waterfall(
+    [
+      function checkSubfeature(callback) {
+        subfeature_setting_master
+          .findOne({
+            where: {
+              id: req.body.type
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'subfeature_setting_master tidak ditemukan'
+              });
+            }
+            callback(null, true);
+          })
+          .catch(err => {
+            console.log('Error checkSubfeature', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error checkSubfeature',
+              data: err
+            });
+          });
+      },
+
+      function addSettings(data, callback) {
+        subfeature_setting
+          .create({
+            subfeature_setting_id: req.body.type,
+            value: req.body.value
+          })
+          .then(res => {
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log('Error addSetting', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error addSetting',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null, result);
+    }
+  );
+};
+
 exports.connectNewFeatureCompany = (APP, req, callback) => {
   let { pricing, feature, pricing_feature } = APP.models.mysql;
   let { feature_active } = APP.models.company[req.user.db].mysql;

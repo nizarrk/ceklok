@@ -248,7 +248,7 @@
   "/payment/type/update": {
     "method": "post",
     "controller": "paymentController",
-    "function": "update",
+    "function": "editPayment",
     "auth": true
   },
   "/payment/type/delete": {
@@ -497,10 +497,16 @@
     "function": "delete",
     "auth": true
   },
-  "/absence/type/get": {
+  "/absent/type/get": {
     "method": "post",
-    "controller": "absenceTypeController",
+    "controller": "absentTypeController",
     "function": "get",
+    "auth": true
+  },
+  "/absent/type/getbyid": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "getById",
     "auth": true
   },
   "/absent/type/insert": {
@@ -513,6 +519,12 @@
     "method": "post",
     "controller": "absentTypeController",
     "function": "update",
+    "auth": true
+  },
+  "/absent/type/updatestatus": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "updateStatus",
     "auth": true
   },
   "/absent/type/delete": {
@@ -557,6 +569,12 @@
     "function": "get",
     "auth": true
   },
+  "/cuti/type/getbyid": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "getById",
+    "auth": true
+  },
   "/cuti/type/insert": {
     "method": "post",
     "controller": "cutiKhususController",
@@ -567,6 +585,12 @@
     "method": "post",
     "controller": "cutiKhususController",
     "function": "update",
+    "auth": true
+  },
+  "/cuti/type/updatestatus": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "updateStatus",
     "auth": true
   },
   "/cuti/type/delete": {
@@ -833,6 +857,12 @@
     "function": "connectNewFeatureCompany",
     "auth": true
   },
+  "/feature/sub/setting": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "subfeatureSettingsCompany",
+    "auth": true
+  },
   "/feature/ceklok/add": {
     "method": "post",
     "controller": "featureController",
@@ -1031,10 +1061,34 @@
     "function": "overtimeSettingsCompany",
     "auth": true
   },
+  "/inbox/get": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "messageList",
+    "auth": true
+  },
+  "/inbox/detail": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "messageDetail",
+    "auth": true
+  },
   "/inbox/send": {
     "method": "post",
     "controller": "inboxController",
     "function": "sendMessage",
+    "auth": true
+  },
+  "/inbox/updatestatus": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "changeMessageStatus",
+    "auth": true
+  },
+  "/inbox/delete": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "deleteMessage",
     "auth": true
   }
 }

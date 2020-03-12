@@ -5,6 +5,637 @@ const trycatch = require('trycatch');
 const path = require('path');
 const moment = require('moment');
 
+exports.messageList = (APP, req, callback) => {
+  let { inbox, company, admin_app, admin } = APP.models.mysql;
+  let { datestart, dateend, name, type, company_id } = req.body;
+
+  async.waterfall(
+    [
+      function checkParams(callback) {
+        if (req.user.level === 1) {
+          if (datestart && dateend && name && type && company_id) {
+            company
+              .findOne({
+                where: {
+                  id: company_id,
+                  status: 1
+                }
+              })
+              .then(res => {
+                if (res == null) {
+                  callback({
+                    code: 'NOT_FOUND',
+                    id: '',
+                    message: 'Company tidak ditemukan'
+                  });
+                } else {
+                  let params = [
+                    {
+                      model: 'inbox',
+                      db: `${process.env.MYSQL_NAME}`,
+                      subs: `${process.env.MYSQL_NAME}_${res.company_code}`,
+                      status: 'Send',
+                      level: 1,
+                      params: `
+                        ib.created_by = ${req.user.id} 
+                      AND
+                        CONVERT(ib.created_at, date) 
+                      BETWEEN
+                        '${datestart}' AND '${dateend}'
+                      AND
+                        ib.company_id = '${company_id}'
+                      AND
+                        ib.name LIKE '%${name}%'
+                      AND
+                        ib.message_type = ${type}
+                      `
+                    },
+                    {
+                      model: 'inbox',
+                      db: `${process.env.MYSQL_NAME}`,
+                      subs: `${process.env.MYSQL_NAME}_${res.company_code}`,
+                      status: 'Receive',
+                      level: 1,
+                      params: `
+                        ib.recipient_id = ${req.user.id}
+                      AND
+                        CONVERT(ib.created_at, date) 
+                      BETWEEN
+                        '${datestart}' AND '${dateend}'
+                      AND
+                        ib.company_id = '${company_id}'
+                      AND
+                        ib.name LIKE '%${name}%'
+                      AND
+                        ib.message_type = ${type}
+
+                    `
+                    }
+                  ];
+
+                  callback(null, params);
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  id: 'LNQ98',
+                  message:
+                    'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( map data users )',
+                  data: err
+                });
+              });
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'LNQ96',
+              message: 'Kesalahan pada parameter'
+            });
+          }
+        } else if (req.user.level === 2) {
+          if (datestart && dateend && name && type) {
+            let params = [
+              {
+                model: 'inbox',
+                db: `${req.user.db}`,
+                subs: `${req.user.db}`,
+                status: 'Send',
+                level: 2,
+                params: `
+                  ib.created_by = ${req.user.id} 
+                AND
+                  CONVERT(ib.created_at, date) 
+                BETWEEN
+                  '${datestart}' AND '${dateend}'
+                AND
+                  ib.company_id = '${req.user.company}'
+                AND
+                  ib.name LIKE '%${name}%'
+                AND
+                  ib.message_type = ${type}
+                `
+              },
+              {
+                model: 'inbox',
+                db: `${req.user.db}`,
+                subs: `${req.user.db}`,
+                status: 'Receive',
+                level: 1,
+                params: `
+                  ib.recipient_id = ${req.user.id}
+                AND
+                  CONVERT(ib.created_at, date) 
+                BETWEEN
+                  '${datestart}' AND '${dateend}'
+                AND
+                  ib.company_id = '${req.user.company}'
+                AND
+                  ib.name LIKE '%${name}%'
+                AND
+                  ib.message_type = ${type}
+                AND
+                  ib.status = 1
+                `
+              },
+              {
+                model: 'inbox',
+                db: `${process.env.MYSQL_NAME}`,
+                subs: `${req.user.db}`,
+                status: 'Receive',
+                level: 1,
+                params: `
+                  ib.recipient_id = ${req.user.id}
+                AND
+                  CONVERT(ib.created_at, date) 
+                BETWEEN
+                  '${datestart}' AND '${dateend}'
+                AND
+                  ib.company_id = '${req.user.company}'
+                AND
+                  ib.name LIKE '%${name}%'
+                AND
+                  ib.message_type = ${type}
+                AND
+                  ib.status = 1
+              `
+              }
+            ];
+
+            callback(null, params);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'LNQ96',
+              message: 'Kesalahan pada parameter'
+            });
+          }
+        } else if (req.user.level === 3) {
+          let params = [
+            {
+              model: 'inbox',
+              db: `${req.user.db}`,
+              subs: `${req.user.db}`,
+              status: 'Send',
+              level: 2,
+              params: `
+                ib.created_by = ${req.user.id} 
+              AND
+                CONVERT(ib.created_at, date) 
+              BETWEEN
+                '${datestart}' AND '${dateend}'
+              AND
+                ib.company_id = '${req.user.company}'
+              AND
+                ib.name LIKE '%${name}%'
+              AND
+                ib.message_type = ${type}
+              `
+            },
+            {
+              model: 'inbox',
+              db: `${req.user.db}`,
+              subs: `${req.user.db}`,
+              status: 'Receive',
+              level: 1,
+              params: `
+                ib.recipient_id = ${req.user.id}
+              AND
+                CONVERT(ib.created_at, date) 
+              BETWEEN
+                '${datestart}' AND '${dateend}'
+              AND
+                ib.company_id = '${req.user.company}'
+              AND
+                ib.name LIKE '%${name}%'
+              AND
+                ib.message_type = ${type}
+              AND
+                ib.status = 1
+              `
+            },
+            {
+              model: 'inbox',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${req.user.db}`,
+              status: 'Receive',
+              level: 1,
+              params: `
+                ib.recipient_id = ${req.user.id}
+              AND
+                CONVERT(ib.created_at, date) 
+              BETWEEN
+                '${datestart}' AND '${dateend}'
+              AND
+                ib.company_id = '${req.user.company}'
+              AND
+                ib.name LIKE '%${name}%'
+              AND
+                ib.message_type = ${type}
+              AND
+                ib.status = 1
+            `
+            }
+          ];
+
+          callback(null, params);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'LNQ96',
+            message: 'Kesalahan pada parameter ( user level )'
+          });
+        }
+      },
+
+      function getInboxData(data, callback) {
+        console.log(req.user.id);
+
+        let arr = [];
+        Promise.all(
+          data.map((x, i) => {
+            return APP.db.sequelize
+              .query(
+                `
+                SELECT
+                  ib.id,
+                  ib.message_type,
+                CASE
+                  WHEN ib.message_type = 1 THEN 'System'
+                  WHEN ib.message_type = 2 THEN 'Module'
+                  WHEN ib.message_type = 3 THEN 'Single'
+                  WHEN ib.message_type = 4 THEN 'Broadcast'
+                END 
+                AS 
+                  message_type_name,
+                  ib.recipient_level,
+                CASE
+                  WHEN ib.recipient_level = 1 THEN 'Admin CEKLOK'
+                  WHEN ib.recipient_level = 2 THEN 'Admin Company'
+                  WHEN ib.recipient_level = 3 THEN 'Employee'
+                END
+                AS
+                  recipient_type,
+                  ib.recipient_id,
+                CASE
+                  WHEN ib.recipient_level = 1 THEN app.name
+                  WHEN ib.recipient_level = 2 THEN adm.name
+                  WHEN ib.recipient_level = 3 THEN emp.name
+                END
+                AS
+                  recipient_name,
+                  ib.name,
+                  ib.description,
+                  ib.created_at,
+                  ib.sender_level,
+                CASE
+                  WHEN ib.sender_level = 1 THEN 'Admin CEKLOK'
+                  WHEN ib.sender_level = 1 THEN 'Admin Company'
+                  WHEN ib.sender_level = 1 THEN 'Employee'
+                END
+                AS
+                  sender_level_name,
+                  ib.created_by,
+                CASE
+                  WHEN ib.sender_level = 1 THEN app1.name
+                  WHEN ib.sender_level = 1 THEN adm1.name
+                  WHEN ib.sender_level = 1 THEN emp1.name
+                END
+                AS
+                  created_by_name,
+                CASE
+                  WHEN ib.recipient_level = 1 THEN 0
+                  WHEN ib.recipient_level = 2 THEN ib.company_id
+                  WHEN ib.recipient_level = 3 THEN ib.company_id
+                END
+                AS
+                  company_id,
+                CASE
+                  WHEN ib.recipient_level = 1 THEN null
+                  WHEN ib.recipient_level = 2 THEN comp.name
+                  WHEN ib.recipient_level = 3 THEN comp.name
+                END
+                AS
+                  company_name,
+                CASE
+                  WHEN ib.status = 1 THEN 'Active'
+                  WHEN ib.status = 0 THEN 'Not Active'
+                  WHEN ib.status = 2 THEN 'Not Publish'
+                END
+                AS
+                  status_name,
+                CASE
+                  WHEN ib.status_read = 0 AND ib.created_by <> ${req.user.id} THEN 'New'
+                  WHEN ib.status_read = 1 AND ib.created_by <> ${req.user.id} THEN 'Sudah Read'
+                  WHEN ib.status_read = 0 AND ib.created_by = ${req.user.id} THEN 'Belum di Read'
+                  WHEN ib.status_read = 1 AND ib.created_by = ${req.user.id} THEN 'Read'
+                END
+                AS
+                  read_status,
+                  '${x.status}' AS message_status,
+                  ${x.level} AS level_status
+                FROM
+                  ${x.db}.${x.model} ib
+                LEFT OUTER JOIN
+                  ceklok.admin_app app 
+                ON
+                  ib.recipient_id = app.id
+                LEFT OUTER JOIN
+                  ceklok.admin adm 
+                ON
+                  ib.recipient_id = adm.id
+                LEFT OUTER JOIN
+                  ${x.subs}.employee emp 
+                ON
+                  ib.recipient_id = emp.id
+                LEFT OUTER JOIN
+                  ceklok.admin_app app1 
+                ON
+                  ib.created_by = app1.id
+                LEFT OUTER JOIN
+                  ceklok.admin adm1
+                ON
+                  ib.created_by = adm1.id
+                LEFT OUTER JOIN
+                  ${x.subs}.employee emp1 
+                ON
+                  ib.recipient_id = emp1.id
+                LEFT OUTER JOIN
+                  ceklok.company comp
+                ON
+                  ib.company_id = comp.id
+                WHERE
+                  ${x.params}
+                `
+              )
+              .then(res => {
+                return res[0].map(y => {
+                  arr.push(y);
+                });
+              });
+          })
+        ).then(() => {
+          if (arr.length == 0) {
+            callback({
+              code: 'NOT_FOUND',
+              id: 'LNQ97',
+              message: 'Message Tidak ditemukan'
+            });
+          } else {
+            callback(null, {
+              code: 'FOUND',
+              id: 'LNP00',
+              message: 'Message ditemukan',
+              data: arr
+            });
+          }
+        });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.messageDetail = (APP, req, callback) => {
+  let { id, level, company_id } = req.body;
+  let { company } = APP.models.mysql;
+
+  async.waterfall(
+    [
+      function checkParams(callback) {
+        if (id && level && company_id) {
+          if (level == 1) {
+            company
+              .findOne({
+                where: {
+                  id: company_id
+                }
+              })
+              .then(res => {
+                if (res == null) {
+                  callback({
+                    code: 'NOT_FOUND',
+                    id: 'DMQ97',
+                    message: 'Data Tidak ditemukan'
+                  });
+                } else {
+                  callback(null, {
+                    query: APP.models.mysql,
+                    model: 'inbox',
+                    db: `${process.env.MYSQL_NAME}`,
+                    subs: `${process.env.MYSQL_NAME}_${res.company_code}`
+                  });
+                }
+              });
+          } else if (level == 2) {
+            callback(null, {
+              query: APP.models.company[req.user.db].mysql,
+              model: 'inbox',
+              db: req.user.db,
+              subs: req.user.db
+            });
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'DNQ96',
+              message: 'Kesalahan pada parameter level'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'DNQ96',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function updateStatusRead(data, callback) {
+        data.query
+          .update(
+            {
+              status_read: 1
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(() => {
+            callback(null, data);
+          })
+          .catch(err => {
+            console.log('Error update', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'DNQ98',
+              message:
+                'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( update read status inbox )',
+              data: err
+            });
+          });
+      },
+
+      function getDetails(data, callback) {
+        return APP.db.sequelize
+          .query(
+            `
+          SELECT
+            ib.id,
+            ib.message_type,
+          CASE
+            WHEN ib.message_type = 1 THEN 'System'
+            WHEN ib.message_type = 2 THEN 'Module'
+            WHEN ib.message_type = 3 THEN 'Single'
+            WHEN ib.message_type = 4 THEN 'Broadcast'
+          END 
+          AS 
+            message_type_name,
+            ib.recipient_level,
+          CASE
+            WHEN ib.recipient_level = 1 THEN 'Admin CEKLOK'
+            WHEN ib.recipient_level = 2 THEN 'Admin Company'
+            WHEN ib.recipient_level = 3 THEN 'Employee'
+          END
+          AS
+            recipient_type,
+            ib.recipient_id,
+          CASE
+            WHEN ib.recipient_level = 1 THEN app.name
+            WHEN ib.recipient_level = 2 THEN adm.name
+            WHEN ib.recipient_level = 3 THEN emp.name
+          END
+          AS
+            recipient_name,
+            ib.name,
+            ib.description,
+            ib.created_at,
+            ib.sender_level,
+          CASE
+            WHEN ib.sender_level = 1 THEN 'Admin CEKLOK'
+            WHEN ib.sender_level = 1 THEN 'Admin Company'
+            WHEN ib.sender_level = 1 THEN 'Employee'
+          END
+          AS
+            sender_level_name,
+            ib.created_by,
+          CASE
+            WHEN ib.sender_level = 1 THEN app1.name
+            WHEN ib.sender_level = 1 THEN adm1.name
+            WHEN ib.sender_level = 1 THEN emp1.name
+          END
+          AS
+            created_by_name,
+          CASE
+            WHEN ib.recipient_level = 1 THEN 0
+            WHEN ib.recipient_level = 2 THEN ib.company_id
+            WHEN ib.recipient_level = 3 THEN ib.company_id
+          END
+          AS
+            company_id,
+          CASE
+            WHEN ib.recipient_level = 1 THEN null
+            WHEN ib.recipient_level = 2 THEN comp.name
+            WHEN ib.recipient_level = 3 THEN comp.name
+          END
+          AS
+            company_name,
+          CASE
+            WHEN ib.status = 1 THEN 'Active'
+            WHEN ib.status = 0 THEN 'Not Active'
+            WHEN ib.status = 2 THEN 'Not Publish'
+          END
+          AS
+            status_name,
+          CASE
+            WHEN ib.created_by =  '${req.user.id}' THEN 'Send'
+            WHEN ib.created_by <> '${req.user.id}' THEN 'Receive'
+          END
+          AS
+            message_status,
+          CASE
+            WHEN ib.status_read = 0 AND ib.created_by <> ${req.user.id} THEN 'New'
+            WHEN ib.status_read = 1 AND ib.created_by <> ${req.user.id} THEN 'Sudah Read'
+            WHEN ib.status_read = 0 AND ib.created_by = ${req.user.id} THEN 'Belum di Read'
+            WHEN ib.status_read = 1 AND ib.created_by = ${req.user.id} THEN 'Read'
+          END
+          AS
+            read_status,
+            ${level} AS level_status
+          FROM
+            ${data.db}.${data.model} ib
+          LEFT OUTER JOIN
+            ceklok.admin_app app 
+          ON
+            ib.recipient_id = app.id
+          LEFT OUTER JOIN
+            ceklok.admin adm 
+          ON
+            ib.recipient_id = adm.id
+          LEFT OUTER JOIN
+            ${data.subs}.employee emp 
+          ON
+            ib.recipient_id = emp.id
+          LEFT OUTER JOIN
+            ceklok.admin_app app1 
+          ON
+            ib.created_by = app1.id
+          LEFT OUTER JOIN
+            ceklok.admin adm1
+          ON
+            ib.created_by = adm1.id
+          LEFT OUTER JOIN
+            ${data.subs}.employee emp1 
+          ON
+            ib.recipient_id = emp1.id
+          LEFT OUTER JOIN
+            ceklok.company comp
+          ON
+            ib.company_id = comp.id
+          WHERE
+            ib.id = ${id}
+          `
+          )
+          .then(res => {
+            if (res[0].length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                id: 'DNQ97',
+                message: 'Data Tidak ditemukan'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                id: 'DN00',
+                message: 'Data ditemukan',
+                data: res[0]
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'DNQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( get inbox )',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.sendMessage = (APP, req, callback) => {
   let { name, desc, level, recipient_id, message_type, company_id, broadcast_type } = req.body;
   let { company, admin, admin_app } = APP.models.mysql;
@@ -236,6 +867,139 @@ exports.sendMessage = (APP, req, callback) => {
               });
             });
         }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.changeMessageStatus = (APP, req, callback) => {
+  let { id, status } = req.body;
+  let inbox;
+
+  async.waterfall(
+    [
+      function checkParams(callback) {
+        if ((id && status == '0') || status == '1' || status == '2') {
+          if (req.user.level === 1) {
+            inbox = APP.models.mysql.inbox;
+            callback(null, inbox);
+          } else if (req.user.level === 2) {
+            inbox = APP.models.company[req.user.db].mysql.inbox;
+            callback(null, inbox);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'CSQ96',
+              message: 'Kesalahan pada parameter level'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'CSQ96',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function updateInbox(inbox, callback) {
+        inbox
+          .update(
+            {
+              status: status
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(updated => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              id: 'CSP00',
+              message: 'Status Message berhasil diubah',
+              data: updated
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              no: 'CSQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( update )',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.deleteMessage = (APP, req, callback) => {
+  let { id } = req.body;
+  let inbox;
+
+  async.waterfall(
+    [
+      function checkParam(callback) {
+        if (id) {
+          if (req.user.level === 1) {
+            inbox = APP.models.mysql.inbox;
+            callback(null, inbox);
+          } else if (req.user.level === 2) {
+            inbox = APP.models.company[req.user.db].mysql.inbox;
+            callback(null, inbox);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'CSQ96',
+              message: 'Kesalahan pada parameter level'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'CSQ96',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function deleteInbox(inbox, callback) {
+        inbox
+          .destroy({
+            where: {
+              id: id
+            }
+          })
+          .then(deleted => {
+            callback(null, {
+              code: 'DELETE_SUCCESS',
+              id: 'DMP00',
+              message: 'Delete Message berhasil',
+              data: deleted
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'DATABASE_ERR',
+              id: 'DMQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( delete )',
+              data: err
+            });
+          });
       }
     ],
     (err, result) => {

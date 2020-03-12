@@ -57,8 +57,7 @@ const generateEmployeeCode = async (APP, req, index) => {
 };
 
 exports.checkExistingTelp = (APP, req, callback) => {
-  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
-  APP.models.company[db].mysql.employee
+  APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
     .findAll({
       where: {
         tlp: req.body.telp
@@ -99,9 +98,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
 };
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
-
-  APP.models.company[db].mysql.employee
+  APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
     .findAll({
       where: {
         email: req.body.email
@@ -142,9 +139,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
-
-  APP.models.company[db].mysql.employee
+  APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
     .findAll({
       where: {
         company_code: req.body.company,
@@ -288,7 +283,7 @@ exports.register = (APP, req, callback) => {
         let username = APP.validation.username(req.body.username);
 
         if (email && username) {
-          APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+          APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
             .build({
               employee_code: data.kode,
               company_code: req.body.company,
