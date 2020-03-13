@@ -26,9 +26,6 @@ module.exports = function(sequelize, Sequelize) {
       html: {
         type: Sequelize.STRING
       },
-      endpoint: {
-        type: Sequelize.STRING(255)
-      },
       status: {
         type: Sequelize.INTEGER(1) //0 = non aktif, 1 = aktif
       },

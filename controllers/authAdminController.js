@@ -576,6 +576,48 @@ exports.register = (APP, req, callback) => {
   });
 };
 
+exports.paymentList = (APP, re, callback) => {
+  let { payment_type, payment_method } = APP.models.mysql;
+
+  payment_type.hasMany(payment_method, {
+    sourceKey: 'id',
+    foreignKey: 'payment_type_id'
+  });
+
+  payment_type
+    .findAll({
+      include: [
+        {
+          model: payment_method
+        }
+      ]
+    })
+    .then(res => {
+      if (res.length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          id: '?',
+          message: 'Payment list tidak ditemukan'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          id: '?',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        id: '?',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+        data: err
+      });
+    });
+};
+
 exports.paymentCompany = (APP, req, callback) => {
   async.waterfall(
     [
@@ -870,390 +912,57 @@ exports.login = (APP, req, callback) => {
   );
 };
 
-exports.verifyEmployee = (APP, req, callback) => {
-  let {
-    employee,
-    grade,
-    grade_benefit,
-    benefit,
-    benefit_active,
-    department,
-    job_title,
-    status_contract,
-    schedule
-  } = APP.models.company[req.user.db].mysql;
-  let { grade_id, department_id, job_title_id, status_contract_id, schedule_id } = req.body;
+// sek gatau ini dipake dimana
+// exports.editStatusContractEmployee = (APP, req, callback) => {
+//   APP.models.company[req.user.db].mysql.job_title
+//     .update(
+//       {
+//         name: req.body.name,
+//         description: req.body.desc
+//       },
+//       {
+//         where: {
+//           id: req.body.id
+//         }
+//       }
+//     )
+//     .then(result => {
+//       if (!result || (result && !result[0])) {
+//         let params = 'No data updated'; //This is only example, Object can also be used
+//         return callback(null, {
+//           code: 'UPDATE_NONE',
+//           data: params
+//         });
+//       }
 
-  APP.db.sequelize.transaction().then(t => {
-    async.waterfall(
-      [
-        function checkBodyGrade(callback) {
-          grade.hasMany(grade_benefit, {
-            sourceKey: 'id',
-            foreignKey: 'grade_id'
-          });
+//       let params = 'Update Success'; //This is only example, Object can also be used
+//       return callback(null, {
+//         code: 'UPDATE_SUCCESS',
+//         data: params
+//       });
+//     })
+//     .catch(err => {
+//       console.log('iki error', err);
 
-          grade_benefit.belongsTo(benefit, {
-            targetKey: 'id',
-            foreignKey: 'benefit_id'
-          });
+//       if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+//         let params = 'Error! Empty Query'; //This is only example, Object can also be used
+//         return callback({
+//           code: 'UPDATE_NONE',
+//           data: params
+//         });
+//       }
 
-          grade
-            .findOne({
-              include: [
-                {
-                  model: grade_benefit,
-                  attributes: ['id', 'grade_id', 'benefit_id'],
-                  include: [
-                    {
-                      model: benefit,
-                      attributes: ['id', 'name', 'description']
-                    }
-                  ]
-                }
-              ],
-              where: {
-                id: grade_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Kesalahan pada parameter grade'
-                });
-              } else {
-                callback(null, {
-                  grade: res.dataValues
-                });
-              }
-            });
-        },
+//       if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+//         let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+//         return callback({
+//           code: 'DUPLICATE',
+//           data: params
+//         });
+//       }
 
-        function checkBodyDepartment(result, callback) {
-          department
-            .findOne({
-              where: {
-                id: department_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Kesalahan pada parameter department'
-                });
-              } else {
-                callback(null, {
-                  grade: result.grade,
-                  department: res.dataValues
-                });
-              }
-            });
-        },
-
-        function checkBodyJob(result, callback) {
-          job_title
-            .findOne({
-              where: {
-                id: job_title_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Kesalahan pada parameter job'
-                });
-              } else {
-                callback(null, {
-                  grade: result.grade,
-                  department: result.department,
-                  job: res.dataValues
-                });
-              }
-            });
-        },
-
-        function checkBodyStatusContract(result, callback) {
-          status_contract
-            .findOne({
-              where: {
-                id: status_contract_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Kesalahan pada parameter contract'
-                });
-              } else {
-                callback(null, {
-                  grade: result.grade,
-                  department: result.department,
-                  job: result.job,
-                  contract: res.dataValues
-                });
-              }
-            });
-        },
-
-        function checkBodySchedule(result, callback) {
-          schedule
-            .findOne({
-              where: {
-                id: schedule_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Kesalahan pada parameter schedule'
-                });
-              } else {
-                callback(null, {
-                  grade: result.grade,
-                  department: result.department,
-                  job: result.job,
-                  contract: result.contract,
-                  schedule: res.dataValues
-                });
-              }
-            });
-        },
-
-        function uploadPath(result, callback) {
-          try {
-            if (!req.files || Object.keys(req.files).length === 0) {
-              return callback({
-                code: 'INVALID_REQUEST',
-                id: 'BSQ96',
-                message: 'Kesalahan pada parameter upload'
-              });
-            }
-
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
-
-            callback(null, {
-              grade: result.grade,
-              department: result.department,
-              job: result.job,
-              contract: result.contract,
-              schedule: result.schedule,
-              doc: docPath + fileName + path.extname(req.files.upload.name)
-            });
-          } catch (err) {
-            console.log(err);
-            callback({
-              code: 'ERR',
-              id: '?',
-              message: 'Terjadi Kesalahan, mohon coba kembali',
-              data: err
-            });
-          }
-        },
-
-        function updateEmployeeInfo(result, callback) {
-          employee
-            .findOne({
-              where: {
-                email: req.body.email
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                return callback({
-                  code: 'NOT_FOUND',
-                  message: 'Email tidak terdaftar'
-                });
-              }
-              if (res.status == 1) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Akun sudah di verify'
-                });
-              }
-              res
-                .update({
-                  grade_id: grade_id,
-                  department_id: department_id,
-                  job_title_id: job_title_id,
-                  status: 1,
-                  status_contract_id: status_contract_id,
-                  status_contract_upload: result.doc.slice(8),
-                  schedule_id: schedule_id
-                })
-                .then(updated => {
-                  callback(null, {
-                    grade: result.grade,
-                    department: result.department,
-                    job: result.job,
-                    contract: result.contract,
-                    schedule: result.schedule,
-                    updated: updated.dataValues
-                  });
-                })
-                .catch(err => {
-                  console.log('1', err);
-
-                  callback({
-                    code: 'ERR_DATABASE',
-                    data: err
-                  });
-                });
-            })
-            .catch(err => {
-              console.log('2', err);
-
-              callback({
-                code: 'ERR_DATABASE',
-                data: err
-              });
-            });
-        },
-
-        function updateEmployeeBenefit(result, callback) {
-          Promise.all(
-            result.grade.grade_benefits.map(x => {
-              let obj = {};
-
-              obj.benefit_id = x.benefit_id;
-              obj.employee_id = result.updated.id;
-
-              return obj;
-            })
-          ).then(arr => {
-            benefit_active
-              .bulkCreate(arr)
-              .then(() => {
-                callback(null, result);
-              })
-              .catch(err => {
-                console.log('Error updateEmployeeBenefit', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  id: '?',
-                  message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-                  data: err
-                });
-              });
-          });
-        },
-
-        function sendEmailAndUpload(result, callback) {
-          try {
-            //send to email
-            APP.mailer.sendMail({
-              subject: 'Account Verified',
-              to: req.body.email,
-              data: {
-                grade: result.grade.name,
-                department: result.department.name,
-                job: result.job.name,
-                contract: result.contract.name,
-                schedule: {
-                  name: result.schedule.name,
-                  desc: result.schedule.description
-                }
-              },
-              file: 'verify_employee.html'
-            });
-
-            // upload file
-            if (req.files.upload) {
-              console.log('ngupload cok');
-
-              req.files.upload.mv('./public' + result.updated.status_contract_upload, function(err) {
-                if (err) {
-                  console.log(err);
-                  return callback({
-                    code: 'ERR',
-                    id: '?',
-                    message: 'Terjadi Kesalahan upload, mohon coba kembali',
-                    data: err
-                  });
-                }
-              });
-            }
-
-            callback(null, {
-              code: 'UPDATE_SUCCESS',
-              data: result
-            });
-          } catch (err) {
-            console.log('3', err);
-            callback({
-              code: 'ERR',
-              message: 'Error sendMail'
-            });
-          }
-        }
-      ],
-      (err, result) => {
-        if (err) {
-          t.rollback();
-          return callback(err);
-        }
-        t.commit();
-        callback(null, result);
-      }
-    );
-  });
-};
-
-exports.editStatusContractEmployee = (APP, req, callback) => {
-  APP.models.company[req.user.db].mysql.job_title
-    .update(
-      {
-        name: req.body.name,
-        description: req.body.desc
-      },
-      {
-        where: {
-          id: req.body.id
-        }
-      }
-    )
-    .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
-
-      let params = 'Update Success'; //This is only example, Object can also be used
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: params
-      });
-    })
-    .catch(err => {
-      console.log('iki error', err);
-
-      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-        let params = 'Error! Empty Query'; //This is only example, Object can also be used
-        return callback({
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
-
-      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-        return callback({
-          code: 'DUPLICATE',
-          data: params
-        });
-      }
-
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
-};
+//       return callback({
+//         code: 'ERR_DATABASE',
+//         data: err
+//       });
+//     });
+// };

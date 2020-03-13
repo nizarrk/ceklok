@@ -17,6 +17,12 @@
     "function": "register",
     "auth": false
   },
+  "/auth/admin/payment/list": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "paymentList",
+    "auth": false
+  },
   "/auth/admin/payment": {
     "method": "post",
     "controller": "authAdminController",
@@ -1089,6 +1095,24 @@
     "method": "post",
     "controller": "inboxController",
     "function": "deleteMessage",
+    "auth": true
+  },
+  "/notification/get": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationList",
+    "auth": true
+  },
+  "/notification/detail": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationDetail",
+    "auth": true
+  },
+  "/notification/send": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "sendNotification",
     "auth": true
   }
 }

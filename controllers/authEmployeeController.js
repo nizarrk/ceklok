@@ -30,7 +30,7 @@ const generateEmployeeCode = async (APP, req, index) => {
     add = index;
   }
 
-  let res = await APP.models.company[`ceklok_${req.body.company}`].mysql.employee.findAll({
+  let res = await APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee.findAll({
     limit: 1,
     order: [['id', 'DESC']]
   });
@@ -57,7 +57,7 @@ const generateEmployeeCode = async (APP, req, index) => {
 };
 
 exports.checkExistingTelp = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
+  APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
     .findAll({
       where: {
         tlp: req.body.telp
@@ -98,7 +98,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
 };
 
 exports.checkExistingEmail = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
+  APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
     .findAll({
       where: {
         email: req.body.email
@@ -139,7 +139,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
+  APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
     .findAll({
       where: {
         company_code: req.body.company,
@@ -283,7 +283,7 @@ exports.register = (APP, req, callback) => {
         let username = APP.validation.username(req.body.username);
 
         if (email && username) {
-          APP.models.company[process.env.DBNAME + '_' + req.body.company].mysql.employee
+          APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
             .build({
               employee_code: data.kode,
               company_code: req.body.company,
@@ -398,7 +398,7 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company.toUpperCase()].mysql.employee
+        APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql.employee
           .findAll({
             where: {
               user_name: req.body.username,
@@ -553,7 +553,7 @@ exports.forgotPassword = (APP, req, callback) => {
       },
 
       function checkEmail(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+        APP.models.company[process.env.MYSQL_NAME + req.body.company].mysql.employee
           .findAll({
             where: {
               email: req.body.email
@@ -752,7 +752,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function checkPassword(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+        APP.models.company[process.env.MYSQL_NAME + req.body.company].mysql.employee
           .findOne({
             where: {
               email: req.body.email
@@ -792,7 +792,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function updatePassword(result, callback) {
-        APP.models.company[process.env.DBNAME + req.body.company].mysql.employee
+        APP.models.company[process.env.MYSQL_NAME + req.body.company].mysql.employee
           .findOne({
             where: {
               email: req.body.email

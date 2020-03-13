@@ -408,43 +408,43 @@ exports.messageDetail = (APP, req, callback) => {
     [
       function checkParams(callback) {
         if (id && level && company_id) {
-          if (level == 1) {
-            company
-              .findOne({
-                where: {
-                  id: company_id
-                }
-              })
-              .then(res => {
-                if (res == null) {
-                  callback({
-                    code: 'NOT_FOUND',
-                    id: 'DMQ97',
-                    message: 'Data Tidak ditemukan'
-                  });
-                } else {
+          company
+            .findOne({
+              where: {
+                id: company_id
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                callback({
+                  code: 'NOT_FOUND',
+                  id: 'DMQ97',
+                  message: 'Data Tidak ditemukan'
+                });
+              } else {
+                if (req.user.level === 1) {
                   callback(null, {
-                    query: APP.models.mysql,
+                    query: APP.models.mysql.inbox,
                     model: 'inbox',
                     db: `${process.env.MYSQL_NAME}`,
                     subs: `${process.env.MYSQL_NAME}_${res.company_code}`
                   });
+                } else if (level == 2) {
+                  callback(null, {
+                    query: APP.models.company[`${process.env.MYSQL_NAME}_${res.company_code}`].mysql.inbox,
+                    model: 'inbox',
+                    db: `${process.env.MYSQL_NAME}_${res.company_code}`,
+                    subs: `${process.env.MYSQL_NAME}_${res.company_code}`
+                  });
+                } else {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    id: 'DNQ96',
+                    message: 'Kesalahan pada parameter level'
+                  });
                 }
-              });
-          } else if (level == 2) {
-            callback(null, {
-              query: APP.models.company[req.user.db].mysql,
-              model: 'inbox',
-              db: req.user.db,
-              subs: req.user.db
+              }
             });
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              id: 'DNQ96',
-              message: 'Kesalahan pada parameter level'
-            });
-          }
         } else {
           callback({
             code: 'INVALID_REQUEST',
@@ -674,7 +674,7 @@ exports.sendMessage = (APP, req, callback) => {
             callback(null, params);
           } else {
             callback({
-              code: 'INVALID',
+              code: 'INVALID_REQUEST',
               id: 'SMQ96',
               message: 'Kesalahan pada parameter user.level'
             });
@@ -780,10 +780,10 @@ exports.sendMessage = (APP, req, callback) => {
             })
             .then(res => {
               callback(null, {
-                code: 'OK',
-                no: 'SMP00',
+                code: 'INSERT_SUCCESS',
+                id: 'SMP00',
                 message: 'Message berhasil disimpan',
-                data: {}
+                data: res
               });
             })
             .catch(err => {
@@ -931,7 +931,7 @@ exports.changeMessageStatus = (APP, req, callback) => {
             console.log(err);
             callback({
               code: 'ERR_DATABASE',
-              no: 'CSQ98',
+              id: 'CSQ98',
               message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( update )',
               data: err
             });

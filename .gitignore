@@ -35,7 +35,7 @@ jspm_packages/
 .env.server.old
 
 # Config key
-config/
+# config/
 
 # Uploads Folder
 public/uploads/

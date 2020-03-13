@@ -28,11 +28,11 @@ function verifyToken(req, res, next) {
           next();
         });
       } else {
-        return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+        return res.status(401).send({ auth: false, status: 401, message: 'Failed to authenticate token.' });
       }
     })
     .catch(err => {
-      return res.status(500).send({ auth: false, message: err });
+      return res.status(401).send({ auth: false, status: 401, message: err });
     });
 }
 
