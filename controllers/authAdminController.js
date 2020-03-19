@@ -175,11 +175,11 @@ exports.checkExistingCredentialsCompany = (APP, req, callback) => {
     [
       function checkTelp(callback) {
         module.exports.checkExistingTelpCompany(APP, req, callback);
-      },
-
-      function checkEmail(result, callback) {
-        module.exports.checkExistingEmailCompany(APP, req, callback);
       }
+
+      // function checkEmail(result, callback) {
+      //   module.exports.checkExistingEmailCompany(APP, req, callback);
+      // }
     ],
     (err, result) => {
       if (err) return callback(err);
@@ -327,6 +327,7 @@ exports.register = (APP, req, callback) => {
                   province: req.body.admin.prov,
                   zipcode: req.body.admin.zip,
                   msisdn: 'default',
+                  photo: 'default.jpg',
                   tlp: req.body.admin.telp,
                   email: req.body.admin.email,
                   user_name: req.body.admin.username,
@@ -548,7 +549,7 @@ exports.register = (APP, req, callback) => {
           //send to email
           APP.mailer.sendMail({
             subject: 'Invoice',
-            to: data.company.email,
+            to: data.admin.email,
             data: {
               payment: data.payment,
               company: data.company
@@ -618,6 +619,61 @@ exports.paymentList = (APP, re, callback) => {
     });
 };
 
+exports.paymentDetail = (APP, req, callback) => {
+  let { payment, payment_detail, payment_type, payment_method } = APP.models.mysql;
+
+  payment.belongsTo(payment_method, {
+    targetKey: 'id',
+    foreignKey: 'payment_method_id'
+  });
+
+  payment_method.belongsTo(payment_type, {
+    targetKey: 'id',
+    foreignKey: 'payment_type_id'
+  });
+
+  payment
+    .findOne({
+      include: [
+        {
+          model: payment_method,
+          attributes: ['id', 'name', 'description', 'to_bank_name', 'to_rek_name', 'to_rek_no'],
+          include: [
+            {
+              model: payment_type,
+              attributes: ['id', 'name', 'description']
+            }
+          ]
+        }
+      ],
+      where: {
+        invoice: req.body.invoice
+      }
+    })
+    .then(res => {
+      if (res == null) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Payment tidak ditemukan'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          message: 'Payment Ditemukan',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        message: '',
+        data: err
+      });
+    });
+};
+
 exports.paymentCompany = (APP, req, callback) => {
   async.waterfall(
     [
@@ -630,25 +686,25 @@ exports.paymentCompany = (APP, req, callback) => {
           })
           .then(res => {
             if (res == null) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND',
                 id: 'PVP01',
                 message: 'Invoice tidak ditemukan, mohon periksa kembali nomor invoice anda.'
               });
-            }
-
-            if (res.image == null) {
-              return callback(null, true);
             } else {
-              callback({
-                code: 'ERR',
-                id: 'PVP03',
-                message: 'Terjadi kesalahan, mohon ulangi kembali.'
-              });
+              if (res.image == null || res.image == '') {
+                return callback(null, true);
+              } else {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  id: '?',
+                  message: 'Invoice sudah di proses, silahkan tunggu untuk admin melakukan approval'
+                });
+              }
             }
           })
           .catch(err => {
-            console.log(err);
+            console.log(' Error checkPaymentStatus', err);
 
             callback({
               code: 'ERR_DATABASE',
@@ -660,22 +716,33 @@ exports.paymentCompany = (APP, req, callback) => {
       },
 
       function uploadPath(result, callback) {
-        if (!req.files || Object.keys(req.files).length === 0) {
-          return callback({
+        try {
+          if (!req.files || Object.keys(req.files).length === 0) {
+            return callback({
+              code: 'ERR',
+              id: 'PVS01',
+              message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi'
+            });
+          }
+
+          let fileName = new Date().toISOString().replace(/:|\./g, '');
+          let imagePath = './public/uploads/payment/company/';
+
+          // if (!fs.existsSync(imagePath)) {
+          //   mkdirp.sync(imagePath);
+          // }
+
+          callback(null, imagePath + fileName + path.extname(req.files.image.name));
+        } catch (err) {
+          console.log(err);
+
+          callback({
             code: 'ERR',
-            id: 'PVS01',
-            message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi'
+            id: 'PVP03',
+            message: 'Terjadi kesalahan, mohon ulangi kembali.',
+            data: err
           });
         }
-
-        let fileName = new Date().toISOString().replace(/:|\./g, '');
-        let imagePath = './public/uploads/payment/company/';
-
-        if (!fs.existsSync(imagePath)) {
-          mkdirp.sync(imagePath);
-        }
-
-        callback(null, imagePath + fileName + path.extname(req.files.image.name));
       },
 
       function updatePaymentDetails(result, callback) {
@@ -715,7 +782,7 @@ exports.paymentCompany = (APP, req, callback) => {
             });
           })
           .catch(err => {
-            console.log(err);
+            console.log('Error updatePaymentDetails', err);
 
             callback({
               code: 'ERR_DATABASE',

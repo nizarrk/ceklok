@@ -2,12 +2,6 @@
 
 const async = require('async');
 
-/**
- * The model name `example` based on the related file in `/models` directory.
- *
- * There're many ways to get data from MySql with `Sequelize`,
- * please check `Sequelize` documentation.
- */
 exports.get = function(APP, req, callback) {
   APP.models.company[req.user.db].mysql.status_contract
     .findAll()
@@ -23,22 +17,16 @@ exports.get = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
 
-/**
- * The model name `example` based on the related file in `/models` directory.
- *
- * There're many ways to insert data to MySql with `Sequelize`,
- * please check `Sequelize` documentation.
- */
 exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'ES-000';
+        let pad = 'ES000';
         let kode = '';
 
         APP.models.company[req.user.db].mysql.status_contract
@@ -58,7 +46,7 @@ exports.insert = function(APP, req, callback) {
               console.log(res[0].code);
 
               let lastID = res[0].code;
-              let replace = lastID.replace('ES-', '');
+              let replace = lastID.replace('ES', '');
               console.log(replace);
 
               let str = parseInt(replace) + 1;
@@ -115,7 +103,7 @@ exports.insert = function(APP, req, callback) {
 
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -128,12 +116,6 @@ exports.insert = function(APP, req, callback) {
   );
 };
 
-/**
- * The model name `example` based on the related file in `/models` directory.
- *
- * There're many ways to update data from MySql with `Sequelize`,
- * please check `Sequelize` documentation.
- */
 exports.update = function(APP, req, callback) {
   APP.models.company[req.user.db].mysql.status_contract
     .update(
@@ -185,41 +167,97 @@ exports.update = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
 
-/**
- * The model name `example` based on the related file in `/models` directory.
- *
- * There're many ways to delete data from MySql with `Sequelize`,
- * please check `Sequelize` documentation.
- */
 exports.delete = function(APP, req, callback) {
-  let params = {
-    where: {
-      id: req.body.id
-    }
-  };
-  APP.models.company[req.user.db].mysql.status_contract
-    .destroy(params)
-    .then(deleted => {
-      if (!deleted)
-        return callback(null, {
-          code: 'DELETE_NONE',
-          data: params.where
-        });
+  let { employee, status_contract } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkParam(callback) {
+        if (req.user.level === 2) {
+          if (req.body.id) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: '?',
+              message: 'Kesalahan pada parameter id'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '?',
+            message: 'Invalid User level'
+          });
+        }
+      },
 
-      return callback(null, {
-        code: 'DELETE_SUCCESS',
-        data: params.where
-      });
-    })
-    .catch(err => {
-      return callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
+      function checkEmployeeStatusContract(data, callback) {
+        employee
+          .findAll({
+            where: {
+              status_contract_id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                id: '',
+                message: 'Terdapat employee aktif sedang mengunakan grading ini!'
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: '?',
+              message: '?',
+              data: err
+            });
+          });
+      },
+
+      function deleteStatusContract(data, callback) {
+        status_contract
+          .destroy({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(deleted => {
+            // if (!deleted)
+            //   return callback(null, {
+            //     code: 'DELETE_NONE',
+            //     data: params.where
+            //   });
+
+            callback(null, {
+              code: 'DELETE_SUCCESS',
+              id: '?',
+              message: '',
+              data: deleted
+            });
+          })
+          .catch(err => {
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

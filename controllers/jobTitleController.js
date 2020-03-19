@@ -17,7 +17,7 @@ exports.get = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -45,7 +45,7 @@ exports.getById = function(APP, req, callback) {
     .catch(err => {
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -127,7 +127,7 @@ exports.insert = function(APP, req, callback) {
 
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       }
@@ -189,7 +189,7 @@ exports.update = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -242,35 +242,97 @@ exports.updateStatus = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
 
 exports.delete = function(APP, req, callback) {
-  let params = {
-    where: {
-      id: req.body.id
-    }
-  };
-  APP.models.company[req.user.db].mysql.job_title
-    .destroy(params)
-    .then(deleted => {
-      if (!deleted)
-        return callback(null, {
-          code: 'DELETE_NONE',
-          data: deleted
-        });
+  let { employee, job_title } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkParam(callback) {
+        if (req.user.level === 2) {
+          if (req.body.id) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: '?',
+              message: 'Kesalahan pada parameter id'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '?',
+            message: 'Invalid User level'
+          });
+        }
+      },
 
-      return callback(null, {
-        code: 'DELETE_SUCCESS',
-        data: deleted
-      });
-    })
-    .catch(err => {
-      return callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
+      function checkEmployeeJobTitle(data, callback) {
+        employee
+          .findAll({
+            where: {
+              job_title_id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                id: '',
+                message: 'Terdapat employee aktif sedang mengunakan grading ini!'
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: '?',
+              message: '?',
+              data: err
+            });
+          });
+      },
+
+      function deleteJobTitle(data, callback) {
+        job_title
+          .destroy({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(deleted => {
+            // if (!deleted)
+            //   return callback(null, {
+            //     code: 'DELETE_NONE',
+            //     data: params.where
+            //   });
+
+            callback(null, {
+              code: 'DELETE_SUCCESS',
+              id: '?',
+              message: '',
+              data: deleted
+            });
+          })
+          .catch(err => {
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

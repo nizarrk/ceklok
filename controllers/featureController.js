@@ -3,6 +3,7 @@
 const async = require('async');
 const path = require('path');
 const fs = require('fs');
+const moment = require('moment');
 
 exports.displayAllFeature = function(APP, req, callback) {
   let { feature, subfeature, feature_type } = APP.models.mysql;
@@ -563,70 +564,191 @@ exports.subfeatureSettingsCompany = (APP, req, callback) => {
 };
 
 exports.connectNewFeatureCompany = (APP, req, callback) => {
-  let { pricing, feature, pricing_feature } = APP.models.mysql;
+  let { pricing, feature, pricing_feature, payment, payment_detail } = APP.models.mysql;
   let { feature_active } = APP.models.company[req.user.db].mysql;
 
-  async.waterfall([
-    function checkFeature(callback) {
-      feature
-        .findOne({
-          where: {
-            id: req.body.feature
-          }
-        })
-        .then(res => {
-          if (res == null) {
-            return callback({
-              code: 'NOT_FOUND',
-              message: 'Feature tidak ditemukan'
-            });
-          }
-
-          callback(null, res.dataValues);
-        })
-        .catch(err => {
-          console.log('Error checkFeature', err);
-          callback({
-            code: 'ERR_DATABASE',
-            message: 'Error checkFeature',
-            data: err
-          });
-        });
-    },
-
-    function connectFeature(result, callback) {
-      pricing_feature
-        .findOne({
-          where: {
-            feature_id: req.body.feature
-          }
-        })
-        .then(res => {
-          if (res == null) {
-            feature_active
-              .create({
-                feature_id: req.body.feature,
-                date_start: new Date(),
-                status: 2 // needs settings
-              })
-              .then(created => {
-                callback(null, {
-                  code: 'INSERT_SUCCESS',
-                  data: created
-                });
-              })
-              .catch(err => {
-                console.log('Error connectFeature', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  message: 'Error connectFeature',
-                  data: err
-                });
+  async.waterfall(
+    [
+      function checkFeature(callback) {
+        feature
+          .findOne({
+            where: {
+              id: req.body.feature.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Feature tidak ditemukan'
               });
-          } else {
-            //payment.....
-          }
-        });
+            }
+
+            callback(null, res.dataValues);
+          })
+          .catch(err => {
+            console.log('Error checkFeature', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error checkFeature',
+              data: err
+            });
+          });
+      },
+
+      function connectFeature(result, callback) {
+        pricing_feature
+          .findOne({
+            where: {
+              feature_id: req.body.feature.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              feature_active
+                .create({
+                  feature_id: req.body.feature.id,
+                  date_start: new Date(),
+                  status: 2 // needs settings
+                })
+                .then(created => {
+                  callback(null, {
+                    free: true,
+                    data: created
+                  });
+                })
+                .catch(err => {
+                  console.log('Error connectFeature', err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    message: 'Error connectFeature',
+                    data: err
+                  });
+                });
+            } else {
+              pricing
+                .findOne({
+                  where: {
+                    id: res.pricing_id
+                  }
+                })
+                .then(res => {
+                  if (res == null) {
+                    callback({
+                      code: 'NOT_FOUND',
+                      message: 'Pricing tidak ditemukan!'
+                    });
+                  } else {
+                    let total =
+                      req.body.payment.type == '1'
+                        ? res.monthly_price
+                        : req.body.payment.type == '2'
+                        ? res.annual_price
+                        : 0;
+
+                    let subscription =
+                      req.body.payment.type == '1'
+                        ? res.monthly_minimum
+                        : req.body.payment.type == '2'
+                        ? res.annual_minimum
+                        : 0;
+
+                    callback(null, {
+                      free: false,
+                      paymentInfo: {
+                        total: total,
+                        subscription: subscription
+                      }
+                    });
+                  }
+                });
+            }
+          });
+      },
+      function paymentUser(data, callback) {
+        if (data.free) {
+          callback(null, data);
+        } else {
+          let invoice = `NF${moment().format('YYYYMMDD')}/${req.otp}`;
+
+          payment
+            .create({
+              payment_method_id: req.body.payment.method,
+              // pricing_id: req.body.payment.pricing,
+              invoice: invoice,
+              company_id: req.user.company,
+              name: 'Invoice Connect New Feature',
+              description: 'Invoice untuk bukti fitur baru',
+              subscription_type: req.body.payment.type,
+              subscription: data.paymentInfo.subscription,
+              total: data.paymentInfo.total,
+              status: 0
+            })
+            .then(res => {
+              callback(null, {
+                free: false,
+                payment: res.dataValues
+              });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'ARQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        }
+      },
+
+      function paymentDetail(data, callback) {
+        if (data.free) {
+          callback(null, {
+            code: 'INSERT_SUCCESS',
+            id: '?',
+            message: '',
+            data: data.data
+          });
+        } else {
+          payment_detail
+            .create({
+              transaction_type_id: 2, // 2 = traksaksi feature
+              payment_id: data.payment.id,
+              item_id: req.body.payment.pricing,
+              invoice: data.payment.invoice
+            })
+            .then(res => {
+              callback(null, {
+                code: 'INSERT_SUCCESS',
+                id: '',
+                message: '',
+                data: {
+                  admin: data.admin,
+                  company: data.company,
+                  payment: {
+                    data: data.payment,
+                    detail: res.dataValues
+                  }
+                }
+              });
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                id: '?',
+                message: 'Kesalahan pada database',
+                data: err
+              });
+            });
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null, result);
     }
-  ]);
+  );
 };

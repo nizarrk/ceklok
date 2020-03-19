@@ -23,6 +23,12 @@
     "function": "paymentList",
     "auth": false
   },
+  "/auth/admin/payment/detail": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "paymentDetail",
+    "auth": false
+  },
   "/auth/admin/payment": {
     "method": "post",
     "controller": "authAdminController",
@@ -1097,6 +1103,18 @@
     "function": "deleteMessage",
     "auth": true
   },
+  "/notification/get/company": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "companyList",
+    "auth": true
+  },
+  "/notification/get/recipient": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "recipientList",
+    "auth": true
+  },
   "/notification/get": {
     "method": "post",
     "controller": "notificationController",
@@ -1113,6 +1131,18 @@
     "method": "post",
     "controller": "notificationController",
     "function": "sendNotification",
+    "auth": true
+  },
+  "/notification/setting/add": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationSettings",
+    "auth": true
+  },
+  "/notification/setting": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationSettingsCompany",
     "auth": true
   }
 }

@@ -20,7 +20,7 @@ exports.get = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -103,7 +103,7 @@ exports.getById = (APP, req, callback) => {
       console.log(err);
       callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
@@ -181,7 +181,7 @@ exports.insert = function(APP, req, callback) {
 
             return callback({
               code: 'ERR_DATABASE',
-              data: JSON.stringify(err)
+              data: err
             });
           });
       },
@@ -285,7 +285,7 @@ exports.update = function(APP, req, callback) {
 
               return callback({
                 code: 'ERR_DATABASE',
-                data: JSON.stringify(err)
+                data: err
               });
             });
         },
@@ -371,54 +371,54 @@ exports.update = function(APP, req, callback) {
   });
 };
 
-exports.updateGradeBenefit = function(APP, req, callback) {
-  let mysql = APP.models.company[req.user.db].mysql;
+// exports.updateGradeBenefit = function(APP, req, callback) {
+//   let mysql = APP.models.company[req.user.db].mysql;
 
-  let benefit = req.body.benefit.split(','),
-    insert = [],
-    update = [];
+//   let benefit = req.body.benefit.split(','),
+//     insert = [],
+//     update = [];
 
-  benefit.map((x, index) => {
-    mysql.grade_benefit
-      .findOne({
-        where: {
-          grade_id: req.body.id,
-          benefit_id: x
-        }
-      })
-      .then(res => {
-        if (res == null) {
-          insert.push({
-            benefit_id: x,
-            grade_id: req.body.id
-          });
+//   benefit.map((x, index) => {
+//     mysql.grade_benefit
+//       .findOne({
+//         where: {
+//           grade_id: req.body.id,
+//           benefit_id: x
+//         }
+//       })
+//       .then(res => {
+//         if (res == null) {
+//           insert.push({
+//             benefit_id: x,
+//             grade_id: req.body.id
+//           });
 
-          mysql.grade_benefit.bulkCreate(insert).then(() => {
-            console.log(`id ${x} inserted`);
-          });
-        } else {
-          res
-            .update({
-              status: res.status == 0 ? 1 : 0
-            })
-            .then(updated => {
-              console.log(`id ${x} updated`);
-              update.push(updated);
-            });
-        }
-      });
-    if (benefit.length == index + 1) {
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        message: 'Benefit Grade berhasil diubah!',
-        data: {
-          inserted: insert,
-          updated: update
-        }
-      });
-    }
-  });
-};
+//           mysql.grade_benefit.bulkCreate(insert).then(() => {
+//             console.log(`id ${x} inserted`);
+//           });
+//         } else {
+//           res
+//             .update({
+//               status: res.status == 0 ? 1 : 0
+//             })
+//             .then(updated => {
+//               console.log(`id ${x} updated`);
+//               update.push(updated);
+//             });
+//         }
+//       });
+//     if (benefit.length == index + 1) {
+//       return callback(null, {
+//         code: 'UPDATE_SUCCESS',
+//         message: 'Benefit Grade berhasil diubah!',
+//         data: {
+//           inserted: insert,
+//           updated: update
+//         }
+//       });
+//     }
+//   });
+// };
 
 exports.updateStatus = function(APP, req, callback) {
   APP.models.company[req.user.db].mysql.grade
@@ -469,36 +469,112 @@ exports.updateStatus = function(APP, req, callback) {
 
       return callback({
         code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
+        data: err
       });
     });
 };
 
 exports.delete = function(APP, req, callback) {
-  let params = {
-    where: {
-      id: req.body.id
-    }
-  };
-  APP.models.company[req.user.db].mysql.grade
-    .destroy(params)
-    .then(deleted => {
-      // if (!deleted)
-      //   return callback(null, {
-      //     code: 'DELETE_NONE',
-      //     data: params.where
-      //   });
+  let { employee, grade, grade_benefit } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkParam(callback) {
+        if (req.user.level === 2) {
+          if (req.body.id) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: '?',
+              message: 'Kesalahan pada parameter id'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '?',
+            message: 'Invalid User level'
+          });
+        }
+      },
 
-      return callback(null, {
-        code: 'DELETE_SUCCESS',
-        message: 'Grade berhasil dihapus!',
-        data: params.where
-      });
-    })
-    .catch(err => {
-      return callback({
-        code: 'ERR_DATABASE',
-        data: JSON.stringify(err)
-      });
-    });
+      function checkEmployeeGrade(data, callback) {
+        employee
+          .findAll({
+            where: {
+              grade_id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                id: '',
+                message: 'Terdapat employee aktif sedang mengunakan grading ini!'
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: '?',
+              message: '?',
+              data: err
+            });
+          });
+      },
+
+      function deleteGrade(data, callback) {
+        grade
+          .destroy({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(deleted => {
+            // if (!deleted)
+            //   return callback(null, {
+            //     code: 'DELETE_NONE',
+            //     data: params.where
+            //   });
+
+            callback(null, deleted);
+          })
+          .catch(err => {
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function deleteGradeBenefit(data, callback) {
+        grade_benefit
+          .destroy({
+            where: {
+              grade_id: req.body.id
+            }
+          })
+          .then(deleted => {
+            callback(null, {
+              code: 'DELETE_SUCCESS',
+              id: '?',
+              message: '',
+              data: {
+                grade: data,
+                grade_benefit: deleted
+              }
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };

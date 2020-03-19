@@ -21,7 +21,7 @@ function verifyToken(req, res, next) {
       if (result !== null) {
         // verifies secret and checks exp
         jwt.verify(token, config.key, function(err, decoded) {
-          if (err) return res.status(500).send({ auth: false, message: 'Failed to authenticate token.' });
+          if (err) return res.status(401).send({ auth: false, status: 401, message: 'Failed to authenticate token.' });
 
           // if everything is good, save to request for use in other routes
           req.user = decoded;

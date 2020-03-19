@@ -5,6 +5,139 @@ const trycatch = require('trycatch');
 const path = require('path');
 const moment = require('moment');
 
+exports.companyList = (APP, req, callback) => {
+  let { company } = APP.models.mysql;
+
+  company
+    .findAll({
+      where: {
+        status: 1
+      }
+    })
+    .then(res => {
+      if (res == null) {
+        callback({
+          code: 'NOT_FOUND',
+          id: '?',
+          message: 'Company tidak ditemukan'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          id: '?',
+          message: 'Company ditemukan',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        id: '?',
+        message: 'Kesalahan pada database',
+        data: err
+      });
+    });
+};
+
+exports.recipientList = (APP, req, callback) => {
+  let { level, company_id } = req.body;
+  let { admin, admin_app, company } = APP.models.mysql;
+
+  async.waterfall(
+    [
+      function checkparams(callback) {
+        if (level) {
+          if (level == 1) {
+            callback(null, admin_app);
+          } else if (level == 2) {
+            callback(null, admin);
+          } else if (level == 3) {
+            if (company_id) {
+              company
+                .findOne({
+                  where: {
+                    id: company_id,
+                    status: 1
+                  }
+                })
+                .then(res => {
+                  if (res == null) {
+                    callback({
+                      code: 'NOT_FOUND',
+                      id: '?',
+                      message: 'Company tidak ditemukan'
+                    });
+                  } else {
+                    let { employee } = APP.models.company[`${process.env.MYSQL_NAME}_${res.company_code}`].mysql;
+
+                    callback(null, employee);
+                  }
+                })
+                .catch(err => {
+                  console.log(err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    id: '?',
+                    message: 'kesalahan database',
+                    data: err
+                  });
+                });
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                id: '?',
+                message: 'Kesalahan pada parameter company_id'
+              });
+            }
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: '?',
+              message: 'Kesalahan pada parameter level'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '?',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function getData(query, callback) {
+        query
+          .findAll({
+            attributes: ['id', 'name']
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                id: '?',
+                message: 'Data tidak ditemukan'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                id: '?',
+                message: 'Data ditemukan',
+                data: res
+              });
+            }
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.notificationList = (APP, req, callback) => {
   let { company } = APP.models.mysql;
   let { datestart, dateend, name, type, company_id } = req.body;
@@ -646,7 +779,7 @@ exports.sendNotification = (APP, req, callback) => {
   async.waterfall(
     [
       function checkParam(callback) {
-        if (name && desc && level && recipient_id && type && notif_type && broadcast_type) {
+        if (name && desc && level && type && notif_type && broadcast_type) {
           let params = {};
           // admin ceklok
           if (req.user.level === 1) {
@@ -693,10 +826,18 @@ exports.sendNotification = (APP, req, callback) => {
       function checkBroadcastType(data, callback) {
         // single add
         if (broadcast_type == '0') {
-          callback(null, {
-            params: data,
-            broadcast: false
-          });
+          if (recipient_id) {
+            callback(null, {
+              params: data,
+              broadcast: false
+            });
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'SMQ96',
+              message: 'Kesalahan pada parameter recipient_id'
+            });
+          }
           //broadast add
         } else if (broadcast_type == '1') {
           callback(null, {
@@ -1008,4 +1149,143 @@ exports.sendNotification = (APP, req, callback) => {
       callback(null, result);
     }
   );
+};
+
+exports.notificationSettings = (APP, req, callback) => {
+  if (req.user.level === 1) {
+    let { notification_setting_master } = APP.models.mysql;
+    let { settings } = req.body;
+
+    if (!settings) {
+      callback({
+        code: 'INVALID_REQUEST',
+        id: 'NSQ96',
+        message: 'Kesalahan pada parameter'
+      });
+    } else {
+      Promise.all(
+        settings.map((x, index) => {
+          let obj = {};
+
+          obj.name = settings[index].name;
+          obj.description = settings[index].desc;
+
+          return obj;
+        })
+      ).then(arr => {
+        notification_setting_master
+          .bulkCreate(arr)
+          .then(res => {
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              id: 'NSP00',
+              message: 'Setting notification berhasil diubah',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log('Error addSetting', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'NSQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
+      });
+    }
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
+};
+
+exports.notificationSettingsCompany = (APP, req, callback) => {
+  if (req.user.level === 2) {
+    let { notification_setting_master } = APP.models.mysql;
+    let { notification_setting } = APP.models.company[req.user.db].mysql;
+    let { type, value } = req.body;
+
+    async.waterfall(
+      [
+        function checkParam(callback) {
+          if (type && value) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'NSQ96',
+              message: 'Kesalahan pada parameter'
+            });
+          }
+        },
+
+        function checknotificationType(data, callback) {
+          notification_setting_master
+            .findOne({
+              where: {
+                id: type
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                return callback({
+                  code: 'NOT_FOUND',
+                  message: 'notification_setting_master tidak ditemukan'
+                });
+              }
+              callback(null, true);
+            })
+            .catch(err => {
+              console.log('Error checknotificationType', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error checknotificationType',
+                data: err
+              });
+            });
+        },
+
+        function addSettings(data, callback) {
+          notification_setting
+            .create({
+              notification_setting_id: type,
+              value: value
+            })
+            .then(res => {
+              callback(null, {
+                code: 'INSERT_SUCCESS',
+                id: 'NSP00',
+                message: 'Setting notification berhasil diubah',
+                data: res
+              });
+            })
+            .catch(err => {
+              console.log('Error addSetting', err);
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'NSQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          return callback(err);
+        }
+        callback(null, result);
+      }
+    );
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
 };

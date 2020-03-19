@@ -546,14 +546,38 @@ exports.login = (APP, req, callback) => {
 };
 
 exports.forgotPassword = (APP, req, callback) => {
+  let query;
   async.waterfall(
     [
-      function checkCompany(callback) {
-        module.exports.checkExistingCompany(APP, req, callback);
+      function checkLevel(callback) {
+        if (req.body.level == 1) {
+          query = APP.models.mysql.admin_app;
+          callback(null, true);
+        } else if (req.body.level == 2) {
+          query = APP.models.mysql.admin;
+          callback(null, true);
+        } else if (req.body.level == 3) {
+          query = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee;
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '',
+            message: 'Invalid User Level'
+          });
+        }
       },
 
-      function checkEmail(result, callback) {
-        APP.models.company[process.env.MYSQL_NAME + req.body.company].mysql.employee
+      function checkCompany(data, callback) {
+        if (req.body.level == 3) {
+          module.exports.checkExistingCompany(APP, req, callback);
+        } else {
+          callback(null, true);
+        }
+      },
+
+      function checkEmail(data, callback) {
+        query
           .findAll({
             where: {
               email: req.body.email
@@ -726,6 +750,9 @@ exports.checkOTP = (APP, req, callback) => {
 };
 
 exports.resetPassword = (APP, req, callback) => {
+  console.log(req.body);
+
+  let query;
   async.waterfall(
     [
       function checkBody(callback) {
@@ -751,8 +778,35 @@ exports.resetPassword = (APP, req, callback) => {
         callback(null, true);
       },
 
-      function checkPassword(result, callback) {
-        APP.models.company[process.env.MYSQL_NAME + req.body.company].mysql.employee
+      function checkLevel(data, callback) {
+        if (req.body.level == 1) {
+          query = APP.models.mysql.admin_app;
+          callback(null, true);
+        } else if (req.body.level == 2) {
+          query = APP.models.mysql.admin;
+          callback(null, true);
+        } else if (req.body.level == 3) {
+          query = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee;
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '',
+            message: 'Invalid User Level'
+          });
+        }
+      },
+
+      function checkCompany(data, callback) {
+        if (req.body.level == 3) {
+          module.exports.checkExistingCompany(APP, req, callback);
+        } else {
+          callback(null, true);
+        }
+      },
+
+      function checkPassword(data, callback) {
+        query
           .findOne({
             where: {
               email: req.body.email
@@ -792,7 +846,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function updatePassword(result, callback) {
-        APP.models.company[process.env.MYSQL_NAME + req.body.company].mysql.employee
+        query
           .findOne({
             where: {
               email: req.body.email

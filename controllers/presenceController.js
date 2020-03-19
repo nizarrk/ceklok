@@ -236,6 +236,16 @@ exports.generateDailyPresence = (APP, req, callback) => {
 
         employee
           .findAll({
+            attributes: [
+              'id',
+              'grade_id',
+              'job_title_id',
+              'schedule_id',
+              'employee_code',
+              'company_code',
+              'nik',
+              'name'
+            ],
             include: [
               {
                 model: schedule,
@@ -248,16 +258,16 @@ exports.generateDailyPresence = (APP, req, callback) => {
           })
           .then(res => {
             if (res.length == 0) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND',
                 message: 'Data pegawai tidak ditemukan!'
               });
+            } else {
+              callback(null, {
+                data: result,
+                employee: res
+              });
             }
-
-            callback(null, {
-              data: result,
-              employee: res
-            });
           })
           .catch(err => {
             console.log('Error getEmployeeData', err);
@@ -270,74 +280,98 @@ exports.generateDailyPresence = (APP, req, callback) => {
       },
 
       function createPresence(result, callback) {
-        let arr = [];
-
-        result.employee.map(row => {
-          let obj = {
-            user_id: row.id,
-            schedule_id: row.schedule_id,
-            date: new Date(),
-            presence_setting_id: result.data.status[3].id
-          };
-          arr.push(obj);
-        });
-        presence
-          .bulkCreate(arr)
-          .then(() => {
-            callback(null, {
-              yesterday: result.yesterday,
-              employee: result.employee
-            });
+        Promise.all(
+          result.employee.map(row => {
+            let obj = {
+              user_id: row.id,
+              schedule_id: row.schedule_id,
+              date: new Date(),
+              presence_setting_id: result.data.status[3].id
+            };
+            return obj;
+          })
+        )
+          .then(arr => {
+            presence
+              .bulkCreate(arr)
+              .then(() => {
+                callback(null, {
+                  yesterday: result.yesterday,
+                  employee: result.employee
+                });
+              })
+              .catch(err => {
+                console.log('Error createBulk function createPresence', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error createBulk function createPresence',
+                  data: err
+                });
+              });
           })
           .catch(err => {
-            console.log('Error createBulk function createPresence', err);
+            console.log(err);
             callback({
-              code: 'ERR_DATABASE',
-              message: 'Error createBulk function createPresence',
+              code: 'ERR',
+              message: 'Error promise.all createPresence',
               data: err
             });
           });
       },
 
       function createMonthlyPresence(result, callback) {
-        let arr = [];
         presence_monthly
           .findAll()
           .then(res => {
             if (res.length == 0) {
-              result.employee.map((data, index) => {
-                let obj = {
-                  user_id: data.user_id,
-                  date: moment().format('YYYY-MM-DD'),
-                  total_time: '00:00:00',
-                  total_minus: '00:00:00',
-                  total_over: '00:00:00',
-                  total_present: 0,
-                  total_absent: 0,
-                  total_permission: 0,
-                  total_cuti: 0,
-                  total_day: 0,
-                  percentage: 0
-                };
-                arr.push(obj);
-              });
-              presence_monthly
-                .bulkCreate(arr)
-                .then(res => {
-                  callback(null, {
-                    data: res,
-                    type: 'insert'
-                  });
+              console.log('masuk length = 0');
+
+              Promise.all(
+                result.employee.map((data, index) => {
+                  let obj = {
+                    user_id: data.id,
+                    date: moment().format('YYYY-MM-DD'),
+                    total_time: '00:00:00',
+                    total_minus: '00:00:00',
+                    total_over: '00:00:00',
+                    total_present: 0,
+                    total_absent: 0,
+                    total_permission: 0,
+                    total_cuti: 0,
+                    total_day: 0,
+                    percentage: 0
+                  };
+                  return obj;
+                })
+              )
+                .then(arr => {
+                  presence_monthly
+                    .bulkCreate(arr)
+                    .then(res => {
+                      callback(null, {
+                        data: res,
+                        type: 'insert'
+                      });
+                    })
+                    .catch(err => {
+                      console.log('Error bulkCreate function createMonthlyPresence', err);
+                      callback({
+                        code: 'ERR_DATABASE',
+                        message: 'Error bulkCreate function createMonthlyPresence',
+                        data: err
+                      });
+                    });
                 })
                 .catch(err => {
-                  console.log('Error bulkCreate function createMonthlyPresence', err);
+                  console.log(err);
                   callback({
-                    code: 'ERR_DATABASE',
-                    message: 'Error bulkCreate function createMonthlyPresence',
+                    code: 'ERR',
+                    message: 'Error promise.all createMonthlyPresence',
                     data: err
                   });
                 });
             } else {
+              console.log('masuk length > 0');
               let arr = [];
               let totalTime = {};
               let totalMinus = {};
