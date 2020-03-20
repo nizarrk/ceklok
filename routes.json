@@ -311,16 +311,16 @@
     "function": "delete",
     "auth": true
   },
-  "/transaction/company/get": {
-    "method": "post",
-    "controller": "transactionController",
-    "function": "getByCompany",
-    "auth": true
-  },
   "/transaction/get": {
     "method": "post",
     "controller": "transactionController",
-    "function": "getAllCompany",
+    "function": "listAllTransaction",
+    "auth": true
+  },
+  "/transaction/getbyid": {
+    "method": "post",
+    "controller": "transactionController",
+    "function": "transactionDetail",
     "auth": true
   },
   "/role/get": {
