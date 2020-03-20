@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /home/apps/config_env/ceklok/ceklok-core-platform/.env:/usr/src/app/.env
+      - /home/apps/logs_pm2:/usr/src/log
+      # - /home/apps/cdn_image/ekyc-cdn:/usr/src/app/public
+    ports:
+      - 3012:3012
+    tty: true
+    container_name: release-ceklok-coreplatform
+    image: gitlab.vascomm.co.id:4567/ceklok/ceklok-core-platform:latest_release
+    networks:
+      ceklok :
+        aliases:
+          - ceklok-core
+    restart: always
+
+networks:
+  ceklok:
+    name: ceklok
+    driver: bridge

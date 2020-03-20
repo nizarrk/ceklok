@@ -1,0 +1,49 @@
+variables:
+  GIT_CLEAN_FLAGS: -n
+
+stages:
+  - development
+  - release
+  - production
+
+cache:
+  key: "${CI_PROJECT_ID}-${CI_COMMIT_REF_SLUG}"
+  paths:
+    - node_modules/
+    
+before_script:
+  #- export http_proxy=http://192.168.13.6:3128
+  #- export https_proxy=http://192.168.13.6:3128
+
+after_script:
+  - docker image prune -f
+  - echo "done"
+
+development:
+  stage: development
+  script:
+    # - cp /home/apps/config_env/bankplus/bankplus_api/.env .env
+    - git-docker -c dev-ceklok-coreplatform -i gitlab.vascomm.co.id:4567/ceklok/ceklok-core-platform:latest_dev
+  tags:
+    - development
+  only:
+    - development
+
+release:
+  stage: release
+  script:
+    - docker-compose -f docker-compose.prod.yml up -d --force-recreate --build
+  tags:
+    - release
+  only:
+    - release
+
+production:
+  stage: production
+  script:
+    - docker-compose -f docker-compose.prod.yml up -d --force-recreate --build
+  tags:
+    - production
+  only:
+    - master
+    - /^hotfix-[a-zA-Z0-9.]*/
