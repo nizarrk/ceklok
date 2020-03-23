@@ -136,7 +136,7 @@ exports.dashboardEmployee = (APP, req, callback) => {
               LEFT OUTER JOIN 
                   ${req.user.db}.presence_setting AS presence_setting ON presence.presence_setting_id = presence_setting.id
               WHERE  
-                  ${req.user.db}.presence.date NOT IN ('${today}') 
+                  ${req.user.db}.presence.date = '${today}'
               AND
                   ${req.user.db}.presence.user_id = ${req.user.id}
               ORDER BY 
@@ -706,7 +706,6 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
   async.waterfall(
     [
       function getTotalActiveCompany(callback) {
-        let arr = [];
         company
           .findAndCountAll({
             where: {
@@ -714,14 +713,26 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
             }
           })
           .then(res => {
-            res.rows.map((x, i) => {
-              let code = x.dataValues.company_code;
-              arr.push(code);
-            });
-            callback(null, {
-              total_company: res.count,
-              company_code: arr
-            });
+            Promise.all(
+              res.rows.map((x, i) => {
+                let code = x.company_code;
+                return code;
+              })
+            )
+              .then(arr => {
+                callback(null, {
+                  total_company: res.count,
+                  company_code: arr
+                });
+              })
+              .catch(err => {
+                console.log('Error getTotalActiveCompany', err);
+                callback({
+                  code: 'ERR',
+                  message: '',
+                  data: err
+                });
+              });
           })
           .catch(err => {
             console.log('Error getTotalActiveCompany', err);
@@ -739,7 +750,7 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
 
         Promise.all(
           result.company_code.map((x, i) => {
-            return APP.models.company[process.env.DBNAME + x].mysql.employee
+            return APP.models.company[`${process.env.MYSQL_NAME}_${x}`].mysql.employee
               .count()
               .then(res => {
                 num += res;
