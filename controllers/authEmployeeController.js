@@ -116,17 +116,15 @@ exports.checkExistingEmail = (APP, req, callback) => {
             parameter: 'email'
           }
         });
+      } else {
+        callback(null, {
+          code: 'NOT_FOUND',
+          info: {
+            dataCount: res.length,
+            parameter: 'email'
+          }
+        });
       }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'email'
-        }
-      });
     })
     .catch(err => {
       console.log('iki error email', err);
@@ -139,6 +137,8 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
+  console.log(APP.models.company);
+
   APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
     .findAll({
       where: {
@@ -150,25 +150,21 @@ exports.checkExistingUsername = (APP, req, callback) => {
       if (res && res.length > 0) {
         callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate Username!'
-          },
+          message: 'Error! Duplicate Username!',
+          info: {
+            dataCount: res.length,
+            parameter: 'username'
+          }
+        });
+      } else {
+        callback(null, {
+          code: 'NOT_FOUND',
           info: {
             dataCount: res.length,
             parameter: 'username'
           }
         });
       }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'username'
-        }
-      });
     })
     .catch(err => {
       console.log('iki error username', err);
