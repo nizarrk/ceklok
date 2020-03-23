@@ -206,7 +206,7 @@ exports.verifyCompany = (APP, req, callback) => {
     async.waterfall(
       [
         function verifyCredentials(callback) {
-          if (req.user.superadmin) {
+          if (req.user.level === 1) {
             APP.models.mysql.admin_app
               .findOne(
                 {
@@ -236,37 +236,41 @@ exports.verifyCompany = (APP, req, callback) => {
               });
           } else {
             callback({
-              code: 'ERR',
+              code: 'INVALiD_REQUEST',
               message: 'Your account is not super admin'
             });
           }
         },
 
         function uploadPath(result, callback) {
-          if (!req.files || Object.keys(req.files).length === 0) {
-            return callback({
+          try {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'ERR',
+                id: 'PVS01',
+                message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let imagePath = './public/uploads/payment/company/';
+
+            callback(null, {
+              result: result,
+              path: imagePath + fileName + path.extname(req.files.image.name)
+            });
+          } catch (err) {
+            console.log('Error uploadPath', err);
+            callback({
               code: 'ERR',
               id: 'PVS01',
-              message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi'
+              message: 'Mohon maaf terjadi kesalahan, tidak ada gambar dipilih atau pilih gambar sekali lagi',
+              data: err
             });
           }
-
-          let fileName = new Date().toISOString().replace(/:|\./g, '');
-          let imagePath = './public/uploads/payment/company/';
-
-          // if (!fs.existsSync(imagePath)) {
-          //   mkdirp.sync(imagePath);
-          // }
-
-          callback(null, {
-            result: result,
-            path: imagePath + fileName + path.extname(req.files.image.name)
-          });
         },
 
         function updatePaymentStatus(data, callback) {
-          console.log('siji');
-
           APP.models.mysql.payment
             .findOne(
               {
@@ -295,7 +299,7 @@ exports.verifyCompany = (APP, req, callback) => {
                   message: 'Company have not verify their payment!'
                 });
               }
-              console.log('loro');
+
               res
                 .update(
                   {
@@ -305,7 +309,6 @@ exports.verifyCompany = (APP, req, callback) => {
                   { transaction: t }
                 )
                 .then(result => {
-                  console.log('telu');
                   // Use the mv() method to place the file somewhere on your server
                   req.files.image.mv(data.path, function(err) {
                     if (err) {
@@ -338,8 +341,6 @@ exports.verifyCompany = (APP, req, callback) => {
         },
 
         function generateCompanyCode(result, callback) {
-          console.log('papat');
-
           let tgl = new Date().getDate().toString();
           if (tgl.length == 1) {
             tgl = '0' + new Date().getDate().toString();
@@ -401,13 +402,19 @@ exports.verifyCompany = (APP, req, callback) => {
                     });
                   }
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                  console.log('Error generateCompanyCode', err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    id: 'PVQ98',
+                    message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                    data: err
+                  });
+                });
             });
         },
 
         function updateCompany(data, callback) {
-          console.log('limo');
-
           APP.models.mysql.company
             .findOne(
               {
@@ -431,27 +438,27 @@ exports.verifyCompany = (APP, req, callback) => {
                   callback(null, { payment: data.payment, company: result, code: data.companyCode });
                 })
                 .catch(err => {
-                  console.log('1', err);
-
+                  console.log('Error update updateCompany', err);
                   callback({
                     code: 'ERR_DATABASE',
+                    id: 'PVQ98',
+                    message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                     data: err
                   });
                 });
             })
             .catch(err => {
-              console.log('2', err);
-
+              console.log('Error findone updateCompany', err);
               callback({
                 code: 'ERR_DATABASE',
+                id: 'PVQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                 data: err
               });
             });
         },
 
         function updateAdmin(data, callback) {
-          console.log('enem');
-
           APP.models.mysql.admin
             .findOne(
               {
@@ -462,8 +469,6 @@ exports.verifyCompany = (APP, req, callback) => {
               { transaction: t }
             )
             .then(res => {
-              console.log('pitu');
-
               res
                 .update(
                   {
@@ -473,8 +478,6 @@ exports.verifyCompany = (APP, req, callback) => {
                   { transaction: t }
                 )
                 .then(result => {
-                  console.log('wolu');
-
                   callback(null, {
                     payment: data.payment,
                     company: data.company,
@@ -482,19 +485,21 @@ exports.verifyCompany = (APP, req, callback) => {
                   });
                 })
                 .catch(err => {
-                  console.log('1', err);
-
+                  console.log('Error update updateAdmin', err);
                   callback({
                     code: 'ERR_DATABASE',
+                    id: 'PVQ98',
+                    message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                     data: err
                   });
                 });
             })
             .catch(err => {
-              console.log('2', err);
-
+              console.log('Error findone updateAdmin', err);
               callback({
                 code: 'ERR_DATABASE',
+                id: 'PVQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                 data: err
               });
             });
@@ -542,7 +547,7 @@ exports.verifyCompany = (APP, req, callback) => {
               //send to email
               APP.mailer.sendMail({
                 subject: 'Company Verified',
-                to: data.company.email,
+                to: data.admin.email,
                 data: {
                   payment: res,
                   company: data.company
@@ -557,16 +562,17 @@ exports.verifyCompany = (APP, req, callback) => {
             })
             .catch(err => {
               console.log('Error sendEmail', err);
-
               callback({
                 code: 'ERR_DATABASE',
+                id: 'PVQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                 data: err
               });
             });
         },
 
         function createCompanyDB(data, callback) {
-          let dbName = 'ceklok_' + data.company.company_code;
+          let dbName = `${process.env.MYSQL_NAME}_${data.company.company_code}`;
 
           APP.db.sequelize
             .query(`CREATE DATABASE ${dbName}`, { transaction: t })
@@ -627,6 +633,8 @@ exports.verifyCompany = (APP, req, callback) => {
           });
           return callback(null, {
             code: 'UPDATE_SUCCESS',
+            id: 'PVP00',
+            message: 'Validasi pembayaran berhasil!',
             data: {
               data
             }

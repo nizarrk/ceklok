@@ -260,6 +260,7 @@ exports.register = (APP, req, callback) => {
                 city: req.body.company.city,
                 province: req.body.company.prov,
                 zipcode: req.body.company.zip,
+                photo: 'default.jpg',
                 msisdn: 'default',
                 tlp: req.body.company.telp,
                 email: req.body.company.email,

@@ -715,14 +715,18 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
           .then(res => {
             Promise.all(
               res.rows.map((x, i) => {
-                let code = x.company_code;
-                return code;
+                let company = {
+                  code: x.company_code,
+                  id: x.id,
+                  name: x.name
+                };
+                return company;
               })
             )
               .then(arr => {
                 callback(null, {
                   total_company: res.count,
-                  company_code: arr
+                  company: arr
                 });
               })
               .catch(err => {
@@ -746,19 +750,19 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
 
       function getTotalEmployee(result, callback) {
         let num = 0;
-        let company = [];
 
         Promise.all(
-          result.company_code.map((x, i) => {
-            return APP.models.company[`${process.env.MYSQL_NAME}_${x}`].mysql.employee
+          result.company.map((x, i) => {
+            return APP.models.company[`${process.env.MYSQL_NAME}_${x.code}`].mysql.employee
               .count()
               .then(res => {
                 num += res;
-                let obj = {};
-                obj.total = res;
-                obj.company = x;
-
-                company.push(obj);
+                let obj = {
+                  id: x.id,
+                  company_code: x.code,
+                  name: x.name,
+                  total: num
+                };
 
                 return obj;
               })
@@ -778,11 +782,56 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
 
           callback(null, {
             total_company: result.total_company,
-            company_code: result.company_code,
             employee: {
               total: num,
               company: arr
             }
+          });
+        });
+      },
+
+      function getMostActiveCompanyTransaction(result, callback) {
+        let num = 0;
+
+        Promise.all(
+          result.employee.company.map(x => {
+            return payment
+              .count({
+                attributes: ['id', 'invoice', 'name', 'description'],
+                where: {
+                  company_id: x.id
+                }
+              })
+              .then(res => {
+                num += res;
+                let obj = {
+                  id: x.id,
+                  company_code: x.company_code,
+                  name: x.name,
+                  total: num
+                };
+
+                return obj;
+              })
+              .catch(err => {
+                console.log('Error getTopFiveCompanyTransaction', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  id: '?',
+                  message: 'Kesalahan pada database',
+                  data: err
+                });
+              });
+          })
+        ).then(arr => {
+          arr.sort((a, b) => {
+            return b.total - a.total;
+          });
+
+          callback(null, {
+            total_company: result.total_company,
+            employee: result.employee.company,
+            transaction: arr
           });
         });
       },
@@ -828,6 +877,7 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
                   total_company: result.total_company,
                   company_code: result.company_code,
                   employee: result.employee,
+                  transaction: result.transaction,
                   feature_access: count,
                   all_feature_usage: all
                 }

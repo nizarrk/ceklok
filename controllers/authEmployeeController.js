@@ -67,25 +67,21 @@ exports.checkExistingTelp = (APP, req, callback) => {
       if (res && res.length > 0) {
         callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate telp!'
-          },
+          message: 'Error! Duplicate telp!',
+          info: {
+            dataCount: res.length,
+            parameter: 'telp'
+          }
+        });
+      } else {
+        callback(null, {
+          code: 'NOT_FOUND',
           info: {
             dataCount: res.length,
             parameter: 'telp'
           }
         });
       }
-      callback(null, {
-        code: 'NOT_FOUND',
-        data: {
-          row: []
-        },
-        info: {
-          dataCount: res.length,
-          parameter: 'telp'
-        }
-      });
     })
     .catch(err => {
       console.log('iki error telp', err);
@@ -108,13 +104,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
       if (res && res.length > 0) {
         callback({
           code: 'DUPLICATE',
-          data: {
-            row: 'Error! Duplicate Email!'
-          },
-          info: {
-            dataCount: res.length,
-            parameter: 'email'
-          }
+          message: 'Error! Duplicate Email!'
         });
       } else {
         callback(null, {
@@ -137,8 +127,6 @@ exports.checkExistingEmail = (APP, req, callback) => {
 };
 
 exports.checkExistingUsername = (APP, req, callback) => {
-  console.log(APP.models.company);
-
   APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
     .findAll({
       where: {
@@ -294,6 +282,7 @@ exports.register = (APP, req, callback) => {
               city: req.body.city,
               province: req.body.prov,
               zipcode: req.body.zip,
+              photo: 'default.jpg',
               msisdn: 'default',
               tlp: req.body.telp,
               email: req.body.email,

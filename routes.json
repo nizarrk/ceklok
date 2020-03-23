@@ -41,9 +41,9 @@
     "function": "login",
     "auth": false
   },
-  "/auth/admin/verifyuser": {
+  "/employee/verifyuser": {
     "method": "post",
-    "controller": "authAdminController",
+    "controller": "employeeController",
     "function": "verifyEmployee",
     "auth": true
   },
@@ -475,37 +475,37 @@
   },
   "/jobtitle/get": {
     "method": "post",
-    "controller": "jobtitleController",
+    "controller": "jobTitleController",
     "function": "get",
     "auth": true
   },
   "/jobtitle/getbyid": {
     "method": "post",
-    "controller": "jobtitleController",
+    "controller": "jobTitleController",
     "function": "getById",
     "auth": true
   },
   "/jobtitle/insert": {
     "method": "post",
-    "controller": "jobtitleController",
+    "controller": "jobTitleController",
     "function": "insert",
     "auth": true
   },
   "/jobtitle/update": {
     "method": "post",
-    "controller": "jobtitleController",
+    "controller": "jobTitleController",
     "function": "update",
     "auth": true
   },
   "/jobtitle/updatestatus": {
     "method": "post",
-    "controller": "jobtitleController",
+    "controller": "jobTitleController",
     "function": "updateStatus",
     "auth": true
   },
   "/jobtitle/delete": {
     "method": "post",
-    "controller": "jobtitleController",
+    "controller": "jobTitleController",
     "function": "delete",
     "auth": true
   },
