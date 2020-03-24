@@ -555,7 +555,7 @@ exports.notificationDetail = (APP, req, callback) => {
                   message: 'Data Tidak ditemukan'
                 });
               } else {
-                if (req.user.level === 1) {
+                if (level == 1) {
                   callback(null, {
                     query: APP.models.mysql.notification,
                     model: 'notification',

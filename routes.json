@@ -701,6 +701,18 @@
     "function": "checkStatus",
     "auth": true
   },
+  "/presence/setting/add": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "presenceSettings",
+    "auth": true
+  },
+  "/presence/setting": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "presenceSettingsCompany",
+    "auth": true
+  },
   "/presence/setting/get": {
     "method": "post",
     "controller": "presenceSettingController",

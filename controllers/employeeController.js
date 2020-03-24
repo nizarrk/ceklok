@@ -984,12 +984,12 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
           })
           .then(res => {
             if (res == null) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND'
               });
+            } else {
+              callback(null, res.dataValues);
             }
-
-            callback(null, res.dataValues);
           });
       },
 
@@ -1000,12 +1000,14 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
             let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
 
             callback(null, {
-              contract: contractPath + fileName + path.extname(req.files.contract_upload.name)
+              contract: contractPath + fileName + path.extname(req.files.contract_upload.name),
+              upload: true
             });
           },
           () => {
             callback(null, {
-              contract: result.contract_upload
+              contract: result.status_contract_upload,
+              upload: false
             });
           }
         );
@@ -1082,21 +1084,27 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
                 email: email,
                 user_name: username,
                 status_contract_id: contract,
-                status_contract_upload: result.contract.slice(8)
+                status_contract_upload: result.upload === true ? result.contract.slice(8) : result.contract
               })
               .then(updated => {
-                //upload file
-                if (req.files.contract_upload) {
-                  req.files.contract_upload.mv(result.contract, function(err) {
-                    if (err)
-                      return callback({
-                        code: 'ERR'
-                      });
-                  });
+                if (result.upload) {
+                  //upload file
+                  if (req.files.contract_upload) {
+                    req.files.contract_upload.mv(result.contract, function(err) {
+                      if (err)
+                        return callback({
+                          code: 'ERR'
+                        });
+                    });
+                  }
+                  callback(null, { result, updated });
+                } else {
+                  callback(null, { result, updated });
                 }
-                callback(null, { result, updated });
               })
               .catch(err => {
+                console.log(err);
+
                 callback({
                   code: 'ERR_DATABASE',
                   data: err

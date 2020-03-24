@@ -993,3 +993,143 @@ exports.checkStatus = (APP, req, callback) => {
       });
     });
 };
+
+exports.presenceSettings = (APP, req, callback) => {
+  if (req.user.level === 1) {
+    let { presence_setting_master } = APP.models.mysql;
+    let { settings } = req.body;
+
+    if (!settings) {
+      callback({
+        code: 'INVALID_REQUEST',
+        id: 'SPQ96',
+        message: 'Kesalahan pada parameter'
+      });
+    } else {
+      Promise.all(
+        settings.map((x, index) => {
+          let obj = {};
+
+          obj.name = settings[index].name;
+          obj.description = settings[index].desc;
+
+          return obj;
+        })
+      ).then(arr => {
+        presence_setting_master
+          .bulkCreate(arr)
+          .then(res => {
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              id: 'SPP00',
+              message: 'Setting presence berhasil diubah',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log('Error addSetting', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'SPQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
+      });
+    }
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
+};
+
+exports.presenceSettingsCompany = (APP, req, callback) => {
+  if (req.user.level === 2) {
+    let { presence_setting_master } = APP.models.mysql;
+    let { presence_setting } = APP.models.company[req.user.db].mysql;
+    let { type, value, desc } = req.body;
+
+    async.waterfall(
+      [
+        function checkParam(callback) {
+          if (type && value) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: 'SPQ96',
+              message: 'Kesalahan pada parameter'
+            });
+          }
+        },
+
+        function checkpresenceType(data, callback) {
+          presence_setting_master
+            .findOne({
+              where: {
+                id: type
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                return callback({
+                  code: 'NOT_FOUND',
+                  message: 'presence_setting_master tidak ditemukan'
+                });
+              }
+              callback(null, true);
+            })
+            .catch(err => {
+              console.log('Error checkpresenceType', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error checkpresenceType',
+                data: err
+              });
+            });
+        },
+
+        function addSettings(data, callback) {
+          presence_setting
+            .create({
+              presence_setting_id: type,
+              value: value,
+              description: desc
+            })
+            .then(res => {
+              callback(null, {
+                code: 'INSERT_SUCCESS',
+                id: 'SPP00',
+                message: 'Setting presence berhasil diubah',
+                data: res
+              });
+            })
+            .catch(err => {
+              console.log('Error addSetting', err);
+              callback({
+                code: 'ERR_DATABASE',
+                id: 'SPQ98',
+                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                data: err
+              });
+            });
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          return callback(err);
+        }
+        callback(null, result);
+      }
+    );
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      id: '?',
+      message: 'Invalid user level'
+    });
+  }
+};
