@@ -578,7 +578,7 @@ exports.register = (APP, req, callback) => {
   });
 };
 
-exports.paymentList = (APP, re, callback) => {
+exports.paymentList = (APP, req, callback) => {
   let { payment_type, payment_method } = APP.models.mysql;
 
   payment_type.hasMany(payment_method, {

@@ -3,7 +3,7 @@
     "method": "post",
     "controller": "exampleController",
     "function": "test",
-    "auth": true
+    "auth": false
   },
   "/test/tes": {
     "method": "post",
@@ -681,7 +681,7 @@
     "method": "post",
     "controller": "presenceController",
     "function": "generateDailyPresence",
-    "auth": true
+    "auth": false
   },
   "/presence/checkinout": {
     "method": "post",

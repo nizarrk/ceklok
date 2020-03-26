@@ -464,7 +464,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                   include: [
                     {
                       model: presence_setting,
-                      attributes: ['id', 'name', 'description']
+                      attributes: ['id', 'value', 'description']
                     }
                   ]
                 }
@@ -988,7 +988,17 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
                 code: 'NOT_FOUND'
               });
             } else {
-              callback(null, res.dataValues);
+              if (res.status_contract_id == contract) {
+                callback(null, {
+                  data: res.dataValues,
+                  upload: false
+                });
+              } else {
+                callback(null, {
+                  data: res.dataValues,
+                  upload: true
+                });
+              }
             }
           });
       },
@@ -996,18 +1006,36 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
       function uploadPath(result, callback) {
         trycatch(
           () => {
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
+            if (result.upload) {
+              if (!req.files || Object.keys(req.files).length === 0) {
+                return callback({
+                  code: 'INVALID_REQUEST',
+                  id: '?',
+                  message: 'Kesalahan pada parameter upload'
+                });
+              }
 
-            callback(null, {
-              contract: contractPath + fileName + path.extname(req.files.contract_upload.name),
-              upload: true
-            });
+              let fileName = new Date().toISOString().replace(/:|\./g, '');
+              let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
+
+              callback(null, {
+                contract: contractPath + fileName + path.extname(req.files.contract_upload.name),
+                current: result.data.status_contract_id,
+                upload: true
+              });
+            } else {
+              callback(null, {
+                contract: result.status_contract_upload,
+                current: result.data.status_contract_id,
+                upload: false
+              });
+            }
           },
-          () => {
-            callback(null, {
-              contract: result.status_contract_upload,
-              upload: false
+          err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
             });
           }
         );

@@ -19,6 +19,10 @@ const moment = require('moment');
 const ip = require('ip');
 const msisdn = require('express-msisdn');
 const randomString = require('crypto-random-string');
+const presence = require('./controllers/presenceController');
+const axios = require('axios');
+
+const schedule = require('node-schedule');
 
 // Your Database configurations.
 const db = require('./db.js');
@@ -282,6 +286,7 @@ function resOutput(APP, req, res, params, status) {
         }
 
         if (process.env.APP_MESSAGE !== 'true') output = params;
+        console.log(message.company);
 
         callback(null, message);
       },
@@ -311,10 +316,10 @@ function resOutput(APP, req, res, params, status) {
                   request: req.body ? JSON.stringify(req.body) : null,
                   response: output ? JSON.stringify(output) : null,
                   status: message.company.status || 200,
-                  ip:
-                    req.connection.remoteAddress === '::1'
-                      ? '127.0.0.1'
-                      : req.connection.remoteAddress.replace('::', '').replace('ffff:', ''),
+                  ip: ip.address(),
+                  // req.connection.remoteAddress === '::1'
+                  //   ? '127.0.0.1'
+                  //   : req.connection.remoteAddress.replace('::', '').replace('ffff:', ''),
                   feature_id: res !== null ? res.feature_id : '',
                   subfeature_id: res !== null ? res.subfeature_id : '',
                   endpoint: req.originalUrl,
@@ -387,14 +392,25 @@ function resOutput(APP, req, res, params, status) {
     (err, message) => {
       trycatch(
         () => {
-          if (process.env.JSON_RESPONSE !== 'true')
-            return res.status(params.status || message.company.status || 200).send(output);
-          return res.status(params.status || message.company.status || 200).json(output);
+          if (res === false) {
+            return console.log('CRON Logged Successfully!');
+          } else {
+            console.log('sukses bukan cron');
+
+            if (process.env.JSON_RESPONSE !== 'true')
+              return res.status(params.status || message.company.status || 200).send(output);
+            return res.status(params.status || message.company.status || 200).json(output);
+          }
         },
-        () => {
-          if (process.env.JSON_RESPONSE !== 'true')
-            return res.status(params.status || message.company.status || 200).send(output);
-          return res.status(params.status || message.company.status || 200).json(output);
+        err => {
+          if (res === false) {
+            return console.log('CRON Failed to Log!', err);
+          } else {
+            console.log('error bukan cron', err);
+            if (process.env.JSON_RESPONSE !== 'true')
+              return res.status(params.status || message.company.status || 200).send(output);
+            return res.status(params.status || message.company.status || 200).json(output);
+          }
         }
       );
     }
@@ -492,6 +508,64 @@ async.series(
         },
         'ok'
       );
+    });
+
+    // CRON GENERATE DAILY ABSENCE EVERY 02.19
+    schedule.scheduleJob('19 2 * * *', function() {
+      db.sequelize
+        .query('SELECT company_code FROM ceklok.company WHERE status = 1')
+        .then(res => {
+          Promise.all(
+            res[0].map((x, i) => {
+              console.log(`Looping ke: ${i}`);
+              console.log(`Company: ${x.company_code}`);
+
+              return presence.generateDailyPresence(
+                APP,
+                {
+                  body: {
+                    company: x.company_code
+                  }
+                },
+                (err, result) => {
+                  if (err)
+                    return resOutput(
+                      APP,
+                      {
+                        body: {
+                          company: x.company_code
+                        },
+                        originalUrl: '/presence/generatepresence',
+                        customDate: new Date()
+                      },
+                      false,
+                      err,
+                      'err'
+                    );
+
+                  return resOutput(
+                    APP,
+                    {
+                      body: {
+                        company: x.company_code
+                      },
+                      originalUrl: '/presence/generatepresence',
+                      customDate: new Date()
+                    },
+                    false,
+                    result,
+                    'ok'
+                  );
+                }
+              );
+            })
+          ).then(() => {
+            console.log('CRON Successfully Executed!');
+          });
+        })
+        .catch(err => {
+          console.log('CRON Failed!', err);
+        });
     });
 
     /**

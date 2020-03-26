@@ -3,25 +3,42 @@
 const async = require('async');
 const moment = require('moment');
 
+// fungsinya dipanggil cron
 exports.generateDailyPresence = (APP, req, callback) => {
-  let { presence_setting, presence, presence_monthly, employee, schedule } = APP.models.company[req.user.db].mysql;
+  console.log(req.body);
+
+  let { presence_setting, presence, presence_monthly, employee, schedule } = APP.models.company[
+    `${process.env.MYSQL_NAME}_${req.body.company}`
+  ].mysql;
   async.waterfall(
     [
       function getPresenceSettings(callback) {
-        let status = [];
         presence_setting
           .findAll()
           .then(res => {
-            if (res == null) {
-              return callback({
+            if (res.length == 0) {
+              callback({
                 code: 'NOT_FOUND',
                 message: 'Presence setting tidak ditemukan'
               });
+            } else {
+              Promise.all(
+                res.map(x => {
+                  return x.dataValues;
+                })
+              )
+                .then(arr => {
+                  callback(null, arr);
+                })
+                .catch(err => {
+                  console.log('Error getPresenceSettings', err);
+                  callback({
+                    code: 'ERR',
+                    message: 'Error getPresenceSettings',
+                    data: err
+                  });
+                });
             }
-            res.map(data => {
-              status.push(data.dataValues);
-            });
-            callback(null, status);
           })
           .catch(err => {
             console.log('Error getPresenceSettings', err);
@@ -58,7 +75,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
           })
           .then(res => {
             if (res.length == 0) {
-              console.log('gaonok sing absen utowo cuti');
+              console.log('Tidak ada WA');
               callback(null, {
                 status: result,
                 data: res,
@@ -92,7 +109,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                         }
                       )
                       .then(updated => {
-                        console.log('hasile LD', updated);
+                        console.log('Hasil LD', updated);
                       });
                   }
 
@@ -111,7 +128,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                         }
                       )
                       .then(updated => {
-                        console.log('hasile NCO', updated);
+                        console.log('Hasil NCO', updated);
                       });
                   }
 
@@ -129,7 +146,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                         }
                       )
                       .then(updated => {
-                        console.log('hasile A', updated);
+                        console.log('Hasil A', updated);
                       });
                   }
                 })
@@ -164,80 +181,81 @@ exports.generateDailyPresence = (APP, req, callback) => {
 
       function checkAbsentCuti(result, callback) {
         if (result.data.length == 0) {
-          return callback(null, result);
-        }
-        Promise.all(
-          result.data.map((data, index) => {
-            APP.db.sequelize
-              .query(
-                `SELECT * FROM ${req.user.db}.absent_cuti
-              WHERE
-                user_id = ${data.user_id} 
-              AND
-                status = 1
-              AND
-                '${result.yesterday}' >= date_format(date_start, '%Y-%m-%d') AND '${result.yesterday}' <= date_format(date_end, '%Y-%m-%d')`
-              )
-              .then(found => {
-                return found[0].map(x => {
-                  if (x.type == 0) {
-                    presence
-                      .update(
-                        {
-                          presence_setting_id: result.status[5].id, // 'I'
-                          total_minus: x.time_total
-                        },
-                        {
-                          where: {
-                            id: data.id
+          callback(null, result);
+        } else {
+          Promise.all(
+            result.data.map((data, index) => {
+              APP.db.sequelize
+                .query(
+                  `SELECT * FROM ${process.env.MYSQL_NAME}_${req.body.company}.absent_cuti
+                WHERE
+                  user_id = ${data.user_id} 
+                AND
+                  status = 1
+                AND
+                  '${result.yesterday}' >= date_format(date_start, '%Y-%m-%d') AND '${result.yesterday}' <= date_format(date_end, '%Y-%m-%d')`
+                )
+                .then(found => {
+                  return found[0].map(x => {
+                    if (x.type == 0) {
+                      presence
+                        .update(
+                          {
+                            presence_setting_id: result.status[5].id, // 'I'
+                            total_minus: x.time_total
+                          },
+                          {
+                            where: {
+                              id: data.id
+                            }
                           }
-                        }
-                      )
-                      .then(updated => {
-                        console.log('hasile I', updated);
-                      });
-                  }
+                        )
+                        .then(updated => {
+                          console.log('hasile I', updated);
+                        });
+                    }
 
-                  if (x.type == 1) {
-                    presence
-                      .update(
-                        {
-                          presence_setting_id: result.status[6].id // 'C'
-                        },
-                        {
-                          where: {
-                            id: data.id
+                    if (x.type == 1) {
+                      presence
+                        .update(
+                          {
+                            presence_setting_id: result.status[6].id // 'C'
+                          },
+                          {
+                            where: {
+                              id: data.id
+                            }
                           }
-                        }
-                      )
-                      .then(updated => {
-                        console.log('hasile C', updated);
-                      });
-                  }
+                        )
+                        .then(updated => {
+                          console.log('hasile C', updated);
+                        });
+                    }
+                  });
+                })
+                .catch(err => {
+                  console.log('Error checkAbsentCuti', err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    message: 'Error checkAbsentCuti',
+                    data: err
+                  });
                 });
-              })
-              .catch(err => {
-                console.log('Error checkAbsentCuti', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  message: 'Error checkAbsentCuti',
-                  data: err
-                });
+            })
+          )
+            .then(() => {
+              callback(null, result);
+            })
+            .catch(err => {
+              console.log('Error checkAbsentCuti', err);
+              callback({
+                code: 'ERR',
+                id: '',
+                message: '',
+                data: err
               });
-          })
-        )
-          .then(() => {
-            callback(null, result);
-          })
-          .catch(err => {
-            console.log('Error checkAbsentCuti', err);
-            callback({
-              code: 'ERR',
-              id: '',
-              message: '',
-              data: err
             });
-          });
+        }
       },
 
       // function checkTodayPresence(result, callback) {presence
@@ -340,7 +358,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               });
           })
           .catch(err => {
-            console.log(err);
+            console.log('Error promise.all createPresence', err);
             callback({
               code: 'ERR',
               message: 'Error promise.all createPresence',
@@ -393,7 +411,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     });
                 })
                 .catch(err => {
-                  console.log(err);
+                  console.log('Error promise.all createMonthlyPresence', err);
                   callback({
                     code: 'ERR',
                     message: 'Error promise.all createMonthlyPresence',
@@ -587,7 +605,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   return updated;
                 })
                 .catch(err => {
-                  console.log(err);
+                  console.log('Error update updateMonthlyPresence', err);
                   callback({
                     code: 'ERR_DATABASE',
                     message: '',
@@ -603,6 +621,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               });
             })
             .catch(err => {
+              console.log('Error Promise.all updateMonthlyPresence');
               callback({
                 code: 'ERR',
                 data: err

@@ -194,4 +194,11 @@ exports.test = function(APP, req, callback) {
   // let tes = APP.generateCode(letter, 'L');
   // Promise.resolve(tes).then(tes => {
   //   console.log(tes);
+  let db = req.user.level !== undefined ? req.user.db : `${process.env.MYSQL_NAME}_${req.body.company}`;
+  console.log(db);
+
+  callback(null, {
+    code: 'OK',
+    message: 'aw'
+  });
 };
