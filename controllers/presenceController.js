@@ -5,16 +5,146 @@ const moment = require('moment');
 
 // fungsinya dipanggil cron
 exports.generateDailyPresence = (APP, req, callback) => {
-  console.log(req.body);
-
-  let { presence_setting, presence, presence_monthly, employee, schedule } = APP.models.company[
+  let { presence_setting, presence, presence_monthly, presence_period, employee, schedule } = APP.models.company[
     `${process.env.MYSQL_NAME}_${req.body.company}`
   ].mysql;
   async.waterfall(
     [
-      function getPresenceSettings(callback) {
+      function checkSettingCutOffMonthly(callback) {
         presence_setting
+          .findOne({
+            where: {
+              presence_setting_id: 3
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Setting Cut Off tidak ditemukan!'
+              });
+            } else {
+              let value = res.value.split(',');
+              let dateStart = `${moment().format('YYYY-MM')}-${value[0]}`;
+              let dateEnd = `${moment()
+                .add(1, 'month')
+                .format('YYYY-MM')}-${value[1]}`;
+
+              let monthName = moment().format('MMMM');
+              let year = moment().format('YYYY');
+
+              callback(null, {
+                datestart: dateStart,
+                dateend: dateEnd,
+                month: monthName,
+                year: year
+              });
+            }
+          });
+      },
+
+      function checkPresencePeriod(result, callback) {
+        presence_period
           .findAll()
+          .then(res => {
+            if (res.length == 0) {
+              console.log('Period Not Found');
+
+              presence_period
+                .create({
+                  name: result.month,
+                  description: 'Initial Generate',
+                  period: result.year
+                })
+                .then(created => {
+                  callback(null, {
+                    id: created.id,
+                    datestart: result.datestart,
+                    dateend: result.dateend,
+                    year: result.year
+                  });
+                })
+                .catch(err => {
+                  console.log('Error create checkPresencePeriod', err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    message: 'Error create checkPresencePeriod',
+                    data: err
+                  });
+                });
+            } else {
+              console.log('Period Found');
+
+              let isBetween = moment().isBetween(result.datestart, result.dateend);
+              if (isBetween) {
+                console.log('isBetween');
+                presence_period
+                  .findAll({
+                    limit: 1,
+                    order: [['id', 'DESC']]
+                  })
+                  .then(res => {
+                    callback(null, {
+                      id: res[0].id,
+                      datestart: result.datestart,
+                      dateend: result.dateend,
+                      year: result.year
+                    });
+                  })
+                  .catch(err => {
+                    console.log('Error isBetween checkPresencePeriod', err);
+                    callback({
+                      code: 'ERR_DATABASE',
+                      message: 'Error isBetween checkPresencePeriod',
+                      data: err
+                    });
+                  });
+              } else {
+                console.log('!isBetween');
+                presence_period
+                  .create({
+                    name: moment()
+                      .add(1, 'month')
+                      .format('MMMM'),
+                    description: 'Generated Period',
+                    period: result.year
+                  })
+                  .then(created => {
+                    callback(null, {
+                      id: created.id,
+                      datestart: result.datestart,
+                      dateend: result.dateend,
+                      year: result.year
+                    });
+                  })
+                  .catch(err => {
+                    console.log('Error create else checkPresencePeriod', err);
+                    callback({
+                      code: 'ERR_DATABASE',
+                      message: 'Error create else checkPresencePeriod',
+                      data: err
+                    });
+                  });
+              }
+            }
+          })
+          .catch(err => {
+            console.log('Error findAll checkPresencePeriod', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error findAll checkPresencePeriod',
+              data: err
+            });
+          });
+      },
+
+      function getPresenceSettings(result, callback) {
+        presence_setting
+          .findAll({
+            where: {
+              presence_setting_id: 1
+            }
+          })
           .then(res => {
             if (res.length == 0) {
               callback({
@@ -28,7 +158,10 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 })
               )
                 .then(arr => {
-                  callback(null, arr);
+                  callback(null, {
+                    period: result,
+                    status: arr
+                  });
                 })
                 .catch(err => {
                   console.log('Error getPresenceSettings', err);
@@ -67,7 +200,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               }
             ],
             where: {
-              presence_setting_id: result[3].id, // 'WA'
+              presence_setting_id: result.status[3].id, // 'WA'
               date: {
                 $eq: yesterday.format('YYYY-MM-DD')
               }
@@ -77,7 +210,8 @@ exports.generateDailyPresence = (APP, req, callback) => {
             if (res.length == 0) {
               console.log('Tidak ada WA');
               callback(null, {
-                status: result,
+                status: result.status,
+                period: result.period,
                 data: res,
                 yesterday: yesterday
               });
@@ -100,7 +234,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     presence
                       .update(
                         {
-                          presence_setting_id: result[7].id // 'LD'
+                          presence_setting_id: result.status[7].id // 'LD'
                         },
                         {
                           where: {
@@ -117,7 +251,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     presence
                       .update(
                         {
-                          presence_setting_id: result[2].id, // 'NCO'
+                          presence_setting_id: result.status[2].id, // 'NCO'
                           total_minus: data.schedule.work_time
                         },
                         {
@@ -136,7 +270,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     presence
                       .update(
                         {
-                          presence_setting_id: result[4].id, // 'A'
+                          presence_setting_id: result.status[4].id, // 'A'
                           total_minus: data.schedule.work_time
                         },
                         {
@@ -153,7 +287,8 @@ exports.generateDailyPresence = (APP, req, callback) => {
               )
                 .then(() => {
                   callback(null, {
-                    status: result,
+                    status: result.status,
+                    period: result.period,
                     data: res,
                     yesterday: yesterday
                   });
@@ -312,7 +447,10 @@ exports.generateDailyPresence = (APP, req, callback) => {
               });
             } else {
               callback(null, {
-                data: result,
+                status: result.status,
+                period: result.period,
+                data: result.data,
+                yesterday: result.yesterday,
                 employee: res
               });
             }
@@ -328,13 +466,15 @@ exports.generateDailyPresence = (APP, req, callback) => {
       },
 
       function createPresence(result, callback) {
+        console.log(result);
+
         Promise.all(
           result.employee.map(row => {
             let obj = {
               user_id: row.id,
               schedule_id: row.schedule_id,
               date: moment(),
-              presence_setting_id: result.data.status[3].id
+              presence_setting_id: result.status[3].id
             };
             return obj;
           })
@@ -345,6 +485,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               .then(() => {
                 callback(null, {
                   yesterday: result.yesterday,
+                  period: result.period,
                   employee: result.employee
                 });
               })
@@ -369,7 +510,11 @@ exports.generateDailyPresence = (APP, req, callback) => {
 
       function createMonthlyPresence(result, callback) {
         presence_monthly
-          .findAll()
+          .findAll({
+            where: {
+              presence_period_id: result.period.id
+            }
+          })
           .then(res => {
             if (res.length == 0) {
               console.log('masuk length = 0');
@@ -378,6 +523,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 result.employee.map((data, index) => {
                   let obj = {
                     user_id: data.id,
+                    presence_period_id: result.period,
                     date: moment().format('YYYY-MM-DD'),
                     total_time: '00:00:00',
                     total_minus: '00:00:00',
@@ -445,7 +591,12 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     where: {
                       user_id: data.id,
                       date: {
-                        $not: moment().format('YYYY-MM-DD')
+                        $between: [
+                          result.period.datestart,
+                          moment()
+                            .subtract(1, 'days')
+                            .format('YYYY-MM-DD')
+                        ]
                       }
                     }
                   })
@@ -554,7 +705,11 @@ exports.generateDailyPresence = (APP, req, callback) => {
                         }
 
                         if (result.employee.length == index + 1 && found.length == index2 + 1) {
-                          callback(null, arr);
+                          callback(null, {
+                            type: 'update',
+                            data: arr,
+                            period: result.period
+                          });
                         }
                       });
                     }
@@ -580,7 +735,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
           });
         } else {
           Promise.all(
-            result.map((x, i) => {
+            result.data.map((x, i) => {
               return presence_monthly
                 .update(
                   {
@@ -597,6 +752,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   },
                   {
                     where: {
+                      presence_period_id: result.period.id,
                       user_id: x.user_id
                     }
                   }
