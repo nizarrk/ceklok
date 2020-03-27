@@ -20,7 +20,6 @@ const ip = require('ip');
 const msisdn = require('express-msisdn');
 const randomString = require('crypto-random-string');
 const presence = require('./controllers/presenceController');
-const axios = require('axios');
 
 const schedule = require('node-schedule');
 
