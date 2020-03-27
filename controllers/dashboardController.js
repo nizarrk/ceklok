@@ -509,7 +509,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
               },
               {
                 model: presence_setting,
-                attributes: ['id', 'name', 'description']
+                attributes: ['id', 'value', 'description']
               }
             ],
             where: {
@@ -561,7 +561,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
               },
               {
                 model: presence_setting,
-                attributes: ['id', 'name', 'description']
+                attributes: ['id', 'value', 'description']
               }
             ],
             where: {
