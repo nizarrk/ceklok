@@ -106,7 +106,7 @@ exports.dashboardEmployee = (APP, req, callback) => {
                   presence.check_out_device_id, presence.check_in_branch_id, 
                   presence.check_out_branch_id, presence.date, presence.check_in, 
                   presence.check_out, presence.total_time, presence.presence_setting_id,
-                  presence_setting.name AS 'presence_setting_name',
+                  presence_setting.value AS 'presence_setting_name',
                   presence_setting.description AS 'presence_setting_description', 
                   employee.id AS 'employee_id', 
                   employee.nik AS 'employee_nik', 
