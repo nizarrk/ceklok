@@ -285,8 +285,6 @@ function resOutput(APP, req, res, params, status) {
         }
 
         if (process.env.APP_MESSAGE !== 'true') output = params;
-        console.log(message.company);
-
         callback(null, message);
       },
       function logging(message, callback) {
