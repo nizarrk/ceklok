@@ -21,7 +21,6 @@ const msisdn = require('express-msisdn');
 const randomString = require('crypto-random-string');
 const presence = require('./controllers/presenceController');
 const cors = require('cors');
-app.use(cors());
 
 const schedule = require('node-schedule');
 
@@ -47,6 +46,8 @@ const app = express();
 let APP = {};
 APP.db = db;
 APP.ip = ip;
+
+app.use(cors());
 
 const fileUpload = require('express-fileupload');
 // default options
