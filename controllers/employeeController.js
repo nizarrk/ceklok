@@ -419,7 +419,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                 },
                 {
                   model: violation,
-                  attributes: ['id', 'code', 'sequence', 'description', 'doc_upload']
+                  attributes: ['id', 'code', 'sequence', 'name', 'description', 'doc_upload', 'created_at']
                 },
                 {
                   model: absent_cuti,
