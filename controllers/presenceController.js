@@ -466,8 +466,6 @@ exports.generateDailyPresence = (APP, req, callback) => {
       },
 
       function createPresence(result, callback) {
-        console.log(result);
-
         Promise.all(
           result.employee.map(row => {
             let obj = {
@@ -576,145 +574,159 @@ exports.generateDailyPresence = (APP, req, callback) => {
               let izin = {};
               let percentage = {};
 
-              result.employee.map((data, index) => {
-                totalTime[data.id] = [];
-                totalMinus[data.id] = [];
-                totalOver[data.id] = [];
-                hadir[data.id] = 0;
-                absen[data.id] = 0;
-                cuti[data.id] = 0;
-                izin[data.id] = 0;
-                percentage[data.id] = 0;
+              Promise.all(
+                result.employee.map((data, index) => {
+                  totalTime[data.id] = [];
+                  totalMinus[data.id] = [];
+                  totalOver[data.id] = [];
+                  hadir[data.id] = 0;
+                  absen[data.id] = 0;
+                  cuti[data.id] = 0;
+                  izin[data.id] = 0;
+                  percentage[data.id] = 0;
 
-                presence
-                  .findAll({
-                    where: {
-                      user_id: data.id,
-                      date: {
-                        $between: [
-                          result.period.datestart,
-                          moment()
-                            .subtract(1, 'days')
-                            .format('YYYY-MM-DD')
-                        ]
+                  return presence
+                    .findAll({
+                      where: {
+                        user_id: data.id,
+                        date: {
+                          $between: [
+                            result.period.datestart,
+                            moment()
+                              .subtract(1, 'days')
+                              .format('YYYY-MM-DD')
+                          ]
+                        },
+                        presence_setting_id: {
+                          $not: ['8']
+                        }
                       }
-                    }
-                  })
-                  .then(found => {
-                    if (found.length == 0) {
-                      presence_monthly
-                        .findOne({
-                          where: {
-                            user_id: data.id
-                          }
-                        })
-                        .then(res => {
-                          if (res == null) {
-                            presence_monthly
-                              .create({
-                                user_id: data.id,
-                                date: moment().format('YYYY-MM-DD'),
-                                total_time: '00:00:00',
-                                total_minus: '00:00:00',
-                                total_over: '00:00:00',
-                                total_present: 0,
-                                total_absent: 0,
-                                total_permission: 0,
-                                total_cuti: 0,
-                                total_day: 0,
-                                percentage: 0
-                              })
-                              .then(res => {
-                                console.log('new employee insert');
-                                console.log(res.user_id);
-                                if (result.employee.length == index + 1) {
-                                  callback(null, arr);
-                                }
-                              });
-                          } else {
-                            if (result.employee.length == index + 1) {
-                              callback(null, arr);
-                            }
-                          }
-                        });
-                    } else {
-                      console.log(index + 1);
-                      console.log('jumlah : ', found.length);
-
-                      found.map((x, index2) => {
-                        totalTime[data.id].push(x.total_time);
-                        totalMinus[data.id].push(x.total_minus);
-                        totalOver[data.id].push(x.total_over);
-
-                        let workTime = moment.duration(APP.time.timeXday(data.schedule.work_time, found.length));
-                        let workTotal = moment.duration(APP.time.timeDuration(totalTime[data.id]));
-                        let workMinus = moment.duration(APP.time.timeDuration(totalMinus[data.id]));
-                        let workOver = moment.duration(APP.time.timeDuration(totalOver[data.id]));
-                        let resultMinus = moment.duration(workTime - workMinus);
-                        percentage[data.id] = (resultMinus / workTime) * 100;
-
-                        x.presence_setting_id == 1 ? hadir[data.id]++ : hadir[data.id]; // H
-                        x.presence_setting_id == 2 ? absen[data.id]++ : absen[data.id]; // NCI
-                        x.presence_setting_id == 3 ? absen[data.id]++ : absen[data.id]; // NCO
-                        x.presence_setting_id == 5 ? absen[data.id]++ : absen[data.id]; // A
-                        x.presence_setting_id == 7 ? cuti[data.id]++ : cuti[data.id]; // C
-                        x.presence_setting_id == 6 ? izin[data.id]++ : izin[data.id]; // I
-
-                        // push index yang terakhir aja
-                        if (index2 + 1 == found.length) {
-                          let timeCompare = moment.duration(
-                            APP.time.timeSubstract(
-                              APP.time.timeDuration(totalTime[data.id]),
-                              APP.time.timeXday(data.schedule.work_time, found.length)
-                            )
-                          );
-
-                          if (timeCompare < 0) {
-                            console.log('masuk if < 0');
-
-                            workMinus = APP.time.timeSubstract(
-                              APP.time.timeDuration(totalTime[data.id]),
-                              APP.time.timeXday(data.schedule.work_time, found.length)
-                            );
-                            workOver = '00:00:00';
-                          }
-
-                          if (timeCompare > 0) {
-                            console.log('masuk if > 0');
-                            workOver = APP.time.timeSubstract(
-                              APP.time.timeDuration(totalTime[data.id]),
-                              APP.time.timeXday(data.schedule.work_time, found.length)
-                            );
-                            workMinus = '00:00:00';
-                          }
-
-                          arr.push({
-                            id: x.id,
-                            user_id: x.user_id,
+                    })
+                    .then(found => {
+                      if (found.length == 0) {
+                        return presence_monthly
+                          .create({
+                            user_id: data.id,
                             date: moment().format('YYYY-MM-DD'),
-                            total_time: APP.time.timeDuration(totalTime[data.id]),
-                            total_minus: workMinus.replace('-', ''), // replace buat hilangin minus
-                            total_over: workOver,
-                            total_present: hadir[data.id],
-                            total_absent: absen[data.id],
-                            total_permission: izin[data.id],
-                            total_cuti: cuti[data.id],
-                            total_day: found.length,
-                            percentage: percentage[data.id]
+                            total_time: '00:00:00',
+                            total_minus: '00:00:00',
+                            total_over: '00:00:00',
+                            total_present: 0,
+                            total_absent: 0,
+                            total_permission: 0,
+                            total_cuti: 0,
+                            total_day: 0,
+                            percentage: 0
+                          })
+                          .then(res => {
+                            console.log('new employee insert');
+                            console.log(res.user_id);
+                            // if (result.employee.length == index + 1) {
+                            //   callback(null, arr);
+                            // }
                           });
-                        }
+                      } else {
+                        console.log('No:', index + 1);
+                        console.log('jumlah: ', found.length);
+                        console.log('User ID: ', data.id);
 
-                        if (result.employee.length == index + 1 && found.length == index2 + 1) {
-                          callback(null, {
-                            type: 'update',
-                            data: arr,
-                            period: result.period
-                          });
-                        }
-                      });
-                    }
+                        return found.map((x, index2) => {
+                          console.log('ID: ', x.id);
+
+                          totalTime[data.id].push(x.total_time);
+                          totalMinus[data.id].push(x.total_minus);
+                          totalOver[data.id].push(x.total_over);
+                          console.log('Total Time: ', totalTime[data.id]);
+                          console.log('Total Over: ', totalOver[data.id]);
+                          console.log('Total Minus: ', totalMinus[data.id]);
+
+                          let workTime = moment.duration(APP.time.timeXday(data.schedule.work_time, found.length));
+                          let workTotal = moment.duration(APP.time.timeDuration(totalTime[data.id]));
+                          let workMinus = moment.duration(APP.time.timeDuration(totalMinus[data.id]));
+                          let workOver = moment.duration(APP.time.timeDuration(totalOver[data.id]));
+                          let resultMinus = moment.duration(workTime - workMinus);
+                          percentage[data.id] = (resultMinus / workTime) * 100;
+
+                          x.presence_setting_id == 1 ? hadir[data.id]++ : hadir[data.id]; // H
+                          x.presence_setting_id == 2 ? absen[data.id]++ : absen[data.id]; // NCI
+                          x.presence_setting_id == 3 ? absen[data.id]++ : absen[data.id]; // NCO
+                          x.presence_setting_id == 5 ? absen[data.id]++ : absen[data.id]; // A
+                          x.presence_setting_id == 7 ? cuti[data.id]++ : cuti[data.id]; // C
+                          x.presence_setting_id == 6 ? izin[data.id]++ : izin[data.id]; // I
+
+                          // push index yang terakhir aja
+                          if (index2 + 1 == found.length) {
+                            let timeCompare = moment.duration(
+                              APP.time.timeSubstract(
+                                APP.time.timeDuration(totalTime[data.id]),
+                                APP.time.timeXday(data.schedule.work_time, found.length)
+                              )
+                            );
+
+                            if (timeCompare < 0) {
+                              console.log('masuk if < 0');
+
+                              workMinus = APP.time.timeSubstract(
+                                APP.time.timeDuration(totalTime[data.id]),
+                                APP.time.timeXday(data.schedule.work_time, found.length)
+                              );
+                              workOver = '00:00:00';
+                            }
+
+                            if (timeCompare > 0) {
+                              console.log('masuk if > 0');
+                              workOver = APP.time.timeSubstract(
+                                APP.time.timeDuration(totalTime[data.id]),
+                                APP.time.timeXday(data.schedule.work_time, found.length)
+                              );
+                              workMinus = '00:00:00';
+                            }
+
+                            arr.push({
+                              id: x.id,
+                              user_id: x.user_id,
+                              date: moment().format('YYYY-MM-DD'),
+                              total_time: APP.time.timeDuration(totalTime[data.id]),
+                              total_minus: workMinus.replace('-', ''), // replace buat hilangin minus
+                              total_over: workOver,
+                              total_present: hadir[data.id],
+                              total_absent: absen[data.id],
+                              total_permission: izin[data.id],
+                              total_cuti: cuti[data.id],
+                              total_day: found.length,
+                              percentage: percentage[data.id]
+                            });
+
+                            return true;
+                          }
+
+                          // if (result.employee.length == index + 1 && found.length == index2 + 1) {
+                          //   callback(null, {
+                          //     type: 'update',
+                          //     data: arr,
+                          //     period: result.period
+                          //   });
+                          // }
+                        });
+                      }
+                    });
+                })
+              )
+                .then(() => {
+                  callback(null, {
+                    type: 'update',
+                    data: arr,
+                    period: result.period
                   });
-              });
+                })
+                .catch(err => {
+                  console.log('Error promise.all createMonthlyPresence', err);
+                  callback({
+                    code: 'ERR',
+                    message: 'Error promise.all createMonthlyPresence',
+                    data: err
+                  });
+                });
             }
           })
           .catch(err => {

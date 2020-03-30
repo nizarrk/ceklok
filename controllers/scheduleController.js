@@ -190,6 +190,7 @@ exports.update = function(APP, req, callback) {
         break_time: req.body.break,
         weekly_work_time: req.body.weekly,
         work_day: req.body.day,
+        status: req.body.status,
         updated_at: new Date()
       },
       {

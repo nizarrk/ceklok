@@ -128,13 +128,6 @@ exports.displayFeatureCompany = function(APP, req, callback) {
                         b.feature_type_id = d.id`
           )
           .then(rows => {
-            if (rows[0].length == 0) {
-              return callback({
-                code: 'NOT_FOUND',
-                message: 'List feature tidak ditemukan'
-              });
-            }
-
             callback(null, {
               code: 'FOUND',
               data: {
@@ -604,67 +597,72 @@ exports.connectNewFeatureCompany = (APP, req, callback) => {
             }
           })
           .then(res => {
-            if (res == null) {
-              feature_active
-                .create({
-                  feature_id: req.body.feature.id,
-                  date_start: new Date(),
-                  status: 2 // needs settings
-                })
-                .then(created => {
-                  callback(null, {
-                    free: true,
-                    data: created
-                  });
-                })
-                .catch(err => {
-                  console.log('Error connectFeature', err);
-                  callback({
-                    code: 'ERR_DATABASE',
-                    message: 'Error connectFeature',
-                    data: err
-                  });
+            feature_active
+              .create({
+                feature_id: req.body.feature.id,
+                date_start: new Date(),
+                status: 2 // needs settings
+              })
+              .then(() => {
+                callback(null, {
+                  free: res == null ? true : false,
+                  data: res
                 });
-            } else {
-              pricing
-                .findOne({
-                  where: {
-                    id: res.pricing_id
-                  }
-                })
-                .then(res => {
-                  if (res == null) {
-                    callback({
-                      code: 'NOT_FOUND',
-                      message: 'Pricing tidak ditemukan!'
-                    });
-                  } else {
-                    let total =
-                      req.body.payment.type == '1'
-                        ? res.monthly_price
-                        : req.body.payment.type == '2'
-                        ? res.annual_price
-                        : 0;
-
-                    let subscription =
-                      req.body.payment.type == '1'
-                        ? res.monthly_minimum
-                        : req.body.payment.type == '2'
-                        ? res.annual_minimum
-                        : 0;
-
-                    callback(null, {
-                      free: false,
-                      paymentInfo: {
-                        total: total,
-                        subscription: subscription
-                      }
-                    });
-                  }
+              })
+              .catch(err => {
+                console.log('Error connectFeature', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error connectFeature',
+                  data: err
                 });
-            }
+              });
           });
       },
+
+      function checkPricing(data, callback) {
+        if (data.free) {
+          callback(null, data);
+        } else {
+          pricing
+            .findOne({
+              where: {
+                id: data.data.pricing_id
+              }
+            })
+            .then(res => {
+              if (res == null) {
+                callback({
+                  code: 'NOT_FOUND',
+                  message: 'Pricing tidak ditemukan!'
+                });
+              } else {
+                let total =
+                  req.body.payment.type == '1'
+                    ? res.monthly_price
+                    : req.body.payment.type == '2'
+                    ? res.annual_price
+                    : 0;
+
+                let subscription =
+                  req.body.payment.type == '1'
+                    ? res.monthly_minimum
+                    : req.body.payment.type == '2'
+                    ? res.annual_minimum
+                    : 0;
+
+                callback(null, {
+                  free: false,
+                  paymentInfo: {
+                    total: total,
+                    subscription: subscription
+                  }
+                });
+              }
+            });
+        }
+      },
+
       function paymentUser(data, callback) {
         if (data.free) {
           callback(null, data);
