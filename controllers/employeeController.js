@@ -1685,7 +1685,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
           () => {
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
-                code: 'ERR',
+                code: 'INVALID_REQUEST',
                 message: 'No files were uploaded.'
               });
             }
@@ -1736,7 +1736,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
               counter = res[0].sequence + 1;
               if (res[0].sequence >= 3) {
                 return callback({
-                  code: 'ERR',
+                  code: 'INVALID_REQUEST',
                   message: 'Employee is already have 3 violation warnings!'
                 });
               }
@@ -1758,7 +1758,8 @@ exports.addSuratPeringatan = (APP, req, callback) => {
                 doc_upload: result.doc.slice(8), // slice 8 buat ngilangin './public'
                 code: result.code,
                 sequence: counter,
-                description: `Surat Peringatan ${counter}`
+                name: req.body.name,
+                description: req.body.desc
               })
               .then(inserted => {
                 //send email

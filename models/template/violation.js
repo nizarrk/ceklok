@@ -20,6 +20,9 @@ module.exports = function(sequelize, Sequelize) {
       sequence: {
         type: Sequelize.INTEGER(45)
       },
+      name: {
+        type: Sequelize.STRING(45)
+      },
       description: {
         type: Sequelize.STRING(45)
       },
