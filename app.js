@@ -299,9 +299,9 @@ function resOutput(APP, req, res, params, status) {
               endpoint: req.originalUrl
             }
           })
-          .then(res => {
+          .then(row => {
             let profile =
-              res == null || res.auth == 0
+              row == null || row.auth == 0
                 ? {
                     id: 0,
                     code: 0,
@@ -320,8 +320,8 @@ function resOutput(APP, req, res, params, status) {
                   // req.connection.remoteAddress === '::1'
                   //   ? '127.0.0.1'
                   //   : req.connection.remoteAddress.replace('::', '').replace('ffff:', ''),
-                  feature_id: res !== null ? res.feature_id : '',
-                  subfeature_id: res !== null ? res.subfeature_id : '',
+                  feature_id: row !== null ? row.feature_id : '',
+                  subfeature_id: row !== null ? row.subfeature_id : '',
                   endpoint: req.originalUrl,
                   user_id: profile.id,
                   level: profile.level,

@@ -117,7 +117,7 @@ exports.getById = (APP, req, callback) => {
       include: [
         {
           model: employee,
-          attributes: ['id', 'nik', 'name', 'grade_id'],
+          attributes: ['id', 'nik', 'name', 'tlp', 'photo', 'email', 'grade_id'],
           include: [
             {
               model: grade,
