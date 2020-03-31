@@ -1170,6 +1170,8 @@ exports.updateStatus = (APP, req, callback) => {
                   });
                 })
                 .catch(err => {
+                  console.log('Error update function updateSisaCuti', err);
+
                   callback({
                     code: 'ERR_DATABASE',
                     message: 'Error update function updateSisaCuti',
@@ -1178,7 +1180,7 @@ exports.updateStatus = (APP, req, callback) => {
                 });
             })
             .catch(err => {
-              console.log('error find');
+              console.log('Error findOne function updateSisaCuti', err);
 
               callback({
                 code: 'ERR_DATABASE',
