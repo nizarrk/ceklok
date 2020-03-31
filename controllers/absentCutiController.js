@@ -14,7 +14,12 @@ const mkdirp = require('mkdirp');
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
+  let { absent_cuti } = APP.models.company[req.user.db].mysql;
   let params = {};
+
+  if (req.user.level === 3) {
+    params.user_id = req.user.id;
+  }
 
   if (req.body.status || req.body.status === 0) {
     params.status = req.body.status;
@@ -73,7 +78,7 @@ exports.get = function(APP, req, callback) {
   //   }' <= date_format(date_end, '%Y-%m-%d')`
   // )
 
-  APP.models.company[req.user.db].mysql.absent_cuti
+  absent_cuti
     .findAll({
       where: params == {} ? 1 + 1 : params
     })
@@ -87,6 +92,60 @@ exports.get = function(APP, req, callback) {
       });
     })
     .catch(err => {
+      return callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
+exports.getById = (APP, req, callback) => {
+  let { absent_cuti, employee, grade } = APP.models.company[req.user.db].mysql;
+
+  absent_cuti.belongsTo(employee, {
+    targetKey: 'id',
+    foreignKey: 'user_id'
+  });
+
+  employee.belongsTo(grade, {
+    targetKey: 'id',
+    foreignKey: 'grade_id'
+  });
+
+  absent_cuti
+    .findOne({
+      include: [
+        {
+          model: employee,
+          attributes: ['id', 'nik', 'name', 'grade_id'],
+          include: [
+            {
+              model: grade,
+              attributes: ['id', 'name', 'description']
+            }
+          ]
+        }
+      ],
+      where: {
+        id: req.body.id
+      }
+    })
+    .then(res => {
+      if (res == null) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Request tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          message: 'Request Ditemukan!',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
       return callback({
         code: 'ERR_DATABASE',
         data: err

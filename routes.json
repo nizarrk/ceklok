@@ -569,10 +569,16 @@
     "function": "delete",
     "auth": true
   },
-  "/absentcuti/history": {
+  "/absentcuti/get": {
     "method": "post",
     "controller": "absentCutiController",
     "function": "get",
+    "auth": true
+  },
+  "/absentcuti/getbyid": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "getById",
     "auth": true
   },
   "/cuti/type/get": {
