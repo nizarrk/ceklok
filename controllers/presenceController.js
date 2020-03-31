@@ -465,46 +465,46 @@ exports.generateDailyPresence = (APP, req, callback) => {
           });
       },
 
-      // function createPresence(result, callback) {
-      //   Promise.all(
-      //     result.employee.map(row => {
-      //       let obj = {
-      //         user_id: row.id,
-      //         schedule_id: row.schedule_id,
-      //         date: moment(),
-      //         presence_setting_id: result.status[3].id
-      //       };
-      //       return obj;
-      //     })
-      //   )
-      //     .then(arr => {
-      //       presence
-      //         .bulkCreate(arr)
-      //         .then(() => {
-      //           callback(null, {
-      //             yesterday: result.yesterday,
-      //             period: result.period,
-      //             employee: result.employee
-      //           });
-      //         })
-      //         .catch(err => {
-      //           console.log('Error createBulk function createPresence', err);
-      //           callback({
-      //             code: 'ERR_DATABASE',
-      //             message: 'Error createBulk function createPresence',
-      //             data: err
-      //           });
-      //         });
-      //     })
-      //     .catch(err => {
-      //       console.log('Error promise.all createPresence', err);
-      //       callback({
-      //         code: 'ERR',
-      //         message: 'Error promise.all createPresence',
-      //         data: err
-      //       });
-      //     });
-      // },
+      function createPresence(result, callback) {
+        Promise.all(
+          result.employee.map(row => {
+            let obj = {
+              user_id: row.id,
+              schedule_id: row.schedule_id,
+              date: moment(),
+              presence_setting_id: result.status[3].id
+            };
+            return obj;
+          })
+        )
+          .then(arr => {
+            presence
+              .bulkCreate(arr)
+              .then(() => {
+                callback(null, {
+                  yesterday: result.yesterday,
+                  period: result.period,
+                  employee: result.employee
+                });
+              })
+              .catch(err => {
+                console.log('Error createBulk function createPresence', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error createBulk function createPresence',
+                  data: err
+                });
+              });
+          })
+          .catch(err => {
+            console.log('Error promise.all createPresence', err);
+            callback({
+              code: 'ERR',
+              message: 'Error promise.all createPresence',
+              data: err
+            });
+          });
+      },
 
       function createMonthlyPresence(result, callback) {
         presence_monthly
