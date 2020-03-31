@@ -36,8 +36,11 @@ exports.listAllTransaction = function(APP, req, callback) {
         }
 
         if (req.body.datestart && req.body.dateend) {
-          params.date = {
-            $between: [req.body.datestart, req.body.dateend]
+          let start = req.body.datestart + ' 00:00:00';
+          let end = req.body.dateend + ' 23:59:59';
+
+          params.created_at = {
+            $between: [start, end]
           };
         }
 
