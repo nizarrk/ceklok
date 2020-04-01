@@ -122,6 +122,16 @@ exports.get = function(APP, req, callback) {
 exports.getById = (APP, req, callback) => {
   let { absent_cuti, employee, grade, absent_type, cuti_type } = APP.models.company[req.user.db].mysql;
 
+  absent_cuti.belongsTo(employee, {
+    targetKey: 'id',
+    foreignKey: 'user_id'
+  });
+
+  employee.belongsTo(grade, {
+    targetKey: 'id',
+    foreignKey: 'grade_id'
+  });
+
   absent_cuti.belongsTo(absent_type, {
     targetKey: 'code',
     foreignKey: 'absent_cuti_type_code'
@@ -142,16 +152,16 @@ exports.getById = (APP, req, callback) => {
             {
               model: grade,
               attributes: ['id', 'name', 'description']
-            },
-            {
-              model: absent_type,
-              attributes: ['id', 'name', 'description', 'type']
-            },
-            {
-              model: cuti_type,
-              attributes: ['id', 'name', 'description', 'type']
             }
           ]
+        },
+        {
+          model: absent_type,
+          attributes: ['id', 'name', 'description', 'type']
+        },
+        {
+          model: cuti_type,
+          attributes: ['id', 'name', 'description', 'type']
         }
       ],
       where: {
