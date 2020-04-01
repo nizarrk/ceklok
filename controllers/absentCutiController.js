@@ -192,43 +192,21 @@ exports.getById = (APP, req, callback) => {
 };
 
 exports.insert = function(APP, req, callback) {
+  let { absent_cuti, absent_type, cuti_type, employee, schedule } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function generateCode(callback) {
-        let pad = 'AC000';
-        let kode = '';
-
-        APP.models.company[req.user.db].mysql.absent_cuti
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
-          })
-          .then(res => {
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              kode = pad.substring(0, pad.length - str.length) + str;
-
-              callback(null, kode);
-            } else {
-              console.log('ada');
-              console.log(res[0].code);
-
-              let lastID = res[0].code;
-              let replace = lastID.replace('AC', '');
-              console.log(replace);
-
-              let str = parseInt(replace) + 1;
-              kode = pad.substring(0, pad.length - str.toString().length) + str;
-
-              callback(null, kode);
-            }
+        let kode = APP.generateCode(absent_cuti, 'AC');
+        Promise.resolve(kode)
+          .then(x => {
+            callback(null, x);
           })
           .catch(err => {
             console.log(err);
-
             callback({
-              code: 'ERR_DATABASE',
+              code: 'ERR',
+              id: '?',
+              message: 'Terjadi Kesalahan, mohon coba kembali',
               data: err
             });
           });
@@ -237,7 +215,7 @@ exports.insert = function(APP, req, callback) {
       function checkType(result, callback) {
         if (req.body.type == 0) {
           // 0 = absent
-          APP.models.company[req.user.db].mysql.absent_type
+          absent_type
             .findOne({
               where: {
                 id: req.body.typeid
@@ -266,7 +244,7 @@ exports.insert = function(APP, req, callback) {
             });
         } else if (req.body.type == 1) {
           // 1 = cuti
-          APP.models.company[req.user.db].mysql.cuti_type
+          cuti_type
             .findOne({
               where: {
                 id: req.body.typeid
@@ -303,38 +281,41 @@ exports.insert = function(APP, req, callback) {
       },
 
       function checkSchedule(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
+        employee.belongsTo(schedule, {
+          targetKey: 'id',
+          foreignKey: 'schedule_id'
+        });
+        employee
           .findOne({
+            include: [
+              {
+                model: schedule,
+                attributes: ['id', 'name', 'description', 'work_day', 'work_time'],
+                required: true
+              }
+            ],
             where: {
               id: req.user.id
             }
           })
-          .then(user => {
-            APP.models.company[req.user.db].mysql.schedule
-              .findOne({
-                where: {
-                  id: user.schedule_id
-                }
-              })
-              .then(res => {
-                if (res === null) {
-                  callback({
-                    code: 'NOT_FOUND',
-                    message: 'Schedule tidak ditemukan.'
-                  });
-                }
-
-                callback(null, {
-                  kode: result.kode,
-                  typeid: result.typeid,
-                  days: result.days,
-                  left: user.total_cuti,
-                  schedule: {
-                    workday: res.work_day,
-                    time: res.work_time
-                  }
-                });
+          .then(res => {
+            if (res === null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Schedule tidak ditemukan.'
               });
+            } else {
+              callback(null, {
+                kode: result.kode,
+                typeid: result.typeid,
+                days: result.days,
+                left: res.total_cuti,
+                schedule: {
+                  workday: res.schedule.work_day,
+                  time: res.schedule.work_time
+                }
+              });
+            }
           });
       },
 
@@ -538,7 +519,7 @@ exports.insert = function(APP, req, callback) {
       },
 
       function insertAbsentCuti(data, callback) {
-        APP.models.company[req.user.db].mysql.absent_cuti
+        absent_cuti
           .build({
             code: data.kode,
             type: req.body.type,
@@ -1133,34 +1114,34 @@ exports.updateStatus = (APP, req, callback) => {
                 code: 'NOT_FOUND',
                 message: 'Absen atau cuti tidak ditemukan'
               });
-            }
-
-            if (res.status !== 0) {
-              return callback({
-                code: 'INVALID_REQUEST',
-                message:
-                  'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
-              });
-            }
-
-            res
-              .update({
-                status: req.body.status, // 0 = requested 1 = approved, 2 = reject
-                notes: req.body.notes,
-                updated_at: new Date(),
-                action_by: req.user.id
-              })
-              .then(updated => {
-                callback(null, updated);
-              })
-              .catch(err => {
-                console.log('error update', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  message: 'Error update function updateStatus',
-                  data: err
+            } else {
+              if (res.status !== 0) {
+                return callback({
+                  code: 'INVALID_REQUEST',
+                  message:
+                    'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
                 });
-              });
+              } else {
+                res
+                  .update({
+                    status: req.body.status, // 0 = requested 1 = approved, 2 = reject
+                    notes: req.body.notes,
+                    updated_at: new Date(),
+                    action_by: req.user.id
+                  })
+                  .then(updated => {
+                    callback(null, updated);
+                  })
+                  .catch(err => {
+                    console.log('error update', err);
+                    callback({
+                      code: 'ERR_DATABASE',
+                      message: 'Error update function updateStatus',
+                      data: err
+                    });
+                  });
+              }
+            }
           })
           .catch(err => {
             console.log('error findOne', err);
@@ -1173,11 +1154,13 @@ exports.updateStatus = (APP, req, callback) => {
       },
 
       function updateSisaCuti(result, callback) {
+        // if absent
         if (result.type == 0) {
           callback(null, {
             code: 'UPDATE_SUCCESS',
             data: result
           });
+          // if cuti
         } else {
           APP.models.company[req.user.db].mysql.cuti_type
             .findOne({
@@ -1187,35 +1170,36 @@ exports.updateStatus = (APP, req, callback) => {
             })
             .then(res => {
               if (res.days !== null) {
-                return callback(null, {
+                callback(null, {
                   code: 'UPDATE_SUCCESS',
                   data: result
                 });
-              }
-              APP.models.company[req.user.db].mysql.employee
-                .update(
-                  {
-                    total_cuti: res.total_cuti - result.count
-                  },
-                  {
-                    where: result.user_id
-                  }
-                )
-                .then(() => {
-                  return callback(null, {
-                    code: 'UPDATE_SUCCESS',
-                    data: result
-                  });
-                })
-                .catch(err => {
-                  console.log('Error update function updateSisaCuti', err);
+              } else {
+                APP.models.company[req.user.db].mysql.employee
+                  .update(
+                    {
+                      total_cuti: res.total_cuti - result.count
+                    },
+                    {
+                      where: result.user_id
+                    }
+                  )
+                  .then(() => {
+                    return callback(null, {
+                      code: 'UPDATE_SUCCESS',
+                      data: result
+                    });
+                  })
+                  .catch(err => {
+                    console.log('Error update function updateSisaCuti', err);
 
-                  callback({
-                    code: 'ERR_DATABASE',
-                    message: 'Error update function updateSisaCuti',
-                    data: err
+                    callback({
+                      code: 'ERR_DATABASE',
+                      message: 'Error update function updateSisaCuti',
+                      data: err
+                    });
                   });
-                });
+              }
             })
             .catch(err => {
               console.log('Error findOne function updateSisaCuti', err);

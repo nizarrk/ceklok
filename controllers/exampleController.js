@@ -194,8 +194,18 @@ exports.test = function(APP, req, callback) {
   // let tes = APP.generateCode(letter, 'L');
   // Promise.resolve(tes).then(tes => {
   //   console.log(tes);
-  let db = req.user.level !== undefined ? req.user.db : `${process.env.MYSQL_NAME}_${req.body.company}`;
-  console.log(db);
+  let leaveDay = [0, 1, 2, 3, 4, 5]; // 0 - 6 is day in weeks sunday to saturday
+
+  leaveDay = leaveDay.filter(x => {
+    return (
+      x ==
+      moment()
+        .subtract(3, 'days')
+        .day()
+    );
+  });
+
+  console.log(leaveDay);
 
   callback(null, {
     code: 'OK',

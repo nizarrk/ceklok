@@ -829,10 +829,11 @@ exports.generateDailyPresence = (APP, req, callback) => {
 };
 
 exports.checkInOutProcess = (APP, req, callback) => {
+  let { employee, schedule, device, branch, presence, presence_setting } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function checkBLEDevice(callback) {
-        APP.models.company[req.user.db].mysql.device
+        device
           .findOne({
             where: {
               mac: req.body.mac
@@ -851,14 +852,14 @@ exports.checkInOutProcess = (APP, req, callback) => {
       },
 
       function checkSchedule(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
+        employee
           .findOne({
             where: {
               id: req.user.id
             }
           })
           .then(user => {
-            APP.models.company[req.user.db].mysql.schedule
+            schedule
               .findOne({
                 where: {
                   id: user.schedule_id
@@ -870,12 +871,30 @@ exports.checkInOutProcess = (APP, req, callback) => {
                     code: 'NOT_FOUND',
                     message: 'Schedule tidak ditemukan.'
                   });
-                }
+                } else {
+                  // cek hari ini apakah hari kerja
+                  let workDay = res.work_day;
 
-                callback(null, {
-                  device: result,
-                  schedule: res
-                });
+                  workDay = workDay.filter(x => {
+                    return x == moment().day();
+                  });
+
+                  if (workDay.length == 0) {
+                    console.log('libur');
+
+                    callback({
+                      code: 'INVALID_REQUEST',
+                      message: 'Hari ini bukan hari kerja!'
+                    });
+                  } else {
+                    console.log('kerja');
+
+                    callback(null, {
+                      device: result,
+                      schedule: res
+                    });
+                  }
+                }
               });
           });
       },
@@ -918,7 +937,7 @@ exports.checkInOutProcess = (APP, req, callback) => {
 
       function getPresenceSettings(result, callback) {
         let status = [];
-        APP.models.company[req.user.db].mysql.presence_setting.findAll().then(res => {
+        presence_setting.findAll().then(res => {
           if (res == null) {
             return callback({
               code: 'NOT_FOUND',
@@ -951,7 +970,7 @@ exports.checkInOutProcess = (APP, req, callback) => {
 
         // check in
         if (time.isBetween(checkInStart, checkInEnd)) {
-          APP.models.company[req.user.db].mysql.presence
+          presence
             .findOne({
               where: {
                 user_id: req.user.id,
@@ -1010,7 +1029,7 @@ exports.checkInOutProcess = (APP, req, callback) => {
 
         //check out
         else if (time.isBetween(checkOutStart, checkOutEnd)) {
-          APP.models.company[req.user.db].mysql.presence
+          presence
             .findOne({
               where: {
                 user_id: req.user.id,
