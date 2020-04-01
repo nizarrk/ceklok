@@ -14,7 +14,7 @@ const mkdirp = require('mkdirp');
  * please check `Sequelize` documentation.
  */
 exports.get = function(APP, req, callback) {
-  let { absent_cuti } = APP.models.company[req.user.db].mysql;
+  let { absent_cuti, absent_type, cuti_type } = APP.models.company[req.user.db].mysql;
   let params = {};
 
   if (req.user.level === 3) {
@@ -78,8 +78,28 @@ exports.get = function(APP, req, callback) {
   //   }' <= date_format(date_end, '%Y-%m-%d')`
   // )
 
+  absent_cuti.belongsTo(absent_type, {
+    targetKey: 'code',
+    foreignKey: 'absent_cuti_type_code'
+  });
+
+  absent_cuti.belongsTo(cuti_type, {
+    targetKey: 'code',
+    foreignKey: 'absent_cuti_type_code'
+  });
+
   absent_cuti
     .findAll({
+      include: [
+        {
+          model: absent_type,
+          attributes: ['id', 'name', 'description', 'type']
+        },
+        {
+          model: cuti_type,
+          attributes: ['id', 'name', 'description', 'type']
+        }
+      ],
       where: params == {} ? 1 + 1 : params
     })
     .then(rows => {
@@ -258,7 +278,7 @@ exports.insert = function(APP, req, callback) {
             });
         } else {
           callback({
-            code: 'ERR',
+            code: 'INVALID_REQUEST',
             message: 'tipe request tidak terdefinisi'
           });
         }
