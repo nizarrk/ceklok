@@ -1126,6 +1126,21 @@ exports.checkInOutProcess = (APP, req, callback) => {
 };
 
 exports.getHistoryCheckInOut = (APP, req, callback) => {
+  let params = '1+1';
+
+  if (req.body.datestart && req.body.dateend) {
+    params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}'`;
+  }
+
+  if (req.user.level === 3) {
+    params = ` presence.user_id = ${req.user.id}`;
+  }
+
+  if (req.body.datestart && req.body.dateend && req.user.level === 3) {
+    params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}'
+              AND presence.user_id = ${req.user.id}`;
+  }
+
   let query = `SELECT 
                 presence.id, presence.user_id, presence.check_in_device_id, 
                 presence.check_out_device_id, presence.check_in_branch_id, 
@@ -1157,19 +1172,7 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
               LEFT OUTER JOIN 
                 ${req.user.db}.branch AS check_out_branch ON presence.check_out_branch_id = check_out_branch.id
               WHERE  
-                ${req.user.db}.presence.date 
-              BETWEEN 
-                '${req.body.datestart ? req.body.datestart : moment().format('YYYY-MM-DD')}' 
-              AND 
-                '${req.body.dateend ? req.body.dateend : moment().format('YYYY-MM-DD')}'`;
-
-  if (req.body.status) {
-    query += ` AND presence.status = '${req.body.status}'`;
-  }
-
-  if (!req.user.admin) {
-    query += ` AND presence.user_id = ${req.user.id}`;
-  }
+                ${params}`;
 
   APP.db.sequelize
     .query(query)

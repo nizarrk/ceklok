@@ -223,16 +223,16 @@ exports.insert = function(APP, req, callback) {
             })
             .then(res => {
               if (res === null) {
-                return callback({
+                callback({
                   code: 'NOT_FOUND',
                   message: 'Tipe absent tidak ditemukan.'
                 });
+              } else {
+                callback(null, {
+                  kode: result,
+                  typeid: res.type
+                });
               }
-
-              callback(null, {
-                kode: result,
-                typeid: res.type
-              });
             })
             .catch(err => {
               console.log(err);
@@ -252,17 +252,17 @@ exports.insert = function(APP, req, callback) {
             })
             .then(res => {
               if (res === null) {
-                return callback({
+                callback({
                   code: 'NOT_FOUND',
                   message: 'Tipe cuti tidak ditemukan.'
                 });
+              } else {
+                callback(null, {
+                  kode: result,
+                  typeid: res.type,
+                  days: res.days
+                });
               }
-
-              callback(null, {
-                kode: result,
-                typeid: res.type,
-                days: res.days
-              });
             })
             .catch(err => {
               console.log(err);
@@ -275,7 +275,7 @@ exports.insert = function(APP, req, callback) {
         } else {
           callback({
             code: 'INVALID_REQUEST',
-            message: 'tipe request tidak terdefinisi'
+            message: 'Tipe request tidak terdefinisi'
           });
         }
       },
@@ -285,6 +285,7 @@ exports.insert = function(APP, req, callback) {
           targetKey: 'id',
           foreignKey: 'schedule_id'
         });
+
         employee
           .findOne({
             include: [
@@ -316,6 +317,14 @@ exports.insert = function(APP, req, callback) {
                 }
               });
             }
+          })
+          .catch(err => {
+            console.log('Error checkSchedule', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error checkSchedule',
+              data: err
+            });
           });
       },
 
@@ -347,7 +356,7 @@ exports.insert = function(APP, req, callback) {
 
             let work_skip = APP.time.timeXday(data.schedule.time, diff);
 
-            return callback(null, {
+            callback(null, {
               kode: data.kode,
               days: diff - listDate.length,
               typeid: data.typeid,
@@ -356,11 +365,11 @@ exports.insert = function(APP, req, callback) {
           }
 
           // ijin durasi jam
-          if (data.typeid == 0) {
+          else if (data.typeid == 0) {
             let date = req.body.datestart;
             req.body.dateend = date;
 
-            return callback(null, {
+            callback(null, {
               kode: data.kode,
               days: 0,
               typeid: data.typeid,
@@ -369,9 +378,9 @@ exports.insert = function(APP, req, callback) {
                 .format('HH:mm:ss')
             });
           } else {
-            return callback({
-              code: 'ERR',
-              message: 'tipe absent tidak tersedia'
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Tipe absent tidak tersedia'
             });
           }
         }
@@ -400,21 +409,21 @@ exports.insert = function(APP, req, callback) {
 
             // cek sisa jatah cuti reguler employee
             if (data.left < diff - listDate.length) {
-              return callback({
+              callback({
                 code: 'INVALID_REQUEST',
                 message: 'Jatah cuti kurang dari permintaan cuti'
               });
+            } else {
+              callback(null, {
+                kode: data.kode,
+                days: diff - listDate.length,
+                typeid: data.typeid
+              });
             }
-
-            return callback(null, {
-              kode: data.kode,
-              days: diff - listDate.length,
-              typeid: data.typeid
-            });
           }
 
           // 1 = cuti khusus
-          if (data.typeid == 1) {
+          else if (data.typeid == 1) {
             let startDate = moment(req.body.datestart),
               days = data.days - 1, // -1 biar hari pertama keitung cuti
               defaultDays = startDate
@@ -426,15 +435,15 @@ exports.insert = function(APP, req, callback) {
                 .businessAdd(days)
                 .format('YYYY-MM-DD');
 
-            return callback(null, {
+            callback(null, {
               kode: data.kode,
               days: data.days,
               typeid: data.typeid,
               dateend: bussinessDays
             });
           } else {
-            return callback({
-              code: 'ERR',
+            callback({
+              code: 'INVALID_REQUEST',
               message: 'tipe cuti tidak tersedia'
             });
           }
@@ -466,16 +475,16 @@ exports.insert = function(APP, req, callback) {
           )
           .then(res => {
             if (res[0].length > 0) {
-              return callback({
+              callback({
                 code: 'INVALID_REQUEST',
                 message: 'Sudah pernah absen atau cuti di tanggal ini'
               });
             } else {
-              return callback(null, result);
+              callback(null, result);
             }
           })
           .catch(err => {
-            console.log('2', err);
+            console.log('Error function checkTgl', err);
 
             callback({
               code: 'ERR_DATABASE',
@@ -508,7 +517,7 @@ exports.insert = function(APP, req, callback) {
             });
           },
           err => {
-            console.log(err);
+            console.log('Error uploadPath', err);
 
             callback({
               code: 'ERR',
@@ -553,7 +562,7 @@ exports.insert = function(APP, req, callback) {
             });
           })
           .catch(err => {
-            console.log('pas insert', err);
+            console.log('Error insertAbsentCuti', err);
 
             if (err.original && err.original.code === 'ER_DUP_ENTRY') {
               let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
@@ -587,39 +596,40 @@ exports.insert = function(APP, req, callback) {
           })
           .then(res => {
             if (res.length == 0) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND',
                 message: 'admin company tidak ditemukan'
               });
+            } else {
+              let emailList = [];
+
+              res.map(data => {
+                emailList.push(data.email);
+              });
+              //send to email
+              APP.mailer.sendMail({
+                subject: 'New Leave Permission Request',
+                to: emailList,
+                data: {
+                  code: result.data.kode,
+                  absent_type_id: req.body.type,
+                  user_id: req.user.admin == true ? req.body.user : req.user.id,
+                  date_start: req.body.datestart,
+                  date_end: req.body.dateend,
+                  time_start: req.body.timestart,
+                  time_end: req.body.timeend,
+                  description: req.body.desc,
+                  count: result.data.days,
+                  time_total: result.data.time
+                },
+                file: 'leave_permission.html'
+              });
+
+              callback(null, {
+                code: 'INSERT_SUCCESS',
+                data: result
+              });
             }
-            let emailList = [];
-
-            res.map(data => {
-              emailList.push(data.email);
-            });
-            //send to email
-            APP.mailer.sendMail({
-              subject: 'New Leave Permission Request',
-              to: emailList,
-              data: {
-                code: result.data.kode,
-                absent_type_id: req.body.type,
-                user_id: req.user.admin == true ? req.body.user : req.user.id,
-                date_start: req.body.datestart,
-                date_end: req.body.dateend,
-                time_start: req.body.timestart,
-                time_end: req.body.timeend,
-                description: req.body.desc,
-                count: result.data.days,
-                time_total: result.data.time
-              },
-              file: 'leave_permission.html'
-            });
-
-            callback(null, {
-              code: 'INSERT_SUCCESS',
-              data: result
-            });
           })
           .catch(err => {
             console.log(err);
@@ -640,10 +650,11 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
+  let { absent_cuti, absent_type, cuti_type, employee, schedule } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function getDetails(callback) {
-        APP.models.company[req.user.db].mysql.absent_cuti
+        absent_cuti
           .findOne({
             where: {
               id: req.body.id
@@ -651,28 +662,28 @@ exports.update = function(APP, req, callback) {
           })
           .then(res => {
             if (res == null) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND',
                 message: 'Absen atau cuti tidak ditemukan'
               });
+            } else {
+              if (res.status !== 0) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message:
+                    'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
+                });
+              } else {
+                callback(null, res.dataValues);
+              }
             }
-
-            if (res.status !== 0) {
-              return callback({
-                code: 'INVALID_REQUEST',
-                message:
-                  'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
-              });
-            }
-
-            callback(null, res.dataValues);
           });
       },
 
       function checkType(result, callback) {
         if (req.body.type == 0) {
           // 0 = absent
-          APP.models.company[req.user.db].mysql.absent_type
+          absent_type
             .findOne({
               where: {
                 id: req.body.typeid
@@ -680,16 +691,16 @@ exports.update = function(APP, req, callback) {
             })
             .then(res => {
               if (res === null) {
-                return callback({
+                callback({
                   code: 'NOT_FOUND',
                   message: 'Tipe absent tidak ditemukan.'
                 });
+              } else {
+                callback(null, {
+                  result: result,
+                  typeid: res.type
+                });
               }
-
-              callback(null, {
-                result: result,
-                typeid: res.type
-              });
             })
             .catch(err => {
               console.log(err);
@@ -701,7 +712,7 @@ exports.update = function(APP, req, callback) {
             });
         } else if (req.body.type == 1) {
           // 1 = cuti
-          APP.models.company[req.user.db].mysql.cuti_type
+          cuti_type
             .findOne({
               where: {
                 id: req.body.typeid
@@ -709,17 +720,17 @@ exports.update = function(APP, req, callback) {
             })
             .then(res => {
               if (res === null) {
-                return callback({
+                callback({
                   code: 'NOT_FOUND',
                   message: 'Tipe cuti tidak ditemukan.'
                 });
+              } else {
+                callback(null, {
+                  result: result,
+                  typeid: res.type,
+                  days: res.days
+                });
               }
-
-              callback(null, {
-                result: result,
-                typeid: res.type,
-                days: res.days
-              });
             })
             .catch(err => {
               console.log(err);
@@ -731,45 +742,50 @@ exports.update = function(APP, req, callback) {
             });
         } else {
           callback({
-            code: 'ERR',
-            message: 'tipe request tidak terdefinisi'
+            code: 'INVALID_REQUEST',
+            message: 'Tipe request tidak terdefinisi'
           });
         }
       },
 
       function checkSchedule(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
+        employee.belongsTo(schedule, {
+          targetKey: 'id',
+          foreignKey: 'schedule_id'
+        });
+
+        employee
           .findOne({
+            include: [
+              {
+                model: schedule,
+                attributes: ['id', 'name', 'description', 'work_day', 'work_time'],
+                required: true
+              }
+            ],
             where: {
               id: req.user.id
             }
           })
-          .then(user => {
-            APP.models.company[req.user.db].mysql.schedule
-              .findOne({
-                where: {
-                  id: user.schedule_id
-                }
-              })
-              .then(res => {
-                if (res === null) {
-                  callback({
-                    code: 'NOT_FOUND',
-                    message: 'Schedule tidak ditemukan.'
-                  });
-                }
-
-                callback(null, {
-                  result: result.result,
-                  typeid: result.typeid,
-                  days: result.days,
-                  left: user.total_cuti,
-                  schedule: {
-                    workday: res.work_day,
-                    time: res.work_time
-                  }
-                });
+          .then(res => {
+            if (res === null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Schedule tidak ditemukan.'
               });
+            } else {
+              callback(null, {
+                result: result.result,
+                kode: result.kode,
+                typeid: result.typeid,
+                days: result.days,
+                left: res.total_cuti,
+                schedule: {
+                  workday: res.schedule.work_day,
+                  time: res.schedule.work_time
+                }
+              });
+            }
           });
       },
 
@@ -810,11 +826,11 @@ exports.update = function(APP, req, callback) {
           }
 
           // ijin durasi jam
-          if (data.typeid == 0) {
+          else if (data.typeid == 0) {
             let date = req.body.datestart;
             req.body.dateend = date;
 
-            return callback(null, {
+            callback(null, {
               result: data.result,
               days: 0,
               typeid: data.typeid,
@@ -823,9 +839,9 @@ exports.update = function(APP, req, callback) {
                 .format('HH:mm:ss')
             });
           } else {
-            return callback({
-              code: 'ERR',
-              message: 'tipe absent tidak tersedia'
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Tipe absent tidak tersedia'
             });
           }
         }
@@ -854,21 +870,21 @@ exports.update = function(APP, req, callback) {
 
             // cek sisa jatah cuti reguler employee
             if (data.left < diff - listDate.length) {
-              return callback({
+              callback({
                 code: 'INVALID_REQUEST',
                 message: 'Jatah cuti kurang dari permintaan cuti'
               });
+            } else {
+              callback(null, {
+                result: data.result,
+                days: diff - listDate.length,
+                typeid: data.typeid
+              });
             }
-
-            return callback(null, {
-              result: data.result,
-              days: diff - listDate.length,
-              typeid: data.typeid
-            });
           }
 
           // 1 = cuti khusus
-          if (data.typeid == 1) {
+          else if (data.typeid == 1) {
             let startDate = moment(req.body.datestart),
               days = data.days - 1, // -1 biar hari pertama keitung cuti
               defaultDays = startDate
@@ -880,16 +896,16 @@ exports.update = function(APP, req, callback) {
                 .businessAdd(days)
                 .format('YYYY-MM-DD');
 
-            return callback(null, {
+            callback(null, {
               result: data.result,
               days: data.days,
               typeid: data.typeid,
               dateend: bussinessDays
             });
           } else {
-            return callback({
-              code: 'ERR',
-              message: 'tipe cuti tidak tersedia'
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Tipe cuti tidak tersedia'
             });
           }
         }
@@ -901,72 +917,83 @@ exports.update = function(APP, req, callback) {
           result.result.date_start.getTime() == new Date(req.body.datestart).getTime() &&
           result.result.date_end.getTime() == new Date(dateend).getTime()
         ) {
-          return callback(null, result);
-        }
-        APP.db.sequelize
-          .query(
-            `SELECT * FROM ${req.user.db}.absent_cuti
+          callback(null, result);
+        } else {
+          APP.db.sequelize
+            .query(
+              `SELECT * FROM ${req.user.db}.absent_cuti
               WHERE
                 user_id = ${req.user.id} 
               AND
                 '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              req.body.dateend
-            }' <= date_format(date_end, '%Y-%m-%d')
+                req.body.dateend
+              }' <= date_format(date_end, '%Y-%m-%d')
               OR
                 '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              req.body.datestart
-            }' <= date_format(date_end, '%Y-%m-%d')
+                req.body.datestart
+              }' <= date_format(date_end, '%Y-%m-%d')
               OR
                 '${result.dateend ? result.dateend : req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              result.dateend ? result.dateend : req.body.dateend
-            }' <= date_format(date_end, '%Y-%m-%d')`
-          )
-          .then(res => {
-            if (res[0].length > 0) {
-              return callback({
-                code: 'ERR',
-                message: 'Sudah pernah absen atau cuti di tanggal ini'
-              });
-            } else {
-              return callback(null, result);
-            }
-          })
-          .catch(err => {
-            console.log('2', err);
+                result.dateend ? result.dateend : req.body.dateend
+              }' <= date_format(date_end, '%Y-%m-%d')`
+            )
+            .then(res => {
+              if (res[0].length > 0) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'Sudah pernah absen atau cuti di tanggal ini'
+                });
+              } else {
+                callback(null, result);
+              }
+            })
+            .catch(err => {
+              console.log('Error function checkTgl', err);
 
-            callback({
-              code: 'ERR_DATABASE',
-              message: 'Error function checkTgl',
-              data: err
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error function checkTgl',
+                data: err
+              });
             });
-          });
+        }
       },
 
       function uploadPath(data, callback) {
         trycatch(
           () => {
-            if (!req.files || Object.keys(req.files).length === 0) {
-              return callback({
-                code: 'ERR',
-                message: 'No files were uploaded.'
+            if (data.result.type == req.body.type || data.result.absent_cuti_type_code == req.body.codeid) {
+              callback(null, {
+                days: data.days,
+                typeid: data.typeid,
+                time: data.time,
+                dateend: data.dateend,
+                doc: data.result.upload,
+                upload: false
+              });
+            } else {
+              if (!req.files || Object.keys(req.files).length === 0) {
+                return callback({
+                  code: 'ERR',
+                  message: 'No files were uploaded.'
+                });
+              }
+
+              let fileName = new Date().toISOString().replace(/:|\./g, '');
+              let docPath = `./public/uploads/company_${req.user.code}/employee/absen & cuti/`;
+
+              callback(null, {
+                days: data.days,
+                typeid: data.typeid,
+                time: data.time,
+                dateend: data.dateend,
+                doc: docPath + fileName + path.extname(req.files.doc_upload.name),
+                upload: true
               });
             }
-
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/employee/absen & cuti/`;
-
-            callback(null, {
-              days: data.days,
-              typeid: data.typeid,
-              time: data.time,
-              dateend: data.dateend,
-              doc: req.files.doc_upload
-                ? docPath + fileName + path.extname(req.files.doc_upload.name)
-                : data.result.upload
-            });
           },
           err => {
-            console.log(err);
+            console.log('Error uploadPath', err);
 
             callback({
               code: 'ERR',
@@ -977,11 +1004,12 @@ exports.update = function(APP, req, callback) {
       },
 
       function updateAbsentCuti(data, callback) {
-        APP.models.company[req.user.db].mysql.absent_cuti
+        absent_cuti
           .update(
             {
               type: req.body.type,
               absent_cuti_type_id: req.body.typeid,
+              absent_cuti_type_code: req.body.codeid,
               user_id: req.user.admin == true ? req.body.user : req.user.id,
               date_start: req.body.datestart,
               date_end: data.dateend ? data.dateend : req.body.dateend,
@@ -991,7 +1019,7 @@ exports.update = function(APP, req, callback) {
               count: data.days,
               time_total: data.time,
               status: req.body.status, // 0 = requested 1 = approved, 2 = reject
-              upload: data.doc.slice(8) // slice 8 buat ngilangin './public'
+              upload: data.upload ? data.doc.slice(8) : data.doc // slice 8 buat ngilangin './public'
             },
             {
               where: {
@@ -1000,24 +1028,26 @@ exports.update = function(APP, req, callback) {
             }
           )
           .then(result => {
-            // upload file
-            if (req.files.doc_upload) {
-              req.files.doc_upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
+            if (data.upload) {
+              // upload file
+              if (req.files.doc_upload) {
+                req.files.doc_upload.mv(data.doc, function(err) {
+                  if (err)
+                    return callback({
+                      code: 'ERR'
+                    });
+                });
+              }
+            } else {
+              callback(null, {
+                code: 'UPDATE_SUCCESS',
+                data: data,
+                row: result.dataValues
               });
             }
-            let params = 'Insert Success'; //This is only example, Object can also be used
-            return callback(null, {
-              code: 'UPDATE_SUCCESS',
-              data: data,
-              row: result.dataValues
-            });
           })
           .catch(err => {
-            console.log('pas insert', err);
+            console.log('Error updateAbsentCuti', err);
 
             if (err.original && err.original.code === 'ER_DUP_ENTRY') {
               let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
