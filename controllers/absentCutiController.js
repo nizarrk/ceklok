@@ -120,7 +120,7 @@ exports.get = function(APP, req, callback) {
 };
 
 exports.getById = (APP, req, callback) => {
-  let { absent_cuti, employee, grade, absent_type, cuti_type } = APP.models.company[req.user.db].mysql;
+  let { absent_cuti, employee, grade, absent_type, cuti_type, schedule } = APP.models.company[req.user.db].mysql;
 
   absent_cuti.belongsTo(employee, {
     targetKey: 'id',
@@ -130,6 +130,11 @@ exports.getById = (APP, req, callback) => {
   employee.belongsTo(grade, {
     targetKey: 'id',
     foreignKey: 'grade_id'
+  });
+
+  employee.belongsTo(schedule, {
+    targetKey: 'id',
+    foreignKey: 'schedule_id'
   });
 
   absent_cuti.belongsTo(absent_type, {
@@ -152,6 +157,10 @@ exports.getById = (APP, req, callback) => {
             {
               model: grade,
               attributes: ['id', 'name', 'description']
+            },
+            {
+              model: schedule,
+              attributes: ['id', 'name', 'description', 'work_day']
             }
           ]
         },
@@ -962,7 +971,11 @@ exports.update = function(APP, req, callback) {
       function uploadPath(data, callback) {
         trycatch(
           () => {
-            if (data.result.type == req.body.type || data.result.absent_cuti_type_code == req.body.codeid) {
+            console.log('uploadPath');
+
+            if (data.result.absent_cuti_type_code == req.body.codeid) {
+              console.log('gausah upload');
+
               callback(null, {
                 days: data.days,
                 typeid: data.typeid,
@@ -972,9 +985,10 @@ exports.update = function(APP, req, callback) {
                 upload: false
               });
             } else {
+              console.log('upload sek bro');
               if (!req.files || Object.keys(req.files).length === 0) {
                 return callback({
-                  code: 'ERR',
+                  code: 'INVALID_REQUEST',
                   message: 'No files were uploaded.'
                 });
               }
