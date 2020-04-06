@@ -961,7 +961,7 @@ exports.login = (APP, req, callback) => {
                 })
                 .then(() => {
                   callback(null, {
-                    code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
+                    code: rows !== null ? 'FOUND' : 'NOT_FOUND',
                     data: {
                       row: rows,
                       token

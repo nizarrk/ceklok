@@ -179,9 +179,9 @@ exports.login = (APP, req, callback) => {
                   time: req.customTime,
                   elapsed_time: req.elapsedTime || '0'
                 })
-                .then(result => {
+                .then(() => {
                   return callback(null, {
-                    code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
+                    code: rows !== null ? 'FOUND' : 'NOT_FOUND',
                     data: {
                       row: rows,
                       token
