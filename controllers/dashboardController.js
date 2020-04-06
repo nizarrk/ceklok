@@ -215,6 +215,8 @@ exports.dashboardEmployeePresenceDetail = (APP, req, callback) => {
 };
 
 exports.dashboardAdminCompany = (APP, req, callback) => {
+  console.log(req.user.db);
+
   let {
     employee,
     presence,
