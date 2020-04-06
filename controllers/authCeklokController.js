@@ -68,6 +68,7 @@ exports.login = (APP, req, callback) => {
       function checkSuperAdmin(index, callback) {
         APP.models.mysql.admin_app
           .findAll({
+            attributes: ['id', 'user_name', 'password', 'photo', 'initial_login'],
             where: {
               user_name: req.body.username
             }
@@ -96,12 +97,19 @@ exports.login = (APP, req, callback) => {
         bcrypt
           .compare(req.body.pass, rows[0].password)
           .then(res => {
-            if (res === true) return callback(null, rows);
-
-            callback({
-              code: 'INVALID_REQUEST',
-              message: 'Invalid Username or Password'
-            });
+            if (res === true) {
+              callback(null, {
+                id: rows[0].id,
+                user_name: rows[0].user_name,
+                photo: rows[0].photo,
+                initial_login: rows[0].initial_login
+              });
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Invalid Username or Password'
+              });
+            }
           })
           .catch(err => {
             callback({
@@ -114,7 +122,7 @@ exports.login = (APP, req, callback) => {
       function setToken(rows, callback) {
         let token = jwt.sign(
           {
-            id: rows[0].id,
+            id: rows.id,
             level: 1,
             superadmin: true
           },
@@ -126,7 +134,7 @@ exports.login = (APP, req, callback) => {
 
         APP.models.mongo.token
           .findOne({
-            id_admin_ceklok: rows[0].id
+            id_admin_ceklok: rows.id
             // platform: req.body.platform
           })
           .then(res => {
@@ -144,7 +152,7 @@ exports.login = (APP, req, callback) => {
                   return callback(null, {
                     code: 'UPDATE_SUCCESS',
                     data: {
-                      row: rows[0].dataValues,
+                      row: rows,
                       token
                     },
                     info: {
@@ -163,7 +171,7 @@ exports.login = (APP, req, callback) => {
 
               APP.models.mongo.token
                 .create({
-                  id_admin_ceklok: rows[0].id,
+                  id_admin_ceklok: rows.id,
                   // platform: req.body.platform,
                   token,
                   platform: req.body.platform,
@@ -175,7 +183,7 @@ exports.login = (APP, req, callback) => {
                   return callback(null, {
                     code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
                     data: {
-                      row: rows[0],
+                      row: rows,
                       token
                     },
                     info: {

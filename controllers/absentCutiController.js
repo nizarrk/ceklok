@@ -7,12 +7,6 @@ const path = require('path');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 
-/**
- * The model name `example` based on the related file in `/models` directory.
- *
- * There're many ways to get data from MySql with `Sequelize`,
- * please check `Sequelize` documentation.
- */
 exports.get = function(APP, req, callback) {
   let { absent_cuti, absent_type, cuti_type } = APP.models.company[req.user.db].mysql;
   let params = {};
@@ -1143,124 +1137,150 @@ exports.delete = function(APP, req, callback) {
 };
 
 exports.updateStatus = (APP, req, callback) => {
-  async.waterfall(
-    [
-      function updateStatus(callback) {
-        APP.models.company[req.user.db].mysql.absent_cuti
-          .findOne({
-            where: {
-              id: req.body.id
-            }
-          })
-          .then(res => {
-            if (res == null) {
-              return callback({
-                code: 'NOT_FOUND',
-                message: 'Absen atau cuti tidak ditemukan'
-              });
-            } else {
-              if (res.status !== 0) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message:
-                    'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
-                });
-              } else {
-                res
-                  .update({
-                    status: req.body.status, // 0 = requested 1 = approved, 2 = reject
-                    notes: req.body.notes,
-                    updated_at: new Date(),
-                    action_by: req.user.id
-                  })
-                  .then(updated => {
-                    callback(null, updated);
-                  })
-                  .catch(err => {
-                    console.log('error update', err);
-                    callback({
-                      code: 'ERR_DATABASE',
-                      message: 'Error update function updateStatus',
-                      data: err
-                    });
-                  });
-              }
-            }
-          })
-          .catch(err => {
-            console.log('error findOne', err);
-            callback({
-              code: 'ERR_DATABASE',
-              message: 'Error findOne function updateStatus',
-              data: err
-            });
+  let { absent_cuti, cuti_type, employee } = APP.models.company[req.user.db].mysql;
+  APP.db.sequelize.transaction().then(t => {
+    async.waterfall(
+      [
+        function updateStatus(callback) {
+          absent_cuti.belongsTo(employee, {
+            targetKey: 'id',
+            foreignKey: 'user_id'
           });
-      },
 
-      function updateSisaCuti(result, callback) {
-        // if absent
-        if (result.type == 0) {
-          callback(null, {
-            code: 'UPDATE_SUCCESS',
-            data: result
-          });
-          // if cuti
-        } else {
-          APP.models.company[req.user.db].mysql.cuti_type
-            .findOne({
-              where: {
-                id: result.absent_cuti_type_id
-              }
-            })
+          absent_cuti
+            .findOne(
+              {
+                include: [
+                  {
+                    model: employee,
+                    attributes: ['total_cuti']
+                  }
+                ],
+                where: {
+                  id: req.body.id
+                }
+              },
+              { transaction: t }
+            )
             .then(res => {
-              if (res.days !== null) {
-                callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: result
+              if (res == null) {
+                return callback({
+                  code: 'NOT_FOUND',
+                  message: 'Absen atau cuti tidak ditemukan'
                 });
               } else {
-                APP.models.company[req.user.db].mysql.employee
-                  .update(
-                    {
-                      total_cuti: res.total_cuti - result.count
-                    },
-                    {
-                      where: result.user_id
-                    }
-                  )
-                  .then(() => {
-                    return callback(null, {
-                      code: 'UPDATE_SUCCESS',
-                      data: result
-                    });
-                  })
-                  .catch(err => {
-                    console.log('Error update function updateSisaCuti', err);
-
-                    callback({
-                      code: 'ERR_DATABASE',
-                      message: 'Error update function updateSisaCuti',
-                      data: err
-                    });
+                if (res.status !== 0) {
+                  return callback({
+                    code: 'INVALID_REQUEST',
+                    message:
+                      'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
                   });
+                } else {
+                  res
+                    .update({
+                      status: req.body.status, // 0 = requested 1 = approved, 2 = reject
+                      notes: req.body.notes,
+                      updated_at: new Date(),
+                      action_by: req.user.id
+                    })
+                    .then(updated => {
+                      callback(null, updated);
+                    })
+                    .catch(err => {
+                      console.log('error update', err);
+                      callback({
+                        code: 'ERR_DATABASE',
+                        message: 'Error update function updateStatus',
+                        data: err
+                      });
+                    });
+                }
               }
             })
             .catch(err => {
-              console.log('Error findOne function updateSisaCuti', err);
-
+              console.log('error findOne', err);
               callback({
                 code: 'ERR_DATABASE',
-                message: 'Error findOne function updateSisaCuti',
+                message: 'Error findOne function updateStatus',
                 data: err
               });
             });
-        }
-      }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
+        },
 
-      callback(null, result);
-    }
-  );
+        function updateSisaCuti(result, callback) {
+          // if absent
+          if (result.type == 0) {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: result
+            });
+            // if cuti
+          } else {
+            cuti_type
+              .findOne({
+                where: {
+                  id: result.absent_cuti_type_id
+                }
+              })
+              .then(res => {
+                if (res.days == 0) {
+                  employee
+                    .update(
+                      {
+                        total_cuti: result.employee.total_cuti - result.count
+                      },
+                      {
+                        where: {
+                          id: result.user_id
+                        }
+                      },
+                      { transaction: t }
+                    )
+                    .then(() => {
+                      console.log('cuti reguler');
+                      callback(null, {
+                        code: 'UPDATE_SUCCESS',
+                        data: result
+                      });
+                    })
+                    .catch(err => {
+                      console.log('Error update function updateSisaCuti', err);
+
+                      callback({
+                        code: 'ERR_DATABASE',
+                        message: 'Error update function updateSisaCuti',
+                        data: err
+                      });
+                    });
+                } else {
+                  console.log('cuti khusus');
+
+                  callback(null, {
+                    code: 'UPDATE_SUCCESS',
+                    data: result
+                  });
+                }
+              })
+              .catch(err => {
+                console.log('Error findOne function updateSisaCuti', err);
+
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error findOne function updateSisaCuti',
+                  data: err
+                });
+              });
+          }
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          t.rollback();
+          return callback(err);
+        }
+        t.commit();
+        callback(null, result);
+      }
+    );
+  });
 };

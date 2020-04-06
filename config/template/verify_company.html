@@ -2,127 +2,70 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>A simple, clean, and responsive HTML invoice template</title>
+    <title>Payment Verification</title>
     
-    <style>
-    .invoice-box {
-        max-width: 800px;
-        margin: auto;
-        padding: 30px;
-        border: 1px solid #eee;
-        box-shadow: 0 0 10px rgba(0, 0, 0, .15);
-        font-size: 16px;
-        line-height: 24px;
-        font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-        color: #555;
-    }
-    
-    .invoice-box table {
-        width: 100%;
-        line-height: inherit;
-        text-align: left;
-    }
-    
-    .invoice-box table td {
-        padding: 5px;
-        vertical-align: top;
-    }
-    
-    .invoice-box table tr td:nth-child(2) {
-        text-align: right;
-    }
-    
-    .invoice-box table tr.top table td {
-        padding-bottom: 20px;
-    }
-    
-    .invoice-box table tr.top table td.title {
-        font-size: 45px;
-        line-height: 45px;
-        color: #333;
-    }
-    
-    .invoice-box table tr.information table td {
-        padding-bottom: 40px;
-    }
-    
-    .invoice-box table tr.heading td {
-        background: #eee;
-        border-bottom: 1px solid #ddd;
-        font-weight: bold;
-    }
-    
-    .invoice-box table tr.details td {
-        padding-bottom: 20px;
-    }
-    
-    .invoice-box table tr.item td{
-        border-bottom: 1px solid #eee;
-    }
-    
-    .invoice-box table tr.item.last td {
-        border-bottom: none;
-    }
-    
-    .invoice-box table tr.total td:nth-child(2) {
-        border-top: 2px solid #eee;
-        font-weight: bold;
-    }
-    
-    @media only screen and (max-width: 600px) {
-        .invoice-box table tr.top table td {
-            width: 100%;
-            display: block;
-            text-align: center;
-        }
-        
-        .invoice-box table tr.information table td {
-            width: 100%;
-            display: block;
-            text-align: center;
-        }
-    }
-    
-    /** RTL **/
-    .rtl {
-        direction: rtl;
-        font-family: Tahoma, 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-    }
-    
-    .rtl table {
-        text-align: right;
-    }
-    
-    .rtl table tr td:nth-child(2) {
-        text-align: left;
-    }
-    </style>
 </head>
 
-<body>
-    <div class="invoice-box">
-        <table cellpadding="0" cellspacing="0">
-            <tr class="top">
-                <td colspan="2">
-                    <table>
-                        <tr>
-                            <td class="title">
-                                <img src="https://www.sparksuite.com/images/logo.png" style="width:100%; max-width:300px;">
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            
-            <tr class="information">
-                <p>Pembayaran telah dikonfirmasi. Berikut adalah detail anda:</p>
-                <li>Company Code: <b>{{company.company_code}}</b></li>
-            </tr>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif">
 
-            <tr class="information">
-                <h3>{{otp}}</h3>
-            </tr>
-        </table>
+<div class="container" style="margin: 2em auto; width: 568px;">
+        <div class="row">
+            <div class="col">
+            </div>
+            <div class="col-lg-6">
+            <center>
+                <!-- MAIL HEADER -->
+                <div class="header" style="margin-top: 0.1em;">
+                <div style="width:100%;text-align: right;"><img src='https://lh6.googleusercontent.com/QtdirTfoJ4fwMIJE7h2ViaH5yMTdu0KtEu-FjmzSPCtJiBG4YyHEDlVeG2wj7Em1lp9z4ApAjqhy1UMMoaT5=w1920-h975' class="commjuction-logo" style="width: 10em;"></div>
+                <div class="header-cont" style="width:100%;height:auto;background: #115b8a;color:white;background: linear-gradient(90deg, #115b8a 0%, #529CD4 100%);padding:0.5em 0 0.5em 0";>
+                   Payment Verification
+                </div>    
+                </div>
+                <!-- END of MAIL HEADER -->
+                <!-- <img src='https://lh6.googleusercontent.com/QtdirTfoJ4fwMIJE7h2ViaH5yMTdu0KtEu-FjmzSPCtJiBG4YyHEDlVeG2wj7Em1lp9z4ApAjqhy1UMMoaT5=w1920-h975' class="commjuction-logo"> -->
+                <h2 class="cgrey" style="margin-top: 0.7em;">Verifikasi Pembayaran Layanan</h2>
+                <p class="clight" style="margin-top: 0.6em; color: grey;">
+                Pembayaran telah berhasil dikonfirmasi. Gunakan Company Code dibawah ini:</p> <br><br>
+                </p>
+
+                <p class="clight" style="margin-top: 0.6em; color: grey;">
+                <li>Company Code: <b>{{company.company_code}}</b></li>
+                </p>
+
+                 <p class="clight" style="margin-top: 0.6em; color: grey;">
+                Selalu jaga kerahasiaan Company Code Anda hanya terbatas untuk kalangan internal perusahaan Anda <br><br>
+                Untuk pertanyaan lebih lanjut, hubungi tim Support Kami</p>
+                </p>
+
+                <hr style="margin-top: 4em;">
+
+                <img src='https://api.vasdev.co.id:8066/smartcomm/resources/src/vascomm.png' class="vascomm-email"><br>
+                <small class="clight">Ruko Gateway, Jl. Raya Waru, Dusun Sawo, Sawotratap, Kec. Gedangan, Kabupaten Sidoarjo, Jawa Timur 61254</small>
+                <br>
+                <div style="margin-top: 1em;">
+            </center>
+
+            </div>
+             <!-- MAIL FOOTER -->
+                <div class="footer-cont" style="width:100%;height:auto;background:#4F4F4F;color:white;padding:0.5em 0.3em 0.5em 0.3em";>
+                    <div style="font-size:14px">Perhatian! </div>
+                    <p style="font-size:10px">Mohon untuk tidak melakukan reply pada email ini, email ini dibuat secara otomatis oleh sistem, untuk informasi lebih lanjut, hubungi call center / team Support kami, atau kontak kami melalui sosial media kami disini</p>
+                <div style="width:100%;text-align: right;"><img src='https://lh6.googleusercontent.com/3wLq86j9gq_TyK5-qYJrmsk4vd1wjorlnwLz6GD1bj8FCX8NWLQlREAjXpSdXSP2AczGLZvY8PGcZydNfq_R=w1920-h975' class="commjuction-logo" style="width: 10em;"></div>
+                <div style="width:100%;text-align: right;">
+                    <ul class="list-2" style="display: -webkit-box;display: -webkit-flex; display: -ms-flexbox; display: flex; -webkit-box-orient: horizontal;-webkit-box-direction: normal; -webkit-flex-direction: row; -ms-flex-direction: row; flex-direction: row; -webkit-box-pack: center; -webkit-justify-content: center; -ms-flex-pack: center; justify-content: center;    -webkit-box-align: center; -webkit-align-items: center; -ms-flex-align: center; align-items: center; list-style-type: none;">
+                        <li class="list-item-3" style="margin-left:1em;margin-right:1em;"><img src="https://uploads-ssl.webflow.com/5e21dc602c4935740e096895/5e21e2c9ae731c36b9d6e402_facebook%20-%20FontAwesome.svg" alt="" class="image-12"></li>
+                        <li class="list-item-3" style="margin-left:1em;margin-right:1em;"><img src="https://uploads-ssl.webflow.com/5e21dc602c4935740e096895/5e21e2c82c4935ea9409988a_twitter%20-%20FontAwesome.svg" alt=""></li>
+                        <li class="list-item-3" style="margin-left:1em;margin-right:1em;"><img src="https://uploads-ssl.webflow.com/5e21dc602c4935740e096895/5e21e2c710e3494ab5f24332_linkedin%20-%20FontAwesome.svg" alt=""></li>
+                        <li class="list-item-3" style="margin-left:1em;margin-right:1em;"><img src="https://uploads-ssl.webflow.com/5e21dc602c4935740e096895/5e21e2c84120666353d0cc02_youtube-play%20-%20FontAwesome.svg" alt=""></li>
+                      </ul>
+                </div>
+
+                </div>    
+                <!-- END of MAIL FOOTER -->
+            <div class="col">
+            </div>
+        </div>
     </div>
 </body>
+
 </html>

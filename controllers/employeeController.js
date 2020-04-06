@@ -1808,6 +1808,8 @@ exports.addSuratPeringatan = (APP, req, callback) => {
 };
 
 exports.verifyEmployee = (APP, req, callback) => {
+  console.log(req.user.db);
+
   let {
     employee,
     grade,
@@ -1819,6 +1821,7 @@ exports.verifyEmployee = (APP, req, callback) => {
     status_contract,
     schedule
   } = APP.models.company[req.user.db].mysql;
+
   let { grade_id, department_id, job_title_id, status_contract_id, schedule_id } = req.body;
 
   APP.db.sequelize.transaction().then(t => {

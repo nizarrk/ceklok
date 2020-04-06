@@ -665,6 +665,12 @@
     "function": "delete",
     "auth": true
   },
+  "/device/get": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "get",
+    "auth": true
+  },
   "/device/insert": {
     "method": "post",
     "controller": "deviceController",

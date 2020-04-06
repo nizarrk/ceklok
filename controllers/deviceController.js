@@ -3,12 +3,8 @@
 const async = require('async');
 
 exports.get = function(APP, req, callback) {
-  APP.models.mysql.device
-    .findAll({
-      where: {
-        name: req.body.name
-      }
-    })
+  APP.models.company[req.user.db].mysql.device
+    .findAll()
     .then(rows => {
       return callback(null, {
         code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
