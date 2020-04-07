@@ -947,6 +947,12 @@
     "function": "dashboardAdminCeklok",
     "auth": true
   },
+  "/dashboard/ceklok/get/feature": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardAdminCeklokFeature",
+    "auth": true
+  },
   "/profile/getbyid": {
     "method": "post",
     "controller": "profileController",

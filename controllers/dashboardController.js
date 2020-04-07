@@ -701,7 +701,6 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
 
 exports.dashboardAdminCeklok = (APP, req, callback) => {
   let { company, payment, endpoint } = APP.models.mysql;
-  let { _logs } = APP.models.mongo;
 
   async.waterfall(
     [
@@ -828,62 +827,22 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
             return b.total - a.total;
           });
 
+          // callback(null, {
+          //   total_company: result.total_company,
+          //   employee: result.employee.company,
+          //   transaction: arr
+          // });
+
           callback(null, {
-            total_company: result.total_company,
-            employee: result.employee.company,
-            transaction: arr
+            code: 'OK',
+            data: {
+              total_company: result.total_company,
+              company_code: result.company_code,
+              employee: result.employee,
+              transaction: arr
+            }
           });
         });
-      },
-
-      function getFeatureUsage(result, calllback) {
-        let arr = [];
-        let count = {};
-        let all = 0;
-        endpoint
-          .findAndCountAll({
-            attributes: ['endpoint']
-          })
-          .then(res => {
-            res.rows.map((x, i) => {
-              arr.push(x.dataValues.endpoint);
-            });
-
-            Promise.all(
-              arr.map((y, i) => {
-                return _logs
-                  .find({
-                    endpoint: y
-                  })
-                  .then(logs => {
-                    all += logs.length;
-                    count[arr[i]] = logs.length;
-
-                    return true;
-                  })
-                  .catch(err => {
-                    console.log('Error getFeatureUsage', err);
-                    callback({
-                      code: 'ERR_DATABASE',
-                      message: 'Error getFeatureUsage',
-                      data: err
-                    });
-                  });
-              })
-            ).then(() => {
-              callback(null, {
-                code: 'OK',
-                data: {
-                  total_company: result.total_company,
-                  company_code: result.company_code,
-                  employee: result.employee,
-                  transaction: result.transaction,
-                  feature_access: count,
-                  all_feature_usage: all
-                }
-              });
-            });
-          });
       }
     ],
     (err, result) => {
@@ -892,4 +851,54 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
       callback(null, result);
     }
   );
+};
+
+exports.dashboardAdminCeklokFeature = (APP, req, callback) => {
+  let { _logs } = APP.models.mongo;
+  let { endpoint } = APP.models.mysql;
+  let arr = [];
+  let count = {};
+  let all = 0;
+  endpoint
+    .findAndCountAll({
+      attributes: ['endpoint']
+    })
+    .then(res => {
+      res.rows.map((x, i) => {
+        arr.push(x.dataValues.endpoint);
+      });
+
+      Promise.all(
+        arr.map((y, i) => {
+          return _logs
+            .count({
+              endpoint: y
+            })
+            .then(logs => {
+              console.log(logs);
+
+              all += logs;
+              count[arr[i]] = logs;
+
+              return true;
+            })
+            .catch(err => {
+              console.log('Error getFeatureUsage', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error getFeatureUsage',
+                data: err
+              });
+            });
+        })
+      ).then(() => {
+        callback(null, {
+          code: 'OK',
+          data: {
+            feature_access: count,
+            all_feature_usage: all
+          }
+        });
+      });
+    });
 };
