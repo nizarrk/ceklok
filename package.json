@@ -30,9 +30,11 @@
     }
   },
   "dependencies": {
+    "@tensorflow/tfjs-node": "^1.7.2",
     "async": "^3.1.0",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.2",
+    "canvas": "^2.6.1",
     "cors": "^2.8.5",
     "crypto-random-string": "^3.0.0",
     "csvjson": "^5.1.0",
@@ -40,6 +42,7 @@
     "express": "^4.16.3",
     "express-fileupload": "^1.1.6",
     "express-msisdn": "^1.0.8",
+    "face-api.js": "^0.22.2",
     "firebase-admin": "^8.10.0",
     "ip": "^1.1.5",
     "jsonwebtoken": "^8.5.1",

@@ -212,7 +212,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 status: result.status,
                 period: result.period,
                 data: res,
-                yesterday: yesterday
+                yesterday: yesterday.format('YYYY-MM-DD')
               });
             } else {
               Promise.all(
@@ -266,20 +266,85 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   }
 
                   if (leaveDay.length == 0 && data.check_in == '00:00:00' && data.check_out == '00:00:00') {
-                    presence
-                      .update(
-                        {
-                          presence_setting_id: result.status[4].id, // 'A'
-                          total_minus: data.schedule.work_time
-                        },
-                        {
-                          where: {
-                            id: data.id
-                          }
-                        }
+                    // check izin dan cuti
+                    APP.db.sequelize
+                      .query(
+                        `SELECT * FROM ${process.env.MYSQL_NAME}_${req.body.company}.absent_cuti
+                      WHERE
+                        user_id = ${data.user_id} 
+                      AND
+                        status = 1
+                      AND
+                        '${yesterday.format('YYYY-MM-DD')}' >= date_format(date_start, '%Y-%m-%d') 
+                      AND 
+                        '${yesterday.format('YYYY-MM-DD')}' <= date_format(date_end, '%Y-%m-%d')`
                       )
-                      .then(updated => {
-                        console.log('Hasil A', updated);
+                      .then(found => {
+                        if (found[0].length == 0) {
+                          // Data Absent Cuti Not Found == Absent
+                          presence
+                            .update(
+                              {
+                                presence_setting_id: result.status[4].id, // 'A'
+                                total_minus: data.schedule.work_time
+                              },
+                              {
+                                where: {
+                                  id: data.id
+                                }
+                              }
+                            )
+                            .then(updated => {
+                              console.log('Hasil A', updated);
+                            });
+                        } else {
+                          // Data Absent Cuti Found
+                          return found[0].map(x => {
+                            if (x.type == 0) {
+                              presence
+                                .update(
+                                  {
+                                    presence_setting_id: result.status[5].id, // 'I'
+                                    total_minus: x.time_total
+                                  },
+                                  {
+                                    where: {
+                                      id: data.id
+                                    }
+                                  }
+                                )
+                                .then(updated => {
+                                  console.log('hasile I', updated);
+                                });
+                            } else if (x.type == 1) {
+                              presence
+                                .update(
+                                  {
+                                    presence_setting_id: result.status[6].id, // 'C'
+                                    total_minus: x.time_total
+                                  },
+                                  {
+                                    where: {
+                                      id: data.id
+                                    }
+                                  }
+                                )
+                                .then(updated => {
+                                  console.log('hasile C', updated);
+                                });
+                            } else {
+                              console.log('Type Unknown!');
+                            }
+                          });
+                        }
+                      })
+                      .catch(err => {
+                        console.log('Error checkAbsentCuti', err);
+                        callback({
+                          code: 'ERR_DATABASE',
+                          message: 'Error checkAbsentCuti',
+                          data: err
+                        });
                       });
                   }
                 })
@@ -289,7 +354,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     status: result.status,
                     period: result.period,
                     data: res,
-                    yesterday: yesterday
+                    yesterday: yesterday.format('YYYY-MM-DD')
                   });
                 })
                 .catch(err => {
@@ -312,103 +377,6 @@ exports.generateDailyPresence = (APP, req, callback) => {
             });
           });
       },
-
-      function checkAbsentCuti(result, callback) {
-        if (result.data.length == 0) {
-          callback(null, result);
-        } else {
-          Promise.all(
-            result.data.map((data, index) => {
-              APP.db.sequelize
-                .query(
-                  `SELECT * FROM ${process.env.MYSQL_NAME}_${req.body.company}.absent_cuti
-                WHERE
-                  user_id = ${data.user_id} 
-                AND
-                  status = 1
-                AND
-                  '${result.yesterday}' >= date_format(date_start, '%Y-%m-%d') AND '${result.yesterday}' <= date_format(date_end, '%Y-%m-%d')`
-                )
-                .then(found => {
-                  return found[0].map(x => {
-                    if (x.type == 0) {
-                      presence
-                        .update(
-                          {
-                            presence_setting_id: result.status[5].id, // 'I'
-                            total_minus: x.time_total
-                          },
-                          {
-                            where: {
-                              id: data.id
-                            }
-                          }
-                        )
-                        .then(updated => {
-                          console.log('hasile I', updated);
-                        });
-                    }
-
-                    if (x.type == 1) {
-                      presence
-                        .update(
-                          {
-                            presence_setting_id: result.status[6].id // 'C'
-                          },
-                          {
-                            where: {
-                              id: data.id
-                            }
-                          }
-                        )
-                        .then(updated => {
-                          console.log('hasile C', updated);
-                        });
-                    }
-                  });
-                })
-                .catch(err => {
-                  console.log('Error checkAbsentCuti', err);
-                  callback({
-                    code: 'ERR_DATABASE',
-                    message: 'Error checkAbsentCuti',
-                    data: err
-                  });
-                });
-            })
-          )
-            .then(() => {
-              callback(null, result);
-            })
-            .catch(err => {
-              console.log('Error checkAbsentCuti', err);
-              callback({
-                code: 'ERR',
-                id: '',
-                message: '',
-                data: err
-              });
-            });
-        }
-      },
-
-      // function checkTodayPresence(result, callback) {presence
-      //     .findAll({
-      //       where: {
-      //         date: new Date()
-      //       }
-      //     })
-      //     .then(res => {
-      //       if (res.length == 0) {
-      //         callback(null, result);
-      //       } else {
-      //         callback({
-      //           code: 'INVALID_REQUEST',
-      //           message: 'Data Presence hari ini sudah di generate'
-      //         });
-      //       }
-      //     });
-      // },
 
       function getEmployeeData(result, callback) {
         employee.belongsTo(schedule, {
@@ -1158,7 +1126,9 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
                 check_in_branch.name AS 'check_in_branch_name',
                 check_in_branch.address AS 'check_in_branch_address',
                 check_out_branch.name AS 'check_out_branch_name',
-                check_out_branch.address AS 'check_out_branch_address' 
+                check_out_branch.address AS 'check_out_branch_address',
+                presence_setting.value AS 'presence_status_name',
+                presence_setting.description AS 'presence_status_description'
               FROM 
                 ${req.user.db}.presence AS presence 
               LEFT OUTER JOIN 
@@ -1171,6 +1141,8 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
                 ${req.user.db}.branch AS check_in_branch ON presence.check_in_branch_id = check_in_branch.id 
               LEFT OUTER JOIN 
                 ${req.user.db}.branch AS check_out_branch ON presence.check_out_branch_id = check_out_branch.id
+              LEFT OUTER JOIN
+                ${req.user.db}.presence_setting AS presence_setting ON presence.presence_setting_id = presence_setting.id
               WHERE  
                 ${params}`;
 
