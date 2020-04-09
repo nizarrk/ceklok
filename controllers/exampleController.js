@@ -63,13 +63,14 @@ exports.test = function(APP, req, callback) {
                 .withFaceDescriptor();
 
               descriptions.push(detections.descriptor);
+              console.log(label);
+
+              console.log(descriptions);
             }
             return new faceapi.LabeledFaceDescriptors(label, descriptions);
           })
         )
           .then(arr => {
-            console.log(arr);
-
             callback(null, {
               code: 'OK',
               data: arr

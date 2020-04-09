@@ -1819,7 +1819,8 @@ exports.verifyEmployee = (APP, req, callback) => {
     department,
     job_title,
     status_contract,
-    schedule
+    schedule,
+    presence
   } = APP.models.company[req.user.db].mysql;
 
   let { grade_id, department_id, job_title_id, status_contract_id, schedule_id } = req.body;
@@ -2005,49 +2006,49 @@ exports.verifyEmployee = (APP, req, callback) => {
             })
             .then(res => {
               if (res == null) {
-                return callback({
+                callback({
                   code: 'NOT_FOUND',
                   message: 'Email tidak terdaftar'
                 });
-              }
-              if (res.status == 1) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Akun sudah di verify'
-                });
-              }
-              res
-                .update({
-                  grade_id: grade_id,
-                  department_id: department_id,
-                  job_title_id: job_title_id,
-                  status: 1,
-                  status_contract_id: status_contract_id,
-                  status_contract_upload: result.doc.slice(8),
-                  schedule_id: schedule_id
-                })
-                .then(updated => {
-                  callback(null, {
-                    grade: result.grade,
-                    department: result.department,
-                    job: result.job,
-                    contract: result.contract,
-                    schedule: result.schedule,
-                    updated: updated.dataValues
+              } else {
+                if (res.status == 1) {
+                  return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Akun sudah di verify'
                   });
-                })
-                .catch(err => {
-                  console.log('1', err);
-
-                  callback({
-                    code: 'ERR_DATABASE',
-                    data: err
-                  });
-                });
+                } else {
+                  res
+                    .update({
+                      grade_id: grade_id,
+                      department_id: department_id,
+                      job_title_id: job_title_id,
+                      status: 1,
+                      status_contract_id: status_contract_id,
+                      status_contract_upload: result.doc.slice(8),
+                      schedule_id: schedule_id
+                    })
+                    .then(updated => {
+                      callback(null, {
+                        grade: result.grade,
+                        department: result.department,
+                        job: result.job,
+                        contract: result.contract,
+                        schedule: result.schedule,
+                        updated: updated.dataValues
+                      });
+                    })
+                    .catch(err => {
+                      console.log('Error update updateEmployeeInfo', err);
+                      callback({
+                        code: 'ERR_DATABASE',
+                        data: err
+                      });
+                    });
+                }
+              }
             })
             .catch(err => {
-              console.log('2', err);
-
+              console.log('Error findOne updateEmployeeInfo', err);
               callback({
                 code: 'ERR_DATABASE',
                 data: err
@@ -2083,6 +2084,26 @@ exports.verifyEmployee = (APP, req, callback) => {
           });
         },
 
+        function createTodayPresence(result, callback) {
+          presence
+            .create({
+              user_id: result.updated.id,
+              schedule_id: result.updated.schedule_id,
+              date: new Date(),
+              presence_setting_id: 4 // WA
+            })
+            .then(res => {
+              callback(null, result);
+            })
+            .catch(err => {
+              console.log('Error createTodayPresence', err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        },
+
         function sendEmailAndUpload(result, callback) {
           try {
             //send to email
@@ -2104,8 +2125,6 @@ exports.verifyEmployee = (APP, req, callback) => {
 
             // upload file
             if (req.files.upload) {
-              console.log('ngupload cok');
-
               req.files.upload.mv('./public' + result.updated.status_contract_upload, function(err) {
                 if (err) {
                   console.log(err);
