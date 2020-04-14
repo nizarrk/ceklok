@@ -625,12 +625,15 @@ exports.verifyCompany = (APP, req, callback) => {
                     models[modelName] = Model;
 
                     if (n === len) {
-                      let mysqls = {};
+                      let mysqls = {
+                        mysql: {}
+                      };
 
                       Object.keys(models).forEach(val => {
                         if (models[val].associate) models[val].associate(models);
 
-                        mysqls[val] = models[val];
+                        mysqls.mysql[val] = models[val];
+                        APP.models.company[data.dbName] = mysqls;
                       });
                     }
 
