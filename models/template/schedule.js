@@ -44,15 +44,20 @@ module.exports = function(sequelize, Sequelize) {
       work_day: {
         type: Sequelize.STRING(45),
         get: function() {
-          let data = this.getDataValue('work_day').split(',');
-          let hasil = [];
+          if (this.getDataValue('work_day').toString().length === 1) {
+            let data = this.getDataValue('work_day');
+            return [data];
+          } else {
+            let data = this.getDataValue('work_day').split(',');
+            let hasil = [];
 
-          data.map(x => {
-            let num = parseInt(x);
-            hasil.push(num);
-          });
+            data.map(x => {
+              let num = parseInt(x);
+              hasil.push(num);
+            });
 
-          return hasil;
+            return hasil;
+          }
         }
       },
       status: {
