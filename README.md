@@ -30,3 +30,6 @@ Ayapingping Framework, maintained by Core Developer Vascomm (From Core, By Core,
 - Fix whole project for linting / formatting error
 
         npm run lint
+
+
+Restart Server
