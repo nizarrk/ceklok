@@ -6,7 +6,7 @@ exports.get = function(APP, req, callback) {
   APP.models.company[req.user.db].mysql.status_contract
     .findAll()
     .then(rows => {
-      return callback(null, {
+      callback(null, {
         code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
         data: rows,
         info: {
@@ -15,7 +15,31 @@ exports.get = function(APP, req, callback) {
       });
     })
     .catch(err => {
-      return callback({
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
+exports.getById = function(APP, req, callback) {
+  APP.models.company[req.user.db].mysql.status_contract
+    .findOne({
+      where: {
+        id: req.body.id
+      }
+    })
+    .then(rows => {
+      callback(null, {
+        code: rows !== null ? 'FOUND' : 'NOT_FOUND',
+        data: rows,
+        info: {
+          dataCount: rows.length
+        }
+      });
+    })
+    .catch(err => {
+      callback({
         code: 'ERR_DATABASE',
         data: err
       });
