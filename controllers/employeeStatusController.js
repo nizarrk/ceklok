@@ -147,7 +147,8 @@ exports.update = function(APP, req, callback) {
         name: req.body.name,
         description: req.body.desc,
         leave_setting: req.body.setting,
-        leave_permission: req.body.cuti
+        leave_permission: req.body.cuti,
+        status: req.body.status
       },
       {
         where: {
@@ -156,13 +157,66 @@ exports.update = function(APP, req, callback) {
       }
     )
     .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
-        return callback(null, {
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
+
+      let params = 'Update Success'; //This is only example, Object can also be used
+      return callback(null, {
+        code: 'UPDATE_SUCCESS',
+        data: params
+      });
+    })
+    .catch(err => {
+      console.log('iki error', err);
+
+      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+        let params = 'Error! Empty Query'; //This is only example, Object can also be used
+        return callback({
           code: 'UPDATE_NONE',
           data: params
         });
       }
+
+      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+        return callback({
+          code: 'DUPLICATE',
+          data: params
+        });
+      }
+
+      return callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
+exports.updateStatus = function(APP, req, callback) {
+  APP.models.company[req.user.db].mysql.status_contract
+    .update(
+      {
+        status: req.body.status
+      },
+      {
+        where: {
+          id: req.body.id
+        }
+      }
+    )
+    .then(result => {
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
 
       let params = 'Update Success'; //This is only example, Object can also be used
       return callback(null, {
