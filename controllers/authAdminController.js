@@ -840,7 +840,7 @@ exports.login = (APP, req, callback) => {
       function checkAdmin(index, callback) {
         APP.models.mysql.admin
           .findAll({
-            attributes: ['id', 'company_id', 'company_code', 'name', 'password', 'photo', 'initial_login'],
+            attributes: ['id', 'company_id', 'company_code', 'name', 'password', 'photo', 'initial_login', 'status'],
             where: {
               user_name: req.body.username
             }

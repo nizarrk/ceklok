@@ -68,7 +68,7 @@ exports.login = (APP, req, callback) => {
       function checkSuperAdmin(index, callback) {
         APP.models.mysql.admin_app
           .findAll({
-            attributes: ['id', 'name', 'password', 'photo', 'initial_login'],
+            attributes: ['id', 'name', 'password', 'photo', 'initial_login', 'status'],
             where: {
               user_name: req.body.username
             }

@@ -385,7 +385,7 @@ exports.login = (APP, req, callback) => {
       function checkUser(index, callback) {
         APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql.employee
           .findAll({
-            attributes: ['id', 'company_code', 'name', 'password', 'photo', 'initial_login'],
+            attributes: ['id', 'company_code', 'name', 'password', 'photo', 'initial_login', 'status'],
             where: {
               user_name: req.body.username,
               company_code: req.body.company
