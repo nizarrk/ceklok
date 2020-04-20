@@ -18,8 +18,6 @@ const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 exports.test = function(APP, req, callback) {
-  console.log(path.join(__dirname, 'weights/'));
-
   async.waterfall(
     [
       function loadModelData(callback) {
@@ -47,13 +45,36 @@ exports.test = function(APP, req, callback) {
       },
 
       function training(data, callback) {
-        let labels = [];
-        let descriptions = [];
-        labels = ['Mas_Adi'];
+        // let labels = [];
+        let descriptions = {};
+        let labels = fs.readdirSync('./public/labeled_images/');
         return Promise.all(
           labels.map(async label => {
-            for (let i = 1; i <= 1; i++) {
+            descriptions[label] = [];
+            // console.log(label);
+
+            // let images = fs.readdirSync(`./public/labeled_images/${label}/`);
+
+            // return images.map(img => {
+            //   canvas.loadImage(`./public/labeled_images/${label}/${img}`)
+            //     .then(async image => {
+            //       console.log(image);
+            //       return faceapi.detectSingleFace(image)
+            //       .withFaceLandmarks()
+            //       .withFaceDescriptor()
+            //       .then(detection => {
+            //         // console.log(detection.descriptor);
+            //         descriptions.push(detection.descriptor);
+            //         return new faceapi.LabeledFaceDescriptors(label, descriptions);
+            //       })
+            //     })
+            // })
+
+            for (let i = 1; i <= 2; i++) {
+              console.log('masuk for iterasi ke:', i);
+
               let img = await canvas.loadImage(`./public/labeled_images/${label}/${i}.jpg`);
+              console.log(img);
 
               // let imgFile = await faceapi.fetchImage(`https://pejalancoding.site/faceRecognition/labeled_images/${label}/${i}.jpg`);
               // let img = await faceapi.bufferToImage(imgFile);
@@ -62,18 +83,40 @@ exports.test = function(APP, req, callback) {
                 .withFaceLandmarks()
                 .withFaceDescriptor();
 
-              descriptions.push(detections.descriptor);
-              console.log(label);
-
-              console.log(descriptions);
+              descriptions[label].push(detections.descriptor);
             }
-            return new faceapi.LabeledFaceDescriptors(label, descriptions);
+            console.log('keluar for');
+            console.log(descriptions.length);
+
+            let loadLabeledImages = new faceapi.LabeledFaceDescriptors(label, descriptions[label]);
+
+            return loadLabeledImages;
+            // let faceMatcher = new faceapi.FaceMatcher(loadLabeledImages, 0.6);
+            // return faceMatcher;
           })
         )
           .then(arr => {
-            callback(null, {
-              code: 'OK',
-              data: arr
+            console.log(arr);
+
+            Promise.all(
+              arr.map(x => {
+                let json = JSON.stringify(x);
+                fs.writeFile(`./public/training/${x.label}.json`, json, 'utf8', (err, result) => {
+                  if (err) {
+                    callback({
+                      code: 'ERR',
+                      data: err
+                    });
+                  } else {
+                    return result;
+                  }
+                });
+              })
+            ).then(result => {
+              callback(null, {
+                code: 'OK',
+                data: result
+              });
             });
           })
           .catch(err => {
@@ -91,4 +134,8 @@ exports.test = function(APP, req, callback) {
       callback(null, result);
     }
   );
+};
+
+exports.testing = async (APP, req, callback) => {
+  console.log(new Date('2020-04-17 9:52').getTime());
 };

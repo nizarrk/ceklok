@@ -11,7 +11,7 @@
     "controller": "exampleController",
     "function": "testing",
     "level": 0,
-    "auth": true
+    "auth": false
   },
   "/auth/admin/register": {
     "method": "post",
@@ -827,8 +827,8 @@
   },
   "/presence/setting/get": {
     "method": "post",
-    "controller": "presenceSettingController",
-    "function": "get",
+    "controller": "presenceController",
+    "function": "getSettingsCompany",
     "level": 1,
     "auth": true
   },
@@ -1347,6 +1347,34 @@
     "controller": "notificationController",
     "function": "notificationSettingsCompany",
     "level": 2,
+    "auth": true
+  },
+  "/operational/company/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getSpecificCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/employee/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getSpecificEmployee",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/company/activity/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getCompanyActivityLog",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/employee/activity/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getEmployeeActivityLog",
+    "level": 1,
     "auth": true
   }
 }

@@ -66,7 +66,20 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
-      action_by: {
+      approved_at: {
+        type: Sequelize.DATE
+      },
+      approved_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      created_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      updated_by: {
         type: Sequelize.INTEGER(10),
         defaultValue: 0,
         allowNull: false

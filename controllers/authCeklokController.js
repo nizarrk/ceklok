@@ -312,7 +312,10 @@ exports.verifyCompany = (APP, req, callback) => {
                 .update(
                   {
                     status: 1,
-                    image_admin: data.path.slice(8)
+                    image_admin: data.path.slice(8),
+                    updated_at: new Date(),
+                    approved_at: new Date(),
+                    approved_by: req.user.id
                   },
                   { transaction: t }
                 )

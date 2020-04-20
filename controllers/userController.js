@@ -446,7 +446,7 @@ exports.createUserAdminCeklok = (APP, req, callback) => {
 exports.getAllListUser = (APP, req, callback) => {
   let mysql = APP.models.mysql;
 
-  if (req.user.admin) {
+  if (req.user.level === 2) {
     mysql.admin
       .findAll({
         where: {
@@ -473,7 +473,7 @@ exports.getAllListUser = (APP, req, callback) => {
           data: err
         });
       });
-  } else if (req.user.superadmin) {
+  } else if (req.user.level === 1) {
     mysql.admin_app
       .findAll()
       .then(res => {
@@ -507,7 +507,7 @@ exports.getAllListUser = (APP, req, callback) => {
 exports.getDetailsUser = (APP, req, callback) => {
   let mysql = APP.models.mysql;
 
-  if (req.user.admin) {
+  if (req.user.level === 2) {
     mysql.admin
       .findOne({
         where: {
@@ -535,7 +535,7 @@ exports.getDetailsUser = (APP, req, callback) => {
           data: err
         });
       });
-  } else if (req.user.superadmin) {
+  } else if (req.user.level === 1) {
     mysql.admin_app
       .findOne({
         where: {

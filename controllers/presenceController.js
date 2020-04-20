@@ -1197,12 +1197,83 @@ exports.checkStatus = (APP, req, callback) => {
     });
 };
 
+exports.getSettingsCompany = (APP, req, callback) => {
+  let { presence_setting_master } = APP.models.mysql;
+  let { presence_setting } = APP.models.company[req.user.db].mysql;
+
+  async.waterfall(
+    [
+      function getSettingsMaster(callback) {
+        let arr = [];
+        presence_setting_master
+          .findAll()
+          .then(res => {
+            if (res.length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Presence Setting tidak ditemukan!'
+              });
+            } else {
+              res.map(x => {
+                arr.push(x.dataValues);
+              });
+              callback(null, arr);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function getSettingsCompany(data, callback) {
+        Promise.all(
+          data.map((x, i) => {
+            return presence_setting
+              .findAll({
+                where: {
+                  presence_setting_id: x.id
+                }
+              })
+              .then(res => {
+                data[i].presence_settings = res;
+                return true;
+              });
+          })
+        )
+          .then(() => {
+            callback(null, {
+              code: 'FOUND',
+              message: 'Presence Setting Ditemukan!',
+              data: data
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.presenceSettings = (APP, req, callback) => {
   if (req.user.level === 1) {
     let { presence_setting_master } = APP.models.mysql;
     let { settings } = req.body;
 
-    if (!settings) {
+    if (!settings || Array.isArray(settings) === false) {
       callback({
         code: 'INVALID_REQUEST',
         id: 'SPQ96',
@@ -1251,83 +1322,54 @@ exports.presenceSettings = (APP, req, callback) => {
 
 exports.presenceSettingsCompany = (APP, req, callback) => {
   if (req.user.level === 2) {
-    let { presence_setting_master } = APP.models.mysql;
     let { presence_setting } = APP.models.company[req.user.db].mysql;
-    let { type, value, desc } = req.body;
+    let { settings } = req.body;
 
-    async.waterfall(
-      [
-        function checkParam(callback) {
-          if (type && value) {
-            callback(null, true);
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              id: 'SPQ96',
-              message: 'Kesalahan pada parameter'
-            });
-          }
-        },
-
-        function checkpresenceType(data, callback) {
-          presence_setting_master
-            .findOne({
-              where: {
-                id: type
+    if (!settings || Array.isArray(settings) === false) {
+      callback({
+        code: 'INVALID_REQUEST',
+        id: 'SPQ96',
+        message: 'Kesalahan pada parameter'
+      });
+    } else {
+      Promise.all(
+        settings.map((x, index) => {
+          return presence_setting
+            .update(
+              {
+                value: x.value,
+                description: x.desc
+              },
+              {
+                where: {
+                  id: x.id
+                }
               }
-            })
-            .then(res => {
-              if (res == null) {
-                return callback({
-                  code: 'NOT_FOUND',
-                  message: 'presence_setting_master tidak ditemukan'
-                });
-              }
-              callback(null, true);
-            })
-            .catch(err => {
-              console.log('Error checkpresenceType', err);
-              callback({
-                code: 'ERR_DATABASE',
-                message: 'Error checkpresenceType',
-                data: err
-              });
+            )
+            .then(updated => {
+              console.log(updated);
+              return updated;
             });
-        },
-
-        function addSettings(data, callback) {
-          presence_setting
-            .create({
-              presence_setting_id: type,
-              value: value,
-              description: desc
-            })
-            .then(res => {
-              callback(null, {
-                code: 'INSERT_SUCCESS',
-                id: 'SPP00',
-                message: 'Setting presence berhasil diubah',
-                data: res
-              });
-            })
-            .catch(err => {
-              console.log('Error addSetting', err);
-              callback({
-                code: 'ERR_DATABASE',
-                id: 'SPQ98',
-                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-                data: err
-              });
-            });
-        }
-      ],
-      (err, result) => {
-        if (err) {
-          return callback(err);
-        }
-        callback(null, result);
-      }
-    );
+        })
+      )
+        .then(arr => {
+          callback(null, {
+            code: 'UPDATE_SUCCESS',
+            id: 'SPP00',
+            message: 'Setting presence berhasil diubah',
+            data: arr
+          });
+        })
+        .catch(err => {
+          console.log(err);
+          callback({
+            code: 'ERR',
+            id: '',
+            message: 'Terjadi kesalahan, mohon coba kembali atau hubungi tim operasional kami',
+            data: err
+          });
+        });
+    }
   } else {
     callback({
       code: 'INVALID_REQUEST',

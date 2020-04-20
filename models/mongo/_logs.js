@@ -6,14 +6,20 @@ module.exports = function(mongo) {
   const ModelSchema = mongo.Schema({
     feature_id: String,
     subfeature_id: String,
-    endpoint: String,
+    endpoint: {
+      type: String,
+      index: true
+    },
     request: String,
     response: String,
     status: String,
     ip: String,
     user_id: String,
     level: String,
-    company: String,
+    company: {
+      type: String,
+      index: true
+    },
     date: Date,
     time: String,
     elapsed_time: String

@@ -94,7 +94,8 @@ exports.listAllTransaction = function(APP, req, callback) {
                 ]
               }
             ],
-            where: params
+            where: params,
+            order: [['id', 'ASC']]
           })
           .then(rows => {
             if (rows.length == 0) {
@@ -131,7 +132,7 @@ exports.listAllTransaction = function(APP, req, callback) {
 };
 
 exports.transactionDetail = (APP, req, callback) => {
-  let { payment, payment_detail, payment_method, payment_type, transaction_type } = APP.models.mysql;
+  let { payment, payment_detail, payment_method, payment_type, transaction_type, admin_app, admin } = APP.models.mysql;
   let params = { id: req.body.id };
 
   async.waterfall(
@@ -165,6 +166,16 @@ exports.transactionDetail = (APP, req, callback) => {
         payment.belongsTo(payment_method, {
           targetKey: 'id',
           foreignKey: 'payment_method_id'
+        });
+
+        payment.belongsTo(admin_app, {
+          targetKey: 'id',
+          foreignKey: 'approved_by'
+        });
+
+        payment.belongsTo(admin, {
+          targetKey: 'id',
+          foreignKey: 'created_by'
         });
 
         // add payment_type to payment_method
@@ -207,6 +218,14 @@ exports.transactionDetail = (APP, req, callback) => {
                     attributes: ['id', 'name']
                   }
                 ]
+              },
+              {
+                model: admin_app,
+                attributes: ['id', 'name', 'user_name', 'photo']
+              },
+              {
+                model: admin,
+                attributes: ['id', 'name', 'user_name', 'photo']
               }
             ],
             where: params
