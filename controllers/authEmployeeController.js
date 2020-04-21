@@ -398,7 +398,7 @@ exports.login = (APP, req, callback) => {
                 message: 'Invalid Username or Password'
               });
             } else {
-              if (rows[0].status == 0) {
+              if (rows[0].status !== 1) {
                 callback({
                   code: 'INVALID_REQUEST',
                   message: 'User have to wait for admin to verify their account first!'
@@ -462,6 +462,7 @@ exports.login = (APP, req, callback) => {
         APP.models.mongo.token
           .findOne({
             id_user: rows.id,
+            level: 3,
             company_code: rows.company_code,
             platform: req.body.platform
           })
@@ -500,6 +501,8 @@ exports.login = (APP, req, callback) => {
               APP.models.mongo.token
                 .create({
                   id_user: rows.id,
+                  level: 3,
+                  company_code: rows.company_code,
                   platform: req.body.platform,
                   token,
                   date: req.customDate,

@@ -1376,5 +1376,12 @@
     "function": "getEmployeeActivityLog",
     "level": 1,
     "auth": true
+  },
+  "/operational/company/redeactivate": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "redeactivateCompany",
+    "level": 1,
+    "auth": true
   }
 }

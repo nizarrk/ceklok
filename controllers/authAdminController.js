@@ -846,20 +846,21 @@ exports.login = (APP, req, callback) => {
             }
           })
           .then(rows => {
-            if (rows.length <= 0) {
-              return callback({
+            if (rows.length == 0) {
+              callback({
                 code: 'NOT_FOUND',
                 message: 'Invalid Username or Password'
               });
+            } else {
+              if (rows[0].status !== 1) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'Company have to wait for admin to verify their account first!'
+                });
+              } else {
+                callback(null, rows);
+              }
             }
-
-            if (rows[0].status == 0) {
-              return callback({
-                code: 'INVALID_REQUEST',
-                message: 'Company have to wait for admin to verify their account first!'
-              });
-            }
-            callback(null, rows);
           })
           .catch(err => {
             callback({
@@ -916,7 +917,9 @@ exports.login = (APP, req, callback) => {
 
         APP.models.mongo.token
           .findOne({
-            id_admin: rows.id,
+            id_user: rows.id,
+            level: 2,
+            company_code: rows.company_code,
             platform: req.body.platform
           })
           .then(res => {
@@ -953,7 +956,9 @@ exports.login = (APP, req, callback) => {
 
               APP.models.mongo.token
                 .create({
-                  id_admin: rows.id,
+                  id_user: rows.id,
+                  level: 2,
+                  company_code: rows.company_code,
                   platform: req.body.platform,
                   token,
                   date: req.customDate,

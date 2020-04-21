@@ -20,6 +20,36 @@ module.exports = function(sequelize, Sequelize) {
       name: {
         type: Sequelize.STRING(45)
       },
+      gender: {
+        type: Sequelize.INTEGER(11) //1 = Male, 2 = Female, 3 = Other
+      },
+      pob: {
+        type: Sequelize.STRING(45)
+      },
+      dob: {
+        type: Sequelize.DATE
+      },
+      address: {
+        type: Sequelize.STRING(45)
+      },
+      kelurahan: {
+        type: Sequelize.STRING(45)
+      },
+      kecamatan: {
+        type: Sequelize.STRING(45)
+      },
+      city: {
+        type: Sequelize.STRING(45)
+      },
+      province: {
+        type: Sequelize.STRING(45)
+      },
+      zipcode: {
+        type: Sequelize.STRING(45)
+      },
+      msisdn: {
+        type: Sequelize.STRING(45)
+      },
       tlp: {
         type: Sequelize.STRING(45)
       },

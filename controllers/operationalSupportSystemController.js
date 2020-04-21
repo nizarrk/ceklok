@@ -1,6 +1,7 @@
 'use strict';
 
 const async = require('async');
+const path = require('path');
 
 exports.getSpecificCompany = (APP, req, callback) => {
   let { admin, company } = APP.models.mysql;
@@ -202,4 +203,168 @@ exports.getEmployeeActivityLog = (APP, req, callback) => {
         data: err
       });
     });
+};
+
+exports.redeactivateCompany = (APP, req, callback) => {
+  let { admin, company } = APP.models.mysql;
+  let { token } = APP.models.mongo;
+
+  APP.db.sequelize.transaction().then(t => {
+    async.waterfall(
+      [
+        function checkCompany(callback) {
+          company
+            .findOne(
+              {
+                where: {
+                  id: req.body.id
+                }
+              },
+              { transaction: t }
+            )
+            .then(res => {
+              if (res == null) {
+                callback({
+                  code: 'NOT_FOUND',
+                  message: 'Company tidak ditemukan!'
+                });
+              } else {
+                callback(null, res);
+              }
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        },
+
+        function uploadPath(data, callback) {
+          try {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                id: '?',
+                message: 'Kesalahan pada parameter upload'
+              });
+            }
+
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let doc = `./public/uploads/company_${data.company_code}/status/`;
+
+            callback(null, {
+              upload: doc + fileName + path.extname(req.files.upload.name),
+              status: data.status,
+              company_code: data.company_code
+            });
+          } catch (err) {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          }
+        },
+
+        function updateCompanyStatus(data, callback) {
+          company
+            .update(
+              {
+                status: data.status == 1 ? 2 : 1,
+                status_upload: data.upload.slice(8) // slice 8 buat hilangin ./public
+              },
+              {
+                where: {
+                  id: req.body.id
+                },
+                transaction: t
+              }
+            )
+            .then(updated => {
+              callback(null, {
+                status: data.status,
+                company_code: data.company_code,
+                updated: updated,
+                upload: data.upload
+              });
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        },
+
+        function redeactivateAdmin(data, callback) {
+          admin
+            .update(
+              {
+                status: data.status == 1 ? 2 : 1
+              },
+              {
+                where: {
+                  company_id: req.body.id
+                },
+                transaction: t
+              }
+            )
+            .then(updated => {
+              callback(null, {
+                status: data.status,
+                company_code: data.company_code,
+                company: data.updated,
+                admin: updated,
+                upload: data.upload
+              });
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        },
+
+        function destroyAllSessionCompany(data, callback) {
+          token
+            .remove({
+              company_code: data.company_code
+            })
+            .then(deleted => {
+              //upload file
+              if (req.files.upload) {
+                req.files.upload.mv(data.upload, function(err) {
+                  if (err)
+                    return callback({
+                      code: 'ERR'
+                    });
+                });
+              }
+              callback(null, {
+                code: 'UPDATE_SUCCESS',
+                message: 'Re/deactivate company Berhasil!',
+                data: {
+                  company: data.company,
+                  admin: data.admin,
+                  token: deleted
+                }
+              });
+            });
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          t.rollback();
+          return callback(err);
+        }
+        t.commit();
+        callback(null, result);
+      }
+    );
+  });
 };

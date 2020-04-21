@@ -6,21 +6,7 @@ const trycatch = require('trycatch');
 const path = require('path');
 const fs = require('fs');
 
-const checkExistingTelp = (APP, data, req, callback) => {
-  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
-  let { admin_app, admin } = APP.models.mysql;
-  let { employee } = APP.models.company[req.user.db].mysql;
-  let query =
-    req.user.level === 1
-      ? admin_app
-      : req.user.level === 2
-      ? admin
-      : req.user.level === 3
-      ? employee
-      : callback({
-          code: 'INVALID_REQUEST',
-          message: 'User Level Undefined'
-        });
+const checkExistingTelp = (APP, query, data, req, callback) => {
   query
     .findAll({
       where: {
@@ -50,21 +36,7 @@ const checkExistingTelp = (APP, data, req, callback) => {
     });
 };
 
-const checkExistingEmail = (APP, data, req, callback) => {
-  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
-  let { admin_app, admin } = APP.models.mysql;
-  let { employee } = APP.models.company[req.user.db].mysql;
-  let query =
-    req.user.level === 1
-      ? admin_app
-      : req.user.level === 2
-      ? admin
-      : req.user.level === 3
-      ? employee
-      : callback({
-          code: 'INVALID_REQUEST',
-          message: 'User Level Undefined'
-        });
+const checkExistingEmail = (APP, query, data, req, callback) => {
   query
     .findAll({
       where: {
@@ -94,21 +66,7 @@ const checkExistingEmail = (APP, data, req, callback) => {
     });
 };
 
-const checkExistingUsername = (APP, data, req, callback) => {
-  let db = req.user.db !== null ? req.user.db : process.env.DBNAME + req.body.company;
-  let { admin_app, admin } = APP.models.mysql;
-  let { employee } = APP.models.company[req.user.db].mysql;
-  let query =
-    req.user.level === 1
-      ? admin_app
-      : req.user.level === 2
-      ? admin
-      : req.user.level === 3
-      ? employee
-      : callback({
-          code: 'INVALID_REQUEST',
-          message: 'User Level Undefined'
-        });
+const checkExistingUsername = (APP, query, data, req, callback) => {
   query
     .findAll({
       where: {
@@ -138,19 +96,19 @@ const checkExistingUsername = (APP, data, req, callback) => {
     });
 };
 
-const checkExistingCredentials = (APP, data, req, callback) => {
+const checkExistingCredentials = (APP, query, data, req, callback) => {
   async.waterfall(
     [
       function checkUsername(callback) {
-        checkExistingUsername(APP, data, req, callback);
+        checkExistingUsername(APP, query, data, req, callback);
       },
 
       function checkTelp(result, callback) {
-        checkExistingTelp(APP, data, req, callback);
+        checkExistingTelp(APP, query, data, req, callback);
       },
 
       function checkEmail(result, callback) {
-        checkExistingEmail(APP, data, req, callback);
+        checkExistingEmail(APP, query, data, req, callback);
       }
     ],
     (err, result) => {
@@ -225,34 +183,40 @@ exports.getProfileDetail = (APP, req, callback) => {
 
 exports.updateProfile = (APP, req, callback) => {
   let { name, pob, dob, address, kel, kec, zip, prov, city, gender, telp, username, email } = req.body;
+  let query;
   async.waterfall(
     [
       function checkParams(callback) {
-        if (!req.body) {
+        if (name && pob && dob && address && kel && kec && zip && prov && city && gender && telp && username && email) {
+          callback(null, true);
+        } else {
           callback({
             code: 'INVALID_REQUEST',
             id: 'ETQ96',
             message: 'Kesalahan pada parameter'
           });
-        } else {
+        }
+      },
+
+      function checkLevel(data, callback) {
+        if (req.user.level === 1) {
+          query = APP.models.mysql.admin_app;
           callback(null, true);
+        } else if (req.user.level === 2) {
+          query = APP.models.mysql.admin;
+          callback(null, true);
+        } else if (req.user.level === 3) {
+          query = APP.models.company[req.user.db].mysql.employee;
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'User Level Undefined'
+          });
         }
       },
 
       function getCurrentData(data, callback) {
-        let { admin_app, admin } = APP.models.mysql;
-        let { employee } = APP.models.company[req.user.db].mysql;
-        let query =
-          req.user.level === 1
-            ? admin_app
-            : req.user.level === 2
-            ? admin
-            : req.user.level === 3
-            ? employee
-            : callback({
-                code: 'INVALID_REQUEST',
-                message: 'User Level Undefined'
-              });
         query
           .findOne({
             where: {
@@ -273,141 +237,49 @@ exports.updateProfile = (APP, req, callback) => {
       },
 
       function checkCredentials(data, callback) {
-        checkExistingCredentials(APP, data, req, callback);
+        checkExistingCredentials(APP, query, data, req, callback);
       },
 
       function updateProfile(data, callback) {
-        if (req.user.level === 1) {
-          let { admin_app } = APP.models.mysql;
-
-          admin_app
-            .update(
-              {
-                name: name,
-                gender: gender,
-                pob: pob,
-                dob: dob,
-                address: address,
-                kelurahan: kel,
-                kecamatan: kec,
-                city: city,
-                province: prov,
-                zipcode: zip,
-                tlp: telp,
-                email: email,
-                user_name: username
-              },
-              {
-                where: {
-                  id: req.user.id
-                }
+        query
+          .update(
+            {
+              name: name,
+              gender: gender,
+              pob: pob,
+              dob: dob,
+              address: address,
+              kelurahan: kel,
+              kecamatan: kec,
+              city: city,
+              province: prov,
+              zipcode: zip,
+              tlp: telp,
+              email: email,
+              user_name: username
+            },
+            {
+              where: {
+                id: req.user.id
               }
-            )
-            .then(res => {
-              callback(null, {
-                code: 'UPDATE_SUCCESS',
-                id: 'ETP00',
-                message: 'Profile berhasil diubah',
-                data: res
-              });
-            })
-            .catch(err => {
-              console.log('Error updateProfile', err);
-              callback({
-                code: 'ERR_DATABASE',
-                id: 'ETQ98',
-                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami (updateProfile)'
-              });
+            }
+          )
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              id: 'ETP00',
+              message: 'Profile berhasil diubah',
+              data: res
             });
-        } else if (req.user.level === 2) {
-          let { admin } = APP.models.mysql;
-
-          admin
-            .update(
-              {
-                name: name,
-                gender: gender,
-                pob: pob,
-                dob: dob,
-                address: address,
-                kelurahan: kel,
-                kecamatan: kec,
-                city: city,
-                province: prov,
-                zipcode: zip,
-                tlp: telp,
-                email: email,
-                user_name: username
-              },
-              {
-                where: {
-                  id: req.user.id
-                }
-              }
-            )
-            .then(res => {
-              callback(null, {
-                code: 'UPDATE_SUCCESS',
-                id: 'ETP00',
-                message: 'Profile berhasil diubah',
-                data: res
-              });
-            })
-            .catch(err => {
-              console.log('Error updateProfile', err);
-              callback({
-                code: 'ERR_DATABASE',
-                id: 'ETQ98',
-                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami (updateProfile)'
-              });
+          })
+          .catch(err => {
+            console.log('Error updateProfile', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'ETQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami (updateProfile)'
             });
-        } else if (req.user.level === 3) {
-          let { employee } = APP.models.company[req.user.db].mysql;
-
-          employee
-            .update(
-              {
-                name: name,
-                gender: gender,
-                pob: pob,
-                dob: dob,
-                address: address,
-                kelurahan: kel,
-                kecamatan: kec,
-                city: city,
-                province: prov,
-                zipcode: zip,
-                tlp: telp,
-                email: email,
-                user_name: username
-              },
-              {
-                where: {
-                  id: req.user.id
-                }
-              }
-            )
-            .then(res => {
-              callback(null, {
-                code: 'UPDATE_SUCCESS',
-                id: 'ETP00',
-                message: 'Profile berhasil diubah',
-                data: res
-              });
-            })
-            .catch(err => {
-              console.log('Error updateProfile', err);
-              callback({
-                code: 'ERR_DATABASE',
-                id: 'ETQ98',
-                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami (updateProfile)'
-              });
-            });
-        } else {
-          callback({
-            code: 'INVALID_REQUEST'
           });
-        }
       }
     ],
     (err, result) => {

@@ -134,8 +134,9 @@ exports.login = (APP, req, callback) => {
 
         APP.models.mongo.token
           .findOne({
-            id_admin_ceklok: rows.id
-            // platform: req.body.platform
+            id_user: rows.id,
+            level: 1,
+            platform: req.body.platform
           })
           .then(res => {
             if (res !== null) {
@@ -171,8 +172,8 @@ exports.login = (APP, req, callback) => {
 
               APP.models.mongo.token
                 .create({
-                  id_admin_ceklok: rows.id,
-                  // platform: req.body.platform,
+                  id_user: rows.id,
+                  level: 1,
                   token,
                   platform: req.body.platform,
                   date: req.customDate,

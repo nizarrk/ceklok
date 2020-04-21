@@ -5,8 +5,7 @@ module.exports = function(mongo) {
 
   const ModelSchema = mongo.Schema({
     id_user: String,
-    id_admin: String,
-    id_admin_ceklok: String,
+    level: String,
     company_code: String,
     platform: String,
     token: String,
