@@ -70,7 +70,7 @@ exports.test = function(APP, req, callback) {
             //     })
             // })
 
-            for (let i = 1; i <= 2; i++) {
+            for (let i = 1; i <= 1; i++) {
               console.log('masuk for iterasi ke:', i);
 
               let img = await canvas.loadImage(`./public/labeled_images/${label}/${i}.jpg`);
@@ -101,7 +101,7 @@ exports.test = function(APP, req, callback) {
             Promise.all(
               arr.map(x => {
                 let json = JSON.stringify(x);
-                fs.writeFile(`./public/training/${x.label}.json`, json, 'utf8', (err, result) => {
+                fs.writeFile(`./public/uploads/training/${x.label}.json`, json, 'utf8', (err, result) => {
                   if (err) {
                     callback({
                       code: 'ERR',
