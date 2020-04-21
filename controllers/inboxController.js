@@ -799,7 +799,7 @@ exports.sendMessage = (APP, req, callback) => {
           let arr = [];
           Promise.all(
             data.company.map((x, i) => {
-              let { employee } = APP.models.company[`ceklok_${x.company_code}`].mysql;
+              let { employee } = APP.models.company[`${process.env.MYSQL_NAME}_${x.company_code}`].mysql;
               let query = level == 1 ? admin_app : level == 2 ? admin : level == 3 ? employee : '';
 
               let params = level == 1 ? {} : level == 2 ? { company_code: x.company_code } : level == 3 ? {} : '';
