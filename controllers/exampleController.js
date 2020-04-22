@@ -23,13 +23,13 @@ exports.test = function(APP, req, callback) {
       function loadModelData(callback) {
         Promise.all([
           console.log('Load module ...'),
-          faceapi.nets.tinyFaceDetector.loadFromDisk('./public/uploads/weights/'),
-          faceapi.nets.faceRecognitionNet.loadFromDisk('./public/uploads/weights/'),
-          faceapi.nets.faceLandmark68Net.loadFromDisk('./public/uploads/weights/'),
-          faceapi.nets.faceLandmark68TinyNet.loadFromDisk('./public/uploads/weights/'),
-          faceapi.nets.ssdMobilenetv1.loadFromDisk('./public/uploads/weights/'),
-          faceapi.nets.ageGenderNet.loadFromDisk('./public/uploads/weights/'),
-          faceapi.nets.faceExpressionNet.loadFromDisk('./public/uploads/weights/')
+          faceapi.nets.tinyFaceDetector.loadFromDisk('./public/weights/'),
+          faceapi.nets.faceRecognitionNet.loadFromDisk('./public/weights/'),
+          faceapi.nets.faceLandmark68Net.loadFromDisk('./public/weights/'),
+          faceapi.nets.faceLandmark68TinyNet.loadFromDisk('./public/weights/'),
+          faceapi.nets.ssdMobilenetv1.loadFromDisk('./public/weights/'),
+          faceapi.nets.ageGenderNet.loadFromDisk('./public/weights/'),
+          faceapi.nets.faceExpressionNet.loadFromDisk('./public/weights/')
         ])
           .then(() => {
             console.log('Module Loaded');
@@ -47,16 +47,16 @@ exports.test = function(APP, req, callback) {
       function training(data, callback) {
         // let labels = [];
         let descriptions = {};
-        let labels = fs.readdirSync('./public/uploads/labeled_images/');
+        let labels = fs.readdirSync('./public/labeled_images/');
         return Promise.all(
           labels.map(async label => {
             descriptions[label] = [];
             // console.log(label);
 
-            // let images = fs.readdirSync(`./public/uploads/labeled_images/${label}/`);
+            // let images = fs.readdirSync(`./public/labeled_images/${label}/`);
 
             // return images.map(img => {
-            //   canvas.loadImage(`./public/uploads/labeled_images/${label}/${img}`)
+            //   canvas.loadImage(`./public/labeled_images/${label}/${img}`)
             //     .then(async image => {
             //       console.log(image);
             //       return faceapi.detectSingleFace(image)
@@ -73,7 +73,7 @@ exports.test = function(APP, req, callback) {
             for (let i = 1; i <= 1; i++) {
               console.log('masuk for iterasi ke:', i);
 
-              let img = await canvas.loadImage(`./public/uploads/labeled_images/${label}/${i}.jpg`);
+              let img = await canvas.loadImage(`./public/labeled_images/${label}/${i}.jpg`);
               console.log(img);
 
               // let imgFile = await faceapi.fetchImage(`https://pejalancoding.site/faceRecognition/labeled_images/${label}/${i}.jpg`);
@@ -101,7 +101,7 @@ exports.test = function(APP, req, callback) {
             Promise.all(
               arr.map(x => {
                 let json = JSON.stringify(x);
-                fs.writeFile(`./public/uploads/uploads/training/${x.label}.json`, json, 'utf8', (err, result) => {
+                fs.writeFile(`./public/uploads/training/${x.label}.json`, json, 'utf8', (err, result) => {
                   if (err) {
                     callback({
                       code: 'ERR',
@@ -137,5 +137,23 @@ exports.test = function(APP, req, callback) {
 };
 
 exports.testing = async (APP, req, callback) => {
-  console.log(new Date('2020-04-17 9:52').getTime());
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return callback({
+      code: 'INVALID_REQUEST',
+      message: 'No files were uploaded.'
+    });
+  }
+
+  let fileName = new Date().toISOString().replace(/:|\./g, '');
+  let docPath = './public/uploads/training/labeled_images/Afwika/';
+
+  // upload file
+  if (req.files.upload) {
+    req.files.upload.mv(docPath + req.files.upload.name, function(err) {
+      if (err)
+        return callback({
+          code: 'ERR'
+        });
+    });
+  }
 };
