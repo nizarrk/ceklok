@@ -137,23 +137,36 @@ exports.test = function(APP, req, callback) {
 };
 
 exports.testing = async (APP, req, callback) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return callback({
-      code: 'INVALID_REQUEST',
-      message: 'No files were uploaded.'
-    });
-  }
+  try {
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return callback({
+        code: 'INVALID_REQUEST',
+        message: 'No files were uploaded.'
+      });
+    }
 
-  let fileName = new Date().toISOString().replace(/:|\./g, '');
-  let docPath = './public/uploads/training/labeled_images/Afwika/';
+    let fileName = new Date().toISOString().replace(/:|\./g, '');
+    let docPath = './public/uploads/training/labeled_images/Afwika/';
 
-  // upload file
-  if (req.files.upload) {
-    req.files.upload.mv(docPath + req.files.upload.name, function(err) {
-      if (err)
-        return callback({
-          code: 'ERR'
-        });
+    // upload file
+    if (req.files.upload) {
+      req.files.upload.mv(docPath + req.files.upload.name, function(err) {
+        if (err)
+          return callback({
+            code: 'ERR'
+          });
+      });
+
+      callback(null, {
+        code: 'OK',
+        message: 'upload sukses'
+      });
+    }
+  } catch (err) {
+    console.log(err);
+    callback({
+      code: 'ERR',
+      data: err
     });
   }
 };
