@@ -923,47 +923,11 @@ exports.importEmployeeData = (APP, req, callback) => {
 
 exports.updateEmployeeInfo = (APP, req, callback) => {
   let { employee, benefit_active } = APP.models.company[req.user.db].mysql;
-  let {
-    id,
-    nik,
-    name,
-    gender,
-    pob,
-    dob,
-    address,
-    kel,
-    kec,
-    city,
-    prov,
-    zip,
-    telp,
-    email,
-    contract,
-    username,
-    benefit
-  } = req.body;
+  let { id, contract, benefit } = req.body;
   async.waterfall(
     [
       function checkparams(callback) {
-        if (
-          id &&
-          nik &&
-          name &&
-          gender &&
-          pob &&
-          dob &&
-          address &&
-          kel &&
-          kec &&
-          city &&
-          prov &&
-          zip &&
-          telp &&
-          email &&
-          username &&
-          contract &&
-          benefit
-        ) {
+        if (id && contract && benefit) {
           callback(null, true);
         } else {
           callback({
@@ -1097,20 +1061,6 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
           .then(res => {
             res
               .update({
-                name: name,
-                gender: gender,
-                pob: pob,
-                dob: dob,
-                address: address,
-                kelurahan: kel,
-                kecamatan: kec,
-                city: city,
-                province: prov,
-                zipcode: zip,
-                msisdn: 'default',
-                tlp: telp,
-                email: email,
-                user_name: username,
                 status_contract_id: contract,
                 status_contract_upload: result.upload === true ? result.contract.slice(8) : result.contract
               })
