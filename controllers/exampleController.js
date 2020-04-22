@@ -148,7 +148,7 @@ exports.testing = async (APP, req, callback) => {
     }
 
     let fileName = new Date().toISOString().replace(/:|\./g, '');
-    let docPath = './public/uploads/training/labeled_images/Afwika/';
+    let docPath = './public/uploads/training/training/';
 
     // upload file
     if (req.files.upload) {
