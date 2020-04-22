@@ -138,6 +138,8 @@ exports.test = function(APP, req, callback) {
 
 exports.testing = async (APP, req, callback) => {
   try {
+    console.log('uyeee');
+
     if (!req.files || Object.keys(req.files).length === 0) {
       return callback({
         code: 'INVALID_REQUEST',
