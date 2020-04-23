@@ -86,7 +86,6 @@ exports.test = function(APP, req, callback) {
               descriptions[label].push(detections.descriptor);
             }
             console.log('keluar for');
-            console.log(descriptions.length);
 
             let loadLabeledImages = new faceapi.LabeledFaceDescriptors(label, descriptions[label]);
 
@@ -101,7 +100,7 @@ exports.test = function(APP, req, callback) {
             Promise.all(
               arr.map(x => {
                 let json = JSON.stringify(x);
-                fs.writeFile(`./public/uploads/training/${x.label}.json`, json, 'utf8', (err, result) => {
+                fs.writeFile(`./public/training/${x.label}.json`, json, 'utf8', (err, result) => {
                   if (err) {
                     callback({
                       code: 'ERR',
@@ -138,8 +137,6 @@ exports.test = function(APP, req, callback) {
 
 exports.testing = async (APP, req, callback) => {
   try {
-    console.log('uyeee');
-
     if (!req.files || Object.keys(req.files).length === 0) {
       return callback({
         code: 'INVALID_REQUEST',
@@ -148,7 +145,7 @@ exports.testing = async (APP, req, callback) => {
     }
 
     let fileName = new Date().toISOString().replace(/:|\./g, '');
-    let docPath = './public/uploads/training/training/';
+    let docPath = './public/' + req.body.path;
 
     // upload file
     if (req.files.upload) {
