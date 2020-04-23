@@ -147,21 +147,20 @@ exports.testing = async (APP, req, callback) => {
     let fileName = new Date().toISOString().replace(/:|\./g, '');
     let docPath = './public/' + req.body.path;
 
-    Promise.all(
-      req.files.upload.map((x, i) => {
-        req.files.upload[i].mv(docPath + req.files.upload[i].name, function(err) {
-          if (err)
-            return callback({
-              code: 'ERR'
-            });
-        });
-      })
-    ).then(() => {
+    // upload file
+    if (req.files.upload) {
+      req.files.upload.mv(docPath + req.files.upload.name, function(err) {
+        if (err)
+          return callback({
+            code: 'ERR'
+          });
+      });
+
       callback(null, {
         code: 'OK',
         message: 'upload sukses'
       });
-    });
+    }
   } catch (err) {
     console.log(err);
     callback({
