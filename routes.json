@@ -1349,6 +1349,13 @@
     "level": 2,
     "auth": true
   },
+  "/facerecognition/training": {
+    "method": "post",
+    "controller": "faceRecognitionController",
+    "function": "training",
+    "level": 0,
+    "auth": true
+  },
   "/operational/company/get": {
     "method": "post",
     "controller": "operationalSupportSystemController",
@@ -1381,6 +1388,62 @@
     "method": "post",
     "controller": "operationalSupportSystemController",
     "function": "redeactivateCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/employee/redeactivate": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "redeactivateEmployee",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/sendotp": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "generateOTP",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/resetpassword": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "forceResetPassword",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/resetfailedattempt": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "resetFailedAttempt",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "listKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/add": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "addKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/update": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "editKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/delete": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "deleteKnowledge",
     "level": 1,
     "auth": true
   }

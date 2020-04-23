@@ -5,8 +5,6 @@ const fs = require('fs');
 const path = require('path');
 
 exports.sendMail = data => {
-  console.log('isi', data.attachments);
-
   fs.readFile(path.join(__dirname, '../config/template/', data.file), 'utf8', (err, file) => {
     if (err) throw err;
 

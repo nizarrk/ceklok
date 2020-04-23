@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const key = require('../config/jwt-key.json');
 const async = require('async');
+const moment = require('moment');
 const trycatch = require('trycatch');
 const path = require('path');
 const fs = require('fs');
@@ -575,21 +576,22 @@ exports.forgotPassword = (APP, req, callback) => {
 
       function checkEmail(data, callback) {
         query
-          .findAll({
+          .findOne({
             where: {
               email: req.body.email
             }
           })
           .then(res => {
-            if (res.length <= 0) {
-              return callback({
+            if (res == null) {
+              callback({
                 code: 'NOT_FOUND',
                 info: {
                   parameter: 'No records found'
                 }
               });
+            } else {
+              callback(null, res.dataValues);
             }
-            callback(null, true);
           })
           .catch(err => {
             console.log('Error checkEmail', err);
@@ -605,82 +607,112 @@ exports.forgotPassword = (APP, req, callback) => {
       function createOTP(result, callback) {
         let otp = APP.otp.generateOTP();
 
-        APP.models.mongo.otp
-          .findOne({
-            email: req.body.email
-          })
-          .then(res => {
-            if (res != null) {
-              // dimatiin dulu by request
-              // if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
-              //   return callback({
-              //     code: 'INVALID_REQUEST',
-              //     message: 'Limit reached for today!'
-              //   });
-              // }
-              if (res.date.getTime() !== req.currentDate.getTime() || res.count <= 3) {
-                APP.models.mongo.otp
-                  .findByIdAndUpdate(res._id, {
-                    otp: otp,
-                    count: res.count == 3 ? 1 : res.count + 1,
-                    date: req.currentDate,
-                    time: req.customTime,
-                    elapsed_time: req.elapsedTime || '0'
-                  })
-                  .then(result => {
-                    callback(null, {
-                      code: 'UPDATE_SUCCESS',
-                      data: {
-                        row: result,
-                        otp: otp
-                      },
-                      info: {
-                        dataCount: result.length
-                      }
-                    });
-                  })
-                  .catch(err => {
-                    console.log('Error update createOTP', err);
-                    callback({
-                      code: 'ERR_DATABASE',
-                      message: 'Error update createOTP',
-                      data: err
-                    });
-                  });
+        let params =
+          req.body.level === 1
+            ? {
+                email: req.body.email,
+                date: req.currentDate,
+                endpoint: req.originalUrl
               }
-            } else {
+            : req.body.level === 2
+            ? {
+                email: req.body.email,
+                date: req.currentDate,
+                company: result.company_code,
+                endpoint: req.originalUrl
+              }
+            : req.body.level === 3
+            ? {
+                email: req.body.email,
+                date: req.currentDate,
+                company: result.company_code,
+                endpoint: req.originalUrl
+              }
+            : callback({
+                code: 'INVALID_REQUEST',
+                message: 'Invalid user level!'
+              });
+
+        APP.models.mongo.otp.findOne(params).then(res => {
+          if (res != null) {
+            if (res.date.getTime() === req.currentDate.getTime() && res.count >= 3) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Limit reached for today!'
+              });
+            }
+            if (res.date.getTime() !== req.currentDate.getTime() || res.count <= 3) {
               APP.models.mongo.otp
-                .create({
-                  email: req.body.email,
+                .findByIdAndUpdate(res._id, {
                   otp: otp,
-                  count: 1,
-                  endpoint: req.originalUrl,
+                  count: res.count == 3 ? 1 : res.count + 1,
+                  expired_time: moment()
+                    .add(1, 'days')
+                    .format('YYYY-MM-DD HH:mm:ss'),
+                  expired: false,
                   date: req.currentDate,
                   time: req.customTime,
                   elapsed_time: req.elapsedTime || '0'
                 })
-                .then(res => {
+                .then(result => {
                   callback(null, {
-                    code: 'INSERT_SUCCESS',
+                    code: 'UPDATE_SUCCESS',
                     data: {
-                      row: res,
+                      row: result,
                       otp: otp
                     },
                     info: {
-                      dataCount: res.length
+                      dataCount: result.length
                     }
                   });
                 })
                 .catch(err => {
-                  console.log('Error insert createOTP', err);
+                  console.log('Error update createOTP', err);
                   callback({
                     code: 'ERR_DATABASE',
-                    message: 'Error insert createOTP',
+                    message: 'Error update createOTP',
                     data: err
                   });
                 });
             }
-          });
+          } else {
+            APP.models.mongo.otp
+              .create({
+                email: req.body.email,
+                otp: otp,
+                count: 1,
+                endpoint: req.originalUrl,
+                expired_time: moment()
+                  .add(1, 'days')
+                  .format('YYYY-MM-DD HH:mm:ss'),
+                expired: false,
+                company: result.company_code,
+                date: req.currentDate,
+                time: req.customTime,
+                elapsed_time: req.elapsedTime || '0'
+              })
+              .then(res => {
+                callback(null, {
+                  code: 'INSERT_SUCCESS',
+                  data: {
+                    row: res,
+                    otp: otp
+                  },
+                  info: {
+                    dataCount: res.length
+                  }
+                });
+              })
+              .catch(err => {
+                console.log('Error insert createOTP', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error insert createOTP',
+                  data: err
+                });
+              });
+          }
+        });
       },
 
       function sendEmail(data, callback) {

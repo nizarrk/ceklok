@@ -145,7 +145,8 @@ exports.update = function(APP, req, callback) {
     .update(
       {
         name: req.body.name,
-        description: req.body.desc
+        description: req.body.desc,
+        status: req.body.status
       },
       {
         where: {

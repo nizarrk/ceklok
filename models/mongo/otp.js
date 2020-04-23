@@ -5,6 +5,7 @@ module.exports = function(mongo) {
 
   const ModelSchema = mongo.Schema({
     email: String,
+    company: String,
     otp: {
       type: String,
       index: true,
@@ -12,6 +13,9 @@ module.exports = function(mongo) {
       // specifying `index: true` is optional if you do `unique: true`
     },
     count: Number,
+    expired_time: String,
+    expired: String,
+    active: String,
     endpoint: String,
     date: Date,
     time: String,

@@ -107,6 +107,9 @@ module.exports = function(sequelize, Sequelize) {
       initial_login: {
         type: Sequelize.INTEGER(1)
       },
+      login_attempt: {
+        type: Sequelize.INTEGER(1)
+      },
       status: {
         type: Sequelize.INTEGER(1), //0 = pendding, 1 = approve, 2 = reject, 3 = deleted
         allowNull: false,
