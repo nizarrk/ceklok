@@ -100,7 +100,7 @@ exports.test = function(APP, req, callback) {
             Promise.all(
               arr.map(x => {
                 let json = JSON.stringify(x);
-                fs.writeFile(`./public/training/${x.label}.json`, json, 'utf8', (err, result) => {
+                fs.writeFile(`./public/training2/${x.label}.json`, json, 'utf8', (err, result) => {
                   if (err) {
                     callback({
                       code: 'ERR',
