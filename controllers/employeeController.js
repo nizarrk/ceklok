@@ -393,7 +393,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                 },
                 {
                   model: benefit_custom,
-                  attributes: ['id', 'name', 'description', 'upload']
+                  attributes: ['id', 'name', 'description', 'status', 'upload']
                 },
                 {
                   model: benefit_active,
@@ -922,12 +922,12 @@ exports.importEmployeeData = (APP, req, callback) => {
 };
 
 exports.updateEmployeeInfo = (APP, req, callback) => {
-  let { employee, benefit_active } = APP.models.company[req.user.db].mysql;
-  let { id, contract, benefit } = req.body;
+  let { employee, benefit_active, benefit_custom } = APP.models.company[req.user.db].mysql;
+  let { id, contract, benefit, custom } = req.body;
   async.waterfall(
     [
       function checkparams(callback) {
-        if (id && contract && benefit) {
+        if (id && contract && benefit && custom) {
           callback(null, true);
         } else {
           callback({
@@ -1029,6 +1029,55 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
                       {
                         where: {
                           benefit_id: x.benefit_id,
+                          employee_id: x.employee_id
+                        }
+                      }
+                    )
+                    .then(updated => {
+                      return updated;
+                    });
+                })
+              )
+                .then(arr => {
+                  callback(null, result);
+                })
+                .catch(err => {
+                  callback({
+                    code: 'ERR',
+                    data: err
+                  });
+                });
+            });
+        }
+      },
+
+      function activateCustomBenefit(result, callback) {
+        if (custom == null) {
+          callback(null, result);
+        } else {
+          let custom_benefits = custom.split(',');
+          console.log(custom_benefits);
+
+          benefit_custom
+            .findAll({
+              where: {
+                id: custom_benefits,
+                employee_id: id
+              }
+            })
+            .then(res => {
+              console.log(res.length);
+
+              Promise.all(
+                res.map(x => {
+                  return benefit_custom
+                    .update(
+                      {
+                        status: x.status == 0 ? 1 : 0
+                      },
+                      {
+                        where: {
+                          id: x.id,
                           employee_id: x.employee_id
                         }
                       }
