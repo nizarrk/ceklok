@@ -139,30 +139,46 @@ exports.test = function(APP, req, callback) {
 
 exports.testing = async (APP, req, callback) => {
   try {
-    if (!req.files || Object.keys(req.files).length === 0) {
-      return callback({
-        code: 'INVALID_REQUEST',
-        message: 'No files were uploaded.'
-      });
+    let base64String = req.body.upload;
+    let base64Image = base64String.split(';base64,').pop();
+
+    let dir = './public/uploadsssss/';
+
+    if (!fs.existsSync(dir)) {
+      mkdirp.sync(dir);
     }
 
-    let fileName = new Date().toISOString().replace(/:|\./g, '');
-    let docPath = './public/' + req.body.path;
-
-    // upload file
-    if (req.files.upload) {
-      req.files.upload.mv(docPath + req.files.upload.name, function(err) {
-        if (err)
-          return callback({
-            code: 'ERR'
-          });
-      });
-
+    fs.writeFile(dir + 'tes.jpg', base64Image, { encoding: 'base64' }, function(err) {
+      console.log('File created');
       callback(null, {
         code: 'OK',
         message: 'upload sukses'
       });
-    }
+    });
+    // if (!req.files || Object.keys(req.files).length === 0) {
+    //   return callback({
+    //     code: 'INVALID_REQUEST',
+    //     message: 'No files were uploaded.'
+    //   });
+    // }
+
+    // let fileName = new Date().toISOString().replace(/:|\./g, '');
+    // let docPath = './public/' + req.body.path;
+
+    // // upload file
+    // if (req.files.upload) {
+    //   req.files.upload.mv(docPath + req.files.upload.name, function(err) {
+    //     if (err)
+    //       return callback({
+    //         code: 'ERR'
+    //       });
+    //   });
+
+    //   callback(null, {
+    //     code: 'OK',
+    //     message: 'upload sukses'
+    //   });
+    // }
   } catch (err) {
     console.log(err);
     callback({
