@@ -2,6 +2,7 @@
 const async = require('async');
 const path = require('path');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 const faceapi = require('face-api.js');
 // Import a fetch implementation for Node.js
 const fetch = require('node-fetch');
@@ -9,10 +10,36 @@ const canvas = require('canvas');
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
-exports.training = function(APP, req, callback) {
+exports.uploadAndTraining = function(APP, req, callback) {
   async.waterfall(
     [
-      function loadModelData(callback) {
+      function uploadNewImage(callback) {
+        try {
+          let arr = [req.body.upload1, req.body.upload2, req.body.upload2];
+          let dir = `./public/uploads/company_${req.user.code}/employee/facerecog/${req.body.label}/`;
+
+          if (!fs.existsSync(dir)) {
+            mkdirp.sync(dir);
+          }
+
+          Promise.all(
+            arr.map((x, i) => {
+              let base64Image = x.split(';base64,').pop();
+
+              fs.writeFile(dir + `${i + 1}.jpg`, base64Image, { encoding: 'base64' }, function(err) {
+                console.log('File created');
+                return true;
+              });
+            })
+          ).then(() => {
+            callback(null, dir);
+          });
+        } catch (err) {
+          console.log(err);
+        }
+      },
+
+      function loadModelData(data, callback) {
         Promise.all([
           console.log('Load module ...'),
           faceapi.nets.tinyFaceDetector.loadFromDisk('./public/weights/'),
@@ -25,7 +52,7 @@ exports.training = function(APP, req, callback) {
         ])
           .then(() => {
             console.log('Module Loaded');
-            callback(null, true);
+            callback(null, data);
           })
           .catch(err => {
             console.log(err);
@@ -39,7 +66,7 @@ exports.training = function(APP, req, callback) {
       function training(data, callback) {
         // let labels = [];
         let descriptions = {};
-        let labels = fs.readdirSync('./public/labeled_images/');
+        let labels = [req.body.label];
         return Promise.all(
           labels.map(async label => {
             descriptions[label] = [];
@@ -65,7 +92,7 @@ exports.training = function(APP, req, callback) {
             for (let i = 1; i <= 1; i++) {
               console.log('masuk for iterasi ke:', i);
 
-              let img = await canvas.loadImage(`./public/labeled_images/${label}/${i}.jpg`);
+              let img = await canvas.loadImage(`${data}${i}.jpg`);
               console.log(img);
 
               // let imgFile = await faceapi.fetchImage(`https://pejalancoding.site/faceRecognition/labeled_images/${label}/${i}.jpg`);
@@ -88,11 +115,15 @@ exports.training = function(APP, req, callback) {
         )
           .then(arr => {
             console.log(arr);
+            let dir = `${data}result/`;
 
+            if (!fs.existsSync(dir)) {
+              mkdirp.sync(dir);
+            }
             Promise.all(
               arr.map(x => {
                 let json = JSON.stringify(x);
-                fs.writeFile(`./public/training2/${x.label}.json`, json, 'utf8', (err, result) => {
+                fs.writeFile(`${dir}${x.label}.json`, json, 'utf8', (err, result) => {
                   if (err) {
                     callback({
                       code: 'ERR',

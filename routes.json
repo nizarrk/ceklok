@@ -11,12 +11,47 @@
     "controller": "exampleController",
     "function": "testing",
     "level": 0,
-    "auth": false
+    "auth": true
   },
   "/auth/admin/register": {
     "method": "post",
     "controller": "authAdminController",
     "function": "register",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checktelp": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingTelp",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checktelpcompany": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingTelpCompany",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checkusername": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingUsername",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checkemail": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingEmailAdmin",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checkemailcompany": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingEmailCompany",
     "level": 0,
     "auth": false
   },
@@ -192,6 +227,27 @@
     "method": "post",
     "controller": "authEmployeeController",
     "function": "register",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/checktelp": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingTelp",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/checkusername": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingUsername",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/checkemail": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingEmail",
     "level": 0,
     "auth": false
   },
@@ -1349,11 +1405,11 @@
     "level": 2,
     "auth": true
   },
-  "/facerecognition/training": {
+  "/facerecog/training": {
     "method": "post",
     "controller": "faceRecognitionController",
-    "function": "training",
-    "level": 0,
+    "function": "uploadAndTraining",
+    "level": 3,
     "auth": true
   },
   "/operational/company/get": {
