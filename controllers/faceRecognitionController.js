@@ -11,6 +11,7 @@ const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 exports.uploadAndTraining = function(APP, req, callback) {
+  let { employee_face } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function uploadNewImage(callback) {
@@ -28,15 +29,52 @@ exports.uploadAndTraining = function(APP, req, callback) {
 
               fs.writeFile(dir + `${i + 1}.jpg`, base64Image, { encoding: 'base64' }, function(err) {
                 console.log('File created');
-                return true;
               });
+              return dir + `${i + 1}.jpg`;
             })
-          ).then(() => {
-            callback(null, dir);
+          ).then(arr => {
+            callback(null, {
+              dir: dir,
+              path: arr
+            });
           });
         } catch (err) {
           console.log(err);
         }
+      },
+
+      function saveImage(data, callback) {
+        Promise.all(
+          data.path.map(x => {
+            let obj = {
+              employee_id: req.user.id,
+              image: x.slice(8)
+            };
+
+            return obj;
+          })
+        )
+          .then(arr => {
+            employee_face
+              .bulkCreate(arr)
+              .then(() => {
+                callback(null, data.dir);
+              })
+              .catch(err => {
+                console.log(err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: err
+                });
+              });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
       },
 
       function loadModelData(data, callback) {
