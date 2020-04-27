@@ -342,6 +342,9 @@ exports.register = (APP, req, callback) => {
 };
 
 exports.login = (APP, req, callback) => {
+  let { employee, employee_face } = APP.models.company[
+    process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()
+  ].mysql;
   async.waterfall(
     [
       function checkBody(callback) {
@@ -384,8 +387,19 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkUser(index, callback) {
-        APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql.employee
+        employee.hasMany(employee_face, {
+          sourceKey: 'id',
+          foreignKey: 'employee_id'
+        });
+
+        employee
           .findAll({
+            include: [
+              {
+                model: employee_face,
+                attributes: ['id', 'image']
+              }
+            ],
             attributes: ['id', 'company_code', 'name', 'password', 'photo', 'initial_login', 'status'],
             where: {
               user_name: req.body.username,
@@ -393,6 +407,8 @@ exports.login = (APP, req, callback) => {
             }
           })
           .then(rows => {
+            console.log(rows[0].employee_faces);
+
             if (rows.length == 0) {
               callback({
                 code: 'NOT_FOUND',
@@ -427,7 +443,8 @@ exports.login = (APP, req, callback) => {
                 company_code: rows[0].company_code,
                 name: rows[0].name,
                 photo: rows[0].photo,
-                initial_login: rows[0].initial_login
+                initial_login: rows[0].initial_login,
+                employee_faces: rows[0].employee_faces
               });
             } else {
               callback({
@@ -459,6 +476,8 @@ exports.login = (APP, req, callback) => {
             expiresIn: '1d'
           }
         );
+
+        console.log(rows);
 
         APP.models.mongo.token
           .findOne({
