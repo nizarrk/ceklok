@@ -608,20 +608,20 @@ exports.forgotPassword = (APP, req, callback) => {
         let otp = APP.otp.generateOTP();
 
         let params =
-          req.body.level === 1
+          req.body.level == 1
             ? {
                 email: req.body.email,
                 date: req.currentDate,
                 endpoint: req.originalUrl
               }
-            : req.body.level === 2
+            : req.body.level == 2
             ? {
                 email: req.body.email,
                 date: req.currentDate,
                 company: result.company_code,
                 endpoint: req.originalUrl
               }
-            : req.body.level === 3
+            : req.body.level == 3
             ? {
                 email: req.body.email,
                 date: req.currentDate,
