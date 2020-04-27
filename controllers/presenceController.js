@@ -2,6 +2,8 @@
 
 const async = require('async');
 const moment = require('moment');
+const fs = require('fs');
+const mkdirp = require('mkdirp');
 
 // fungsinya dipanggil cron
 exports.generateDailyPresence = (APP, req, callback) => {
@@ -797,14 +799,17 @@ exports.generateDailyPresence = (APP, req, callback) => {
 };
 
 exports.checkInOutProcess = (APP, req, callback) => {
-  let { employee, schedule, device, branch, presence, presence_setting } = APP.models.company[req.user.db].mysql;
+  let { employee, schedule, device, branch, presence, presence_detail, presence_setting } = APP.models.company[
+    req.user.db
+  ].mysql;
   async.waterfall(
     [
       function checkBLEDevice(callback) {
         device
           .findOne({
             where: {
-              mac: req.body.mac
+              // mac: req.body.mac
+              mac: 'f9:55:60:6b:8b:59' //sementara pake ini aja
             }
           })
           .then(res => {
@@ -868,6 +873,9 @@ exports.checkInOutProcess = (APP, req, callback) => {
       },
 
       function checkBranchLocation(result, callback) {
+        //lat long sementara
+        let lat = -7.939259;
+        let long = 112.632022;
         // 6371 radius bumi yang diukur dengan satuan kilometer
         APP.db.sequelize
           .query(
@@ -875,10 +883,10 @@ exports.checkInOutProcess = (APP, req, callback) => {
               SELECT
                 id, name, radius, (
                   6371 * acos (
-                    cos ( radians(${req.body.lat}) )
+                    cos ( radians(${lat}) )
                     * cos( radians( latitude ) )
-                    * cos( radians( longitude ) - radians(${req.body.lng}) )
-                    + sin ( radians(${req.body.lat}) )
+                    * cos( radians( longitude ) - radians(${long}) )
+                    + sin ( radians(${lat}) )
                     * sin( radians( latitude ) )
                   )
                 ) AS distance
@@ -927,11 +935,11 @@ exports.checkInOutProcess = (APP, req, callback) => {
 
       function checkInOut(result, callback) {
         // var time = moment() gives you current time. no format required.
-        let time = moment(),
-          checkInStart = moment(result.schedule.check_in_start, 'HH:mm:ss'),
-          checkInEnd = moment(result.schedule.check_in_end, 'HH:mm:ss'),
-          checkOutStart = moment(result.schedule.check_out_start, 'HH:mm:ss'),
-          checkOutEnd = moment(result.schedule.check_out_end, 'HH:mm:ss');
+        let time = moment();
+        let checkInStart = moment(result.schedule.check_in_start, 'HH:mm:ss');
+        let checkInEnd = moment(result.schedule.check_in_end, 'HH:mm:ss');
+        let checkOutStart = moment(result.schedule.check_out_start, 'HH:mm:ss');
+        let checkOutEnd = moment(result.schedule.check_out_end, 'HH:mm:ss');
 
         console.log(time.format('HH:mm:ss'));
         console.log(result.branch);
@@ -970,9 +978,8 @@ exports.checkInOutProcess = (APP, req, callback) => {
                 })
                 .then(updated => {
                   callback(null, {
-                    code: 'UPDATE_SUCCESS',
-                    message: 'Berhasil melakukan Check In',
-                    data: updated
+                    type: 'checkin',
+                    updated: updated
                   });
                 })
                 .catch(err => {
@@ -1054,9 +1061,8 @@ exports.checkInOutProcess = (APP, req, callback) => {
                 .update(params)
                 .then(updated => {
                   callback(null, {
-                    code: 'UPDATE_SUCCESS',
-                    message: 'Berhasil melakukan Check Out',
-                    data: updated
+                    type: 'checkout',
+                    updated: updated
                   });
                 })
                 .catch(err => {
@@ -1082,6 +1088,128 @@ exports.checkInOutProcess = (APP, req, callback) => {
             code: 'INVALID_REQUEST',
             message: 'Proses check in / out bermasalah'
           });
+        }
+      },
+
+      function uploadPath(result, callback) {
+        try {
+          if (result.type == 'checkin') {
+            let images = [req.body.upload1, req.body.upload2];
+            let fileName = `${moment().format('YYMMDD')}_checkin_image_`;
+            let dir = `./public/uploads/company_${req.user.code}/employee/presence/${req.body.label}/`;
+
+            if (!fs.existsSync(dir)) {
+              mkdirp.sync(dir);
+            }
+
+            Promise.all(
+              images.map((x, i) => {
+                let base64Image = x.split(';base64,').pop();
+
+                fs.writeFile(dir + `${fileName}${i + 1}.jpg`, base64Image, { encoding: 'base64' }, function(err) {
+                  console.log('File created');
+                });
+                return dir + `${fileName}${i + 1}.jpg`;
+              })
+            ).then(arr => {
+              callback(null, {
+                type: result.type,
+                updated: result.updated,
+                path: arr
+              });
+            });
+          } else {
+            let images = [req.body.upload1, req.body.upload2];
+            let fileName = `${moment().format('YYMMDD')}_checkout_image_`;
+            let dir = `./public/uploads/company_${req.user.code}/employee/presence/${req.body.label}/`;
+
+            if (!fs.existsSync(dir)) {
+              mkdirp.sync(dir);
+            }
+
+            Promise.all(
+              images.map((x, i) => {
+                let base64Image = x.split(';base64,').pop();
+
+                fs.writeFile(dir + `${fileName}${i + 1}.jpg`, base64Image, { encoding: 'base64' }, function(err) {
+                  console.log('File created');
+                });
+                return dir + `${fileName}${i + 1}.jpg`;
+              })
+            ).then(arr => {
+              callback(null, {
+                type: result.type,
+                updated: result.updated,
+                path: arr
+              });
+            });
+          }
+        } catch (err) {
+          console.log(err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
+      function createDetail(result, callback) {
+        if (result.type == 'checkin') {
+          presence_detail
+            .create({
+              presence_id: result.updated.id,
+              employee_id: req.user.id,
+              date: moment().format('YYYY-MM-DD'),
+              latitude_checkin: req.body.lat,
+              longitude_checkin: req.body.lng,
+              image_checkin_a: result.path[0].slice(8),
+              image_checkin_b: result.path[1].slice(8)
+            })
+            .then(created => {
+              callback(null, {
+                code: 'UPDATE_SUCCESS',
+                message: 'Berhasil melakukan Check In',
+                data: {
+                  presence: result.updated,
+                  detail: created
+                }
+              });
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        } else {
+          presence_detail
+            .update(
+              {
+                latitude_checkout: req.body.lat,
+                longitude_checkout: req.body.lng,
+                image_checkout_a: result.path[0].slice(8),
+                image_checkout_b: result.path[1].slice(8)
+              },
+              {
+                where: {
+                  presence_id: result.updated.id
+                }
+              }
+            )
+            .then(updated => {
+              callback(null, {
+                code: 'UPDATE_SUCCESS',
+                message: 'Berhasil melakukan Check Out',
+                data: updated
+              });
+            })
+            .catch(err => {
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
         }
       }
     ],

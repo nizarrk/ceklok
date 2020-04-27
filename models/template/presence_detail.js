@@ -14,16 +14,31 @@ module.exports = function(sequelize, Sequelize) {
       presence_id: {
         type: Sequelize.INTEGER(11)
       },
-      latitude: {
+      date: {
+        type: Sequelize.DATEONLY
+      },
+      latitude_checkin: {
         type: Sequelize.FLOAT
       },
-      longitude: {
+      longitude_checkin: {
         type: Sequelize.FLOAT
       },
-      image_a: {
+      latitude_checkout: {
+        type: Sequelize.FLOAT
+      },
+      longitude_checkout: {
+        type: Sequelize.FLOAT
+      },
+      image_checkin_a: {
         type: Sequelize.STRING
       },
-      image_b: {
+      image_checkin_b: {
+        type: Sequelize.STRING
+      },
+      image_checkout_a: {
+        type: Sequelize.STRING
+      },
+      image_checkout_b: {
         type: Sequelize.STRING
       },
       status: {
