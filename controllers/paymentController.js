@@ -390,10 +390,19 @@ exports.addPaymentMethod = (APP, req, callback) => {
 
       function uploadPath(result, callback) {
         try {
-          let { mv, name } = req.files.file;
-          let fileName = 'payment_method' + req.randomString + path.extname(name);
+          APP.fileCheck(req.files.file.data, 'image').then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'File yang diunggah tidak sesuai!'
+              });
+            } else {
+              let { mv, name } = req.files.file;
+              let fileName = 'payment_method' + req.randomString + path.extname(name);
 
-          callback(null, { mv, fileName });
+              callback(null, { mv, fileName });
+            }
+          });
         } catch (err) {
           callback({
             code: 'INVALID_REQUEST',
@@ -498,10 +507,19 @@ exports.editPaymentMethod = (APP, req, callback) => {
 
       function checkUpload(result, callback) {
         try {
-          let { mv, name } = req.files.file;
-          let fileName = 'payment_method' + req.randomString + path.extname(name);
+          APP.fileCheck(req.files.file.data, 'image').then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'File yang diunggah tidak sesuai!'
+              });
+            } else {
+              let { mv, name } = req.files.file;
+              let fileName = 'payment_method' + req.randomString + path.extname(name);
 
-          callback(null, { mv, fileName, cek: true });
+              callback(null, { mv, fileName, cek: true });
+            }
+          });
         } catch (err) {
           payment_method
             .findOne({

@@ -188,12 +188,21 @@ exports.insert = function(APP, req, callback) {
             });
           }
 
-          let fileName = new Date().toISOString().replace(/:|\./g, '');
-          let imagePath = './public/uploads/pricing/';
+          APP.fileCheck(req.files.image.data, 'image').then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'File yang diunggah tidak sesuai!'
+              });
+            } else {
+              let fileName = new Date().toISOString().replace(/:|\./g, '');
+              let imagePath = './public/uploads/pricing/';
 
-          callback(null, {
-            kode: result,
-            path: imagePath + fileName + path.extname(req.files.image.name)
+              callback(null, {
+                kode: result,
+                path: imagePath + fileName + path.extname(req.files.image.name)
+              });
+            }
           });
         },
 

@@ -507,16 +507,25 @@ exports.insert = function(APP, req, callback) {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/employee/absen & cuti/`;
+            APP.fileCheck(req.files.doc_upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/employee/absen & cuti/`;
 
-            callback(null, {
-              kode: data.kode,
-              days: data.days,
-              typeid: data.typeid,
-              time: data.time,
-              dateend: data.dateend,
-              doc: docPath + fileName + path.extname(req.files.doc_upload.name)
+                callback(null, {
+                  kode: data.kode,
+                  days: data.days,
+                  typeid: data.typeid,
+                  time: data.time,
+                  dateend: data.dateend,
+                  doc: docPath + fileName + path.extname(req.files.doc_upload.name)
+                });
+              }
             });
           },
           err => {

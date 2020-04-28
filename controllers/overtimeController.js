@@ -382,11 +382,20 @@ exports.finishingOvertime = (APP, req, callback) => {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/overtime/`;
+            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/overtime/`;
 
-            callback(null, {
-              doc: docPath + fileName + path.extname(req.files.upload.name)
+                callback(null, {
+                  doc: docPath + fileName + path.extname(req.files.upload.name)
+                });
+              }
             });
           } catch (err) {
             console.log(err);

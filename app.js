@@ -580,7 +580,7 @@ async.series(
       app.use(endpoint, (req, res, next) => {
         if (req.body) {
           if (req.headers['content-type'] === 'application/json') {
-            if (process.env.ENCRYPT === 'true' && req.body.data) {
+            if (req.headers['encrypt'] && req.headers['encrypt'] == 'true' && req.body.data) {
               console.log('enkrip broooo');
               req.body = require('./functions/rsa').decrypt(req.body.data);
               next();
@@ -591,6 +591,75 @@ async.series(
       });
       if (routes[endpoint].auth) {
         app.use(endpoint, require('./functions/verifyToken'));
+
+        app.use(endpoint, (req, res, next) => {
+          if (req.headers.authorization) {
+            if (routes[endpoint].level == 4) {
+              console.log('masuk level 4');
+              if (req.user.level == 2 || req.user.level == 3) {
+                console.log('masuk level 2 3');
+              } else {
+                console.log('level token tidak valid!');
+                res.status(401).send({
+                  code: '01',
+                  status: 401,
+                  message: 'Level token tidak sesuai!',
+                  error: true
+                });
+              }
+            } else if (routes[endpoint].level == 5) {
+              console.log('masuk level 5');
+              if (req.user.level == 1 || req.user.level == 2) {
+                console.log('masuk level 1 2');
+              } else {
+                console.log('level token tidak valid!');
+                res.status(401).send({
+                  code: '01',
+                  status: 401,
+                  message: 'Level token tidak sesuai!',
+                  error: true
+                });
+              }
+            } else if (routes[endpoint].level == 0) {
+              console.log('masuk level 0');
+              if (req.user.level == 1 || req.user.level == 2 || req.user.level == 3) {
+                console.log('masuk level 1 2 3');
+              } else {
+                console.log('level token tidak valid!');
+                res.status(401).send({
+                  code: '01',
+                  status: 401,
+                  message: 'Level token tidak sesuai!',
+                  error: true
+                });
+              }
+            } else if (routes[endpoint].level == 1 || routes[endpoint].level == 2 || routes[endpoint].level == 3) {
+              console.log('masuk level 1 2 3');
+              if (req.user.level == routes[endpoint].level) {
+                console.log('level token valid!');
+              } else {
+                console.log('level token tidak valid!');
+                res.status(401).send({
+                  code: '01',
+                  status: 401,
+                  message: 'Level token tidak sesuai!',
+                  error: true
+                });
+              }
+            } else {
+              console.log('tidak masuk level manapun');
+
+              console.log('level token tidak valid!');
+              res.status(401).send({
+                code: '01',
+                status: 401,
+                message: 'Level token tidak sesuai!',
+                error: true
+              });
+            }
+          }
+          next();
+        });
       }
       app[routes[endpoint].method](endpoint, (req, res) => {
         trycatch(
@@ -600,6 +669,10 @@ async.series(
               req,
               (err, result) => {
                 if (err) return resOutput(APP, req, res, err, 'err');
+
+                if (req.headers['encrypt'] && req.headers['encrypt'] == 'true') {
+                  result.data = require('./functions/rsa').encrypt(result.data || []);
+                }
 
                 return resOutput(APP, req, res, result, 'ok');
               }

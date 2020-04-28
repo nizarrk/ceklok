@@ -84,13 +84,22 @@ exports.broadcastLetter = (APP, req, callback) => {
             });
           }
 
-          let fileName = new Date().toISOString().replace(/:|\./g, '');
-          let docPath = `./public/uploads/company_${req.user.code}/broadcast/letter/`;
+          APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'File yang diunggah tidak sesuai!'
+              });
+            } else {
+              let fileName = new Date().toISOString().replace(/:|\./g, '');
+              let docPath = `./public/uploads/company_${req.user.code}/broadcast/letter/`;
 
-          callback(null, {
-            employee: data.employee,
-            code: data.code,
-            doc: docPath + fileName + path.extname(req.files.upload.name)
+              callback(null, {
+                employee: data.employee,
+                code: data.code,
+                doc: docPath + fileName + path.extname(req.files.upload.name)
+              });
+            }
           });
         } catch (err) {
           console.log(err);

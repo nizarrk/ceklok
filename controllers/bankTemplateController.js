@@ -157,12 +157,21 @@ exports.insert = (APP, req, callback) => {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/template/`;
+            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/template/`;
 
-            callback(null, {
-              code: data,
-              doc: docPath + fileName + path.extname(req.files.upload.name)
+                callback(null, {
+                  code: data,
+                  doc: docPath + fileName + path.extname(req.files.upload.name)
+                });
+              }
             });
           },
           err => {
@@ -299,12 +308,21 @@ exports.update = (APP, req, callback) => {
       function checkUpload(data, callback) {
         trycatch(
           () => {
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/template/`;
+            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/template/`;
 
-            callback(null, {
-              status: true,
-              doc: docPath + fileName + path.extname(req.files.upload.name)
+                callback(null, {
+                  status: true,
+                  doc: docPath + fileName + path.extname(req.files.upload.name)
+                });
+              }
             });
           },
           err => {

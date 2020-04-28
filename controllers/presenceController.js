@@ -26,45 +26,39 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 message: 'Setting Cut Off tidak ditemukan!'
               });
             } else {
-              let value = res.value.split(',');
-              let dateStart = `${moment()
-                .subtract(1, 'month')
-                .format('YYYY-MM')}-${value[0]}`;
-              let dateEnd = `${moment().format('YYYY-MM')}-${value[1]}`;
-
-              let monthName = moment().format('MMMM');
-              let year = moment().format('YYYY');
-              console.log(monthName);
-
-              callback(null, {
-                datestart: dateStart,
-                dateend: dateEnd,
-                month: monthName,
-                year: year
-              });
+              callback(null, res.dataValues);
             }
           });
       },
 
       function checkPresencePeriod(result, callback) {
+        let value = result.value.split(',');
+        let monthName = moment().format('MMMM');
+        let year = moment().format('YYYY');
+
         presence_period
-          .findAll()
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
           .then(res => {
             if (res.length == 0) {
               console.log('Period Not Found');
 
               presence_period
                 .create({
-                  name: result.month,
+                  name: monthName,
                   description: 'Initial Generate',
-                  period: result.year
+                  period: year,
+                  date_start: `${moment()
+                    .subtract(1, 'month')
+                    .format('YYYY-MM')}-${value[0]}`,
+                  date_end: `${moment().format('YYYY-MM')}-${value[1]}`
                 })
                 .then(created => {
                   callback(null, {
                     id: created.id,
-                    datestart: result.datestart,
-                    dateend: result.dateend,
-                    year: result.year
+                    year: year
                   });
                 })
                 .catch(err => {
@@ -78,44 +72,31 @@ exports.generateDailyPresence = (APP, req, callback) => {
             } else {
               console.log('Period Found');
 
-              let isBetween = moment().isBetween(result.datestart, result.dateend);
+              let isBetween = moment().isBetween(res[0].date_start, res[0].date_end);
               if (isBetween) {
                 console.log('isBetween');
-                presence_period
-                  .findAll({
-                    limit: 1,
-                    order: [['id', 'DESC']]
-                  })
-                  .then(res => {
-                    callback(null, {
-                      id: res[0].id,
-                      datestart: result.datestart,
-                      dateend: result.dateend,
-                      year: result.year
-                    });
-                  })
-                  .catch(err => {
-                    console.log('Error isBetween checkPresencePeriod', err);
-                    callback({
-                      code: 'ERR_DATABASE',
-                      message: 'Error isBetween checkPresencePeriod',
-                      data: err
-                    });
-                  });
+                callback(null, {
+                  id: res[0].id,
+                  year: year
+                });
               } else {
                 console.log('!isBetween');
                 presence_period
                   .create({
-                    name: moment().format('MMMM'),
+                    name: moment()
+                      .add(1, 'months')
+                      .format('MMMM'),
                     description: 'Generated Period',
-                    period: result.year
+                    period: year,
+                    date_start: `${moment().format('YYYY-MM')}-${value[0]}`,
+                    date_end: `${moment()
+                      .add(1, 'months')
+                      .format('YYYY-MM')}-${value[1]}`
                   })
                   .then(created => {
                     callback(null, {
                       id: created.id,
-                      datestart: result.datestart,
-                      dateend: result.dateend,
-                      year: result.year
+                      year: year
                     });
                   })
                   .catch(err => {
@@ -160,7 +141,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               )
                 .then(arr => {
                   callback(null, {
-                    period: result,
+                    period: result.id,
                     status: arr
                   });
                 })
@@ -499,10 +480,11 @@ exports.generateDailyPresence = (APP, req, callback) => {
       },
 
       function createMonthlyPresence(result, callback) {
+        console.log('periodene bro', result.period);
         presence_monthly
           .findAll({
             where: {
-              presence_period_id: result.period.id
+              presence_period_id: result.period
             }
           })
           .then(res => {
@@ -598,6 +580,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       if (found.length == 0) {
                         return presence_monthly
                           .create({
+                            presence_period_id: result.period,
                             user_id: data.id,
                             date: moment().format('YYYY-MM-DD'),
                             total_time: '00:00:00',
@@ -756,7 +739,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   },
                   {
                     where: {
-                      presence_period_id: result.period.id,
+                      presence_period_id: result.period,
                       user_id: x.user_id
                     }
                   }

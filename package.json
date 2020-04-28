@@ -43,6 +43,7 @@
     "express-fileupload": "^1.1.6",
     "express-msisdn": "^1.0.8",
     "face-api.js": "^0.22.2",
+    "file-type": "^14.2.0",
     "firebase-admin": "^8.10.0",
     "ip": "^1.1.5",
     "jsonwebtoken": "^8.5.1",

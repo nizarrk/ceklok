@@ -979,13 +979,22 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
                 });
               }
 
-              let fileName = new Date().toISOString().replace(/:|\./g, '');
-              let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
+              APP.fileCheck(req.files.contract_upload.data, 'doc').then(res => {
+                if (res == null) {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'File yang diunggah tidak sesuai!'
+                  });
+                } else {
+                  let fileName = new Date().toISOString().replace(/:|\./g, '');
+                  let contractPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
 
-              callback(null, {
-                contract: contractPath + fileName + path.extname(req.files.contract_upload.name),
-                current: result.data.status_contract_id,
-                upload: true
+                  callback(null, {
+                    contract: contractPath + fileName + path.extname(req.files.contract_upload.name),
+                    current: result.data.status_contract_id,
+                    upload: true
+                  });
+                }
               });
             } else {
               callback(null, {
@@ -1277,26 +1286,35 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
 
               Promise.all(
                 result.checklist.map((x, i) => {
-                  let obj = {};
-                  let fileName = x.code + '_' + result.employee.nik;
-                  let statusPath = `./public/uploads/company_${req.user.code}/employee/status/`;
+                  return APP.fileCheck(req.files.status_upload[i].data, 'doc').then(res => {
+                    if (res == null) {
+                      return callback({
+                        code: 'INVALID_REQUEST',
+                        message: 'File yang diunggah tidak sesuai!'
+                      });
+                    } else {
+                      let obj = {};
+                      let fileName = x.code + '_' + result.employee.nik;
+                      let statusPath = `./public/uploads/company_${req.user.code}/employee/status/`;
 
-                  obj.checklist_id = x.id;
-                  obj.employee_id = id;
-                  obj.description = desc;
-                  obj.upload = statusPath.slice(8) + fileName + path.extname(req.files.status_upload[i].name);
+                      obj.checklist_id = x.id;
+                      obj.employee_id = id;
+                      obj.description = desc;
+                      obj.upload = statusPath.slice(8) + fileName + path.extname(req.files.status_upload[i].name);
 
-                  req.files.status_upload[i].mv(
-                    statusPath + fileName + path.extname(req.files.status_upload[i].name),
-                    function(err) {
-                      if (err)
-                        return callback({
-                          code: 'ERR'
-                        });
+                      req.files.status_upload[i].mv(
+                        statusPath + fileName + path.extname(req.files.status_upload[i].name),
+                        function(err) {
+                          if (err)
+                            return callback({
+                              code: 'ERR'
+                            });
+                        }
+                      );
+
+                      return obj;
                     }
-                  );
-
-                  return obj;
+                  });
                 })
               )
                 .then(arr => {
@@ -1451,65 +1469,65 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let gradePath = `./public/uploads/company_${req.user.code}/employee/grade/`;
-            let jobPath = `./public/uploads/company_${req.user.code}/employee/job_title/`;
-            let departmentPath = `./public/uploads/company_${req.user.code}/employee/department/`;
+            APP.fileCheck(
+              [req.files.grade_upload.data, req.files.job_upload.data, req.files.department_upload.data],
+              ['doc', 'doc', 'doc']
+            ).then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let gradePath = `./public/uploads/company_${req.user.code}/employee/grade/`;
+                let jobPath = `./public/uploads/company_${req.user.code}/employee/job_title/`;
+                let departmentPath = `./public/uploads/company_${req.user.code}/employee/department/`;
 
-            if (!fs.existsSync(gradePath)) {
-              mkdirp.sync(gradePath);
-            }
-
-            if (!fs.existsSync(jobPath)) {
-              mkdirp.sync(jobPath);
-            }
-
-            if (!fs.existsSync(departmentPath)) {
-              mkdirp.sync(departmentPath);
-            }
-
-            if (req.files.grade_upload) {
-              req.files.grade_upload.mv(gradePath + fileName + path.extname(req.files.grade_upload.name), function(
-                err
-              ) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
+                if (req.files.grade_upload) {
+                  req.files.grade_upload.mv(gradePath + fileName + path.extname(req.files.grade_upload.name), function(
+                    err
+                  ) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
                   });
-              });
-            }
-
-            if (req.files.job_upload) {
-              req.files.job_upload.mv(jobPath + fileName + path.extname(req.files.job_upload.name), function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
-            if (req.files.department_upload) {
-              req.files.department_upload.mv(
-                departmentPath + fileName + path.extname(req.files.department_upload.name),
-                function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
                 }
-              );
-            }
 
-            callback(null, {
-              grade: req.files.grade_upload
-                ? gradePath + fileName + path.extname(req.files.grade_upload.name)
-                : result.grade_upload,
-              job: req.files.job_upload
-                ? jobPath + fileName + path.extname(req.files.job_upload.name)
-                : result.job_title_upload,
-              department: req.files.department_upload
-                ? departmentPath + fileName + path.extname(req.files.department_upload.name)
-                : result.department_upload
+                if (req.files.job_upload) {
+                  req.files.job_upload.mv(jobPath + fileName + path.extname(req.files.job_upload.name), function(err) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
+                  });
+                }
+
+                if (req.files.department_upload) {
+                  req.files.department_upload.mv(
+                    departmentPath + fileName + path.extname(req.files.department_upload.name),
+                    function(err) {
+                      if (err)
+                        return callback({
+                          code: 'ERR'
+                        });
+                    }
+                  );
+                }
+
+                callback(null, {
+                  grade: req.files.grade_upload
+                    ? gradePath + fileName + path.extname(req.files.grade_upload.name)
+                    : result.grade_upload,
+                  job: req.files.job_upload
+                    ? jobPath + fileName + path.extname(req.files.job_upload.name)
+                    : result.job_title_upload,
+                  department: req.files.department_upload
+                    ? departmentPath + fileName + path.extname(req.files.department_upload.name)
+                    : result.department_upload
+                });
+              }
             });
           },
           err => {
@@ -1689,14 +1707,23 @@ exports.addSuratPeringatan = (APP, req, callback) => {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/employee/doc/`;
+            APP.fileCheck(req.files.doc_upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/employee/doc/`;
 
-            callback(null, {
-              code: result,
-              doc: req.files.doc_upload
-                ? docPath + fileName + path.extname(req.files.doc_upload.name)
-                : result.doc_upload
+                callback(null, {
+                  code: result,
+                  doc: req.files.doc_upload
+                    ? docPath + fileName + path.extname(req.files.doc_upload.name)
+                    : result.doc_upload
+                });
+              }
             });
           },
           err => {
@@ -1974,16 +2001,25 @@ exports.verifyEmployee = (APP, req, callback) => {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
+            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/employee/contract/`;
 
-            callback(null, {
-              grade: result.grade,
-              department: result.department,
-              job: result.job,
-              contract: result.contract,
-              schedule: result.schedule,
-              doc: docPath + fileName + path.extname(req.files.upload.name)
+                callback(null, {
+                  grade: result.grade,
+                  department: result.department,
+                  job: result.job,
+                  contract: result.contract,
+                  schedule: result.schedule,
+                  doc: docPath + fileName + path.extname(req.files.upload.name)
+                });
+              }
             });
           } catch (err) {
             console.log(err);

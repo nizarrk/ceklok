@@ -682,44 +682,53 @@ exports.editCompanyStatus = (APP, req, callback) => {
           })
           .then(res => {
             if (res == null) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND',
                 message: 'Company tidak ditemukan!'
               });
-            }
-
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let statusPath = `./public/uploads/company_${res.company_code}/status/`;
-
-            res
-              .update({
-                status: req.body.status,
-                status_upload: statusPath.slice(8) + fileName + path.extname(req.files.upload.name)
-              })
-              .then(updated => {
-                // upload file
-                if (req.files.upload) {
-                  req.files.upload.mv(statusPath + fileName + path.extname(req.files.upload.name), function(err) {
-                    if (err)
-                      return callback({
-                        code: 'ERR'
-                      });
+            } else {
+              APP.fileCheck(req.files.upload.data, 'doc').then(file => {
+                if (file == null) {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'File yang diunggah tidak sesuai!'
                   });
-                }
+                } else {
+                  let fileName = new Date().toISOString().replace(/:|\./g, '');
+                  let statusPath = `./public/uploads/company_${res.company_code}/status/`;
 
-                callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: updated
-                });
-              })
-              .catch(err => {
-                console.log('Error findOne updateEmployeeStatus', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  message: 'Error findOne updateEmployeeStatus',
-                  data: err
-                });
+                  res
+                    .update({
+                      status: req.body.status,
+                      status_upload: statusPath.slice(8) + fileName + path.extname(req.files.upload.name)
+                    })
+                    .then(updated => {
+                      // upload file
+                      if (req.files.upload) {
+                        req.files.upload.mv(statusPath + fileName + path.extname(req.files.upload.name), function(err) {
+                          if (err)
+                            return callback({
+                              code: 'ERR'
+                            });
+                        });
+                      }
+
+                      callback(null, {
+                        code: 'UPDATE_SUCCESS',
+                        data: updated
+                      });
+                    })
+                    .catch(err => {
+                      console.log('Error findOne updateEmployeeStatus', err);
+                      callback({
+                        code: 'ERR_DATABASE',
+                        message: 'Error findOne updateEmployeeStatus',
+                        data: err
+                      });
+                    });
+                }
               });
+            }
           })
           .catch(err => {
             console.log('Error update updateEmployeeStatus', err);

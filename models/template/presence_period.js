@@ -17,6 +17,12 @@ module.exports = function(sequelize, Sequelize) {
       description: {
         type: Sequelize.STRING(45)
       },
+      date_start: {
+        type: Sequelize.DATEONLY
+      },
+      date_end: {
+        type: Sequelize.DATEONLY
+      },
       period: {
         type: Sequelize.STRING(45)
       },

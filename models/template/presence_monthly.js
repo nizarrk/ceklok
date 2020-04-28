@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      presence_period_id: {
+        type: Sequelize.INTEGER(11)
+      },
       user_id: {
         type: Sequelize.INTEGER(11)
       },
