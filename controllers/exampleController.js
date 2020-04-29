@@ -11,6 +11,7 @@ const bcrypt = require('bcrypt');
 const moment = require('moment');
 const routes = require('../routes2.json');
 const FileType = require('file-type');
+const rsa = require('../functions/rsa');
 const faceapi = require('face-api.js');
 // Import a fetch implementation for Node.js
 const fetch = require('node-fetch');
@@ -19,14 +20,21 @@ const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 exports.test = function(APP, req, callback) {
-  APP.fileCheck(req.files.contract_upload.data, 'doc').then(res => {
-    if (res == null) {
-      callback({
-        code: 'INVALID_REQUEST',
-        message: 'File yang diunggah tidak sesuai!'
-      });
-    }
+  // APP.fileCheck(req.files.contract_upload.data, 'doc').then(res => {
+  //   if (res == null) {
+  //     callback({
+  //       code: 'INVALID_REQUEST',
+  //       message: 'File yang diunggah tidak sesuai!'
+  //     });
+  //   }
+  // });
+  let tes = rsa.encrypt({
+    username: 'nrk123',
+    pass: 'h3jfsi1l',
+    platform: 'Web'
   });
+
+  console.log(tes);
 };
 
 exports.testing = async (APP, req, callback) => {

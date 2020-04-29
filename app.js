@@ -272,10 +272,7 @@ function resOutput(APP, req, res, params, status) {
         output.status = params.status || message.company.status;
         output.error = params.error || message.company.error;
         output.message = params.message || message.company.message;
-        output.data =
-          process.env.ENCRYPT === 'true'
-            ? require('./functions/rsa').encrypt(params.data || message.company.data)
-            : params.data || message.company.data;
+        output.data = params.data || message.company.data;
         output.debug = undefined;
 
         if (process.env.NODE_ENV !== 'production') {
@@ -582,8 +579,15 @@ async.series(
           if (req.headers['content-type'] === 'application/json') {
             if (req.headers['encrypt'] && req.headers['encrypt'] == 'true' && req.body.data) {
               console.log('enkrip broooo');
-              req.body = require('./functions/rsa').decrypt(req.body.data);
-              next();
+              let decrypt = require('./functions/rsa').decrypt(req.body.data);
+
+              if (typeof decrypt == 'string') {
+                req.body = JSON.parse(decrypt);
+              } else {
+                req.body = decrypt;
+              }
+
+              console.log(req.body);
             }
           }
         }
