@@ -20,21 +20,39 @@ const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 exports.test = function(APP, req, callback) {
-  // APP.fileCheck(req.files.contract_upload.data, 'doc').then(res => {
+  // APP.fileCheck(req.files.upload.data, 'doc').then(res => {
   //   if (res == null) {
   //     callback({
   //       code: 'INVALID_REQUEST',
   //       message: 'File yang diunggah tidak sesuai!'
   //     });
+  //   } else {
+  //     console.log(res);
+
   //   }
   // });
-  let tes = rsa.encrypt({
-    username: 'nrk123',
-    pass: 'h3jfsi1l',
-    platform: 'Web'
-  });
+  // let tes = rsa.encrypt({
+  //   username: 'nrk123',
+  //   pass: 'h3jfsi1l',
+  //   platform: 'Web'
+  // });
 
-  console.log(tes);
+  // console.log(tes);
+
+  APP.models.company.ceklok_VST1912231.mysql.presence_monthly
+    .findAll({
+      where: {
+        user_id: 13
+      },
+      limit: 1,
+      order: [['id', 'DESC']]
+    })
+    .then(res => {
+      callback(null, {
+        code: 'OK',
+        data: res
+      });
+    });
 };
 
 exports.testing = async (APP, req, callback) => {

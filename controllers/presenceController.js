@@ -58,7 +58,9 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 .then(created => {
                   callback(null, {
                     id: created.id,
-                    year: year
+                    datestart: created.date_start,
+                    dateend: created.date_end,
+                    year: created.year
                   });
                 })
                 .catch(err => {
@@ -77,7 +79,9 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 console.log('isBetween');
                 callback(null, {
                   id: res[0].id,
-                  year: year
+                  datestart: res[0].date_start,
+                  dateend: res[0].date_end,
+                  year: res[0].year
                 });
               } else {
                 console.log('!isBetween');
@@ -96,7 +100,9 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   .then(created => {
                     callback(null, {
                       id: created.id,
-                      year: year
+                      datestart: created.date_start,
+                      dateend: created.date_end,
+                      year: created.year
                     });
                   })
                   .catch(err => {
@@ -141,7 +147,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               )
                 .then(arr => {
                   callback(null, {
-                    period: result.id,
+                    period: result,
                     status: arr
                   });
                 })
@@ -484,7 +490,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
         presence_monthly
           .findAll({
             where: {
-              presence_period_id: result.period
+              presence_period_id: result.period.id
             }
           })
           .then(res => {
@@ -495,7 +501,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                 result.employee.map((data, index) => {
                   let obj = {
                     user_id: data.id,
-                    presence_period_id: result.period,
+                    presence_period_id: result.period.id,
                     date: moment().format('YYYY-MM-DD'),
                     total_time: '00:00:00',
                     total_minus: '00:00:00',
@@ -572,7 +578,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                           ]
                         },
                         presence_setting_id: {
-                          $not: ['8']
+                          $not: ['8'] // LD
                         }
                       }
                     })
@@ -739,7 +745,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                   },
                   {
                     where: {
-                      presence_period_id: result.period,
+                      presence_period_id: result.period.id,
                       user_id: x.user_id
                     }
                   }

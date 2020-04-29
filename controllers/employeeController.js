@@ -971,6 +971,7 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
         trycatch(
           () => {
             if (result.upload) {
+              console.log('anjay');
               if (!req.files || Object.keys(req.files).length === 0) {
                 return callback({
                   code: 'INVALID_REQUEST',
@@ -980,6 +981,10 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
               }
 
               APP.fileCheck(req.files.contract_upload.data, 'doc').then(res => {
+                console.log('anjay2');
+
+                console.log(res);
+
                 if (res == null) {
                   callback({
                     code: 'INVALID_REQUEST',

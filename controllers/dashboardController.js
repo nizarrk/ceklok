@@ -68,10 +68,12 @@ exports.dashboardEmployee = (APP, req, callback) => {
 
       function getPresenceMonthly(result, callback) {
         presence_monthly
-          .findOne({
+          .findAll({
             where: {
               user_id: req.user.id
-            }
+            },
+            limit: 1,
+            order: [['id', 'DESC']]
           })
           .then(res => {
             // if (res == null) {
@@ -83,7 +85,7 @@ exports.dashboardEmployee = (APP, req, callback) => {
 
             callback(null, {
               employee: result,
-              presence: res
+              presence: res[0]
             });
           })
           .catch(err => {

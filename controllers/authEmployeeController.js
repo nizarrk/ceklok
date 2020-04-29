@@ -798,44 +798,60 @@ exports.checkOTP = (APP, req, callback) => {
 };
 
 exports.resetPassword = (APP, req, callback) => {
-  console.log(req.body);
-
   let query;
+  let { pass, konf, email, level, company, otp } = req.body;
   async.waterfall(
     [
       function checkBody(callback) {
-        let password = APP.validation.password(req.body.pass);
-        let konfirm = APP.validation.password(req.body.konf);
+        if (pass && konf && email && level && otp) {
+          let password = APP.validation.password(pass);
+          let konfirm = APP.validation.password(konf);
 
-        if (password != true) {
-          return callback(password);
-        }
+          if (password != true) {
+            return callback(password);
+          }
 
-        if (konfirm != true) {
-          console.log('konfirm');
+          if (konfirm != true) {
+            console.log('konfirm');
 
-          return callback(konfirm);
-        }
+            return callback(konfirm);
+          }
 
-        if (req.body.konf !== req.body.pass) {
+          if (konf !== pass) {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Invalid password confirm'
+            });
+          }
+
+          callback(null, true);
+        } else {
           callback({
             code: 'INVALID_REQUEST',
-            message: 'Invalid password confirm'
+            id: '',
+            message: 'Kesalahan pada parameter!'
           });
         }
-        callback(null, true);
       },
 
       function checkLevel(data, callback) {
-        if (req.body.level == 1) {
+        if (level == 1) {
           query = APP.models.mysql.admin_app;
           callback(null, true);
-        } else if (req.body.level == 2) {
+        } else if (level == 2) {
           query = APP.models.mysql.admin;
           callback(null, true);
-        } else if (req.body.level == 3) {
-          query = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee;
-          callback(null, true);
+        } else if (level == 3) {
+          if (company) {
+            query = APP.models.company[`${process.env.MYSQL_NAME}_${company}`].mysql.employee;
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: '',
+              message: 'Kesalahan pada parameter company!'
+            });
+          }
         } else {
           callback({
             code: 'INVALID_REQUEST',
@@ -845,8 +861,50 @@ exports.resetPassword = (APP, req, callback) => {
         }
       },
 
+      function checkOTP(data, callback) {
+        APP.models.mongo.otp
+          .findOne({
+            otp: otp,
+            expired: false
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                id: '',
+                message: 'OTP tidak ditemukan!'
+              });
+            } else {
+              if (new Date().getTime() <= new Date(res.expired_time).getTime()) {
+                if (res.email == email) {
+                  callback(null, true);
+                } else {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    id: '',
+                    message: 'OTP tidak valid!'
+                  });
+                }
+              } else {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'OTP Expired! Silahkan mengajukan kode OTP baru!'
+                });
+              }
+            }
+          })
+          .catch(err => {
+            console.log('Error checkOTP', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: '',
+              data: err
+            });
+          });
+      },
+
       function checkCompany(data, callback) {
-        if (req.body.level == 3) {
+        if (level == 3) {
           module.exports.checkExistingCompany(APP, req, callback);
         } else {
           callback(null, true);
@@ -857,11 +915,11 @@ exports.resetPassword = (APP, req, callback) => {
         query
           .findOne({
             where: {
-              email: req.body.email
+              email: email
             }
           })
           .then(res => {
-            bcrypt.compare(req.body.pass, res.password).then(res => {
+            bcrypt.compare(pass, res.password).then(res => {
               console.log(res);
 
               if (res === false) return callback(null, true);
@@ -883,9 +941,9 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function encryptPassword(result, callback) {
-        let pass = APP.validation.password(req.body.pass);
+        let pass = APP.validation.password(pass);
         if (pass === true) {
-          bcrypt.hash(req.body.pass, 10).then(hashed => {
+          bcrypt.hash(pass, 10).then(hashed => {
             callback(null, hashed);
           });
         } else {
@@ -897,7 +955,7 @@ exports.resetPassword = (APP, req, callback) => {
         query
           .findOne({
             where: {
-              email: req.body.email
+              email: email
             }
           })
           .then(res => {

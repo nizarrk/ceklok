@@ -447,6 +447,7 @@ exports.broadcastDetail = (APP, req, callback) => {
       message: 'Kesalahan pada parameter'
     });
   } else {
+    let escape = req.body.id.replace(/[\\"*&-+`.,;:]/g, "'\\''");
     if (req.user.level === 2 || req.user.level === 3) {
       APP.db.sequelize
         .query(
@@ -481,7 +482,7 @@ exports.broadcastDetail = (APP, req, callback) => {
         ON
           b.updated_by = a2.id
         WHERE
-          b.id = ${req.body.id}
+          b.id = ${escape}
         `
         )
         .then(res => {
