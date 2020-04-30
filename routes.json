@@ -430,7 +430,7 @@
     "method": "post",
     "controller": "transactionController",
     "function": "listAllTransaction",
-    "level": 1,
+    "level": 5,
     "auth": true
   },
   "/transaction/getbyid": {
@@ -703,7 +703,7 @@
     "method": "post",
     "controller": "absentCutiController",
     "function": "get",
-    "level": 3,
+    "level": 4,
     "auth": true
   },
   "/absentcuti/getbyid": {
@@ -1290,7 +1290,7 @@
     "method": "post",
     "controller": "overtimeController",
     "function": "finishingOvertime",
-    "level": 2,
+    "level": 3,
     "auth": true
   },
   "/overtime/get": {
