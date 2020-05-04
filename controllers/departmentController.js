@@ -82,7 +82,7 @@ exports.insert = function(APP, req, callback) {
         }
       },
 
-      function generateDepartmentCode(callback) {
+      function generateDepartmentCode(result, callback) {
         let kode = APP.generateCode(department, 'DEP');
         Promise.resolve(kode)
           .then(x => {
@@ -104,7 +104,7 @@ exports.insert = function(APP, req, callback) {
       function insertDepartment(result, callback) {
         department
           .build({
-            code: result,
+            code: result.code,
             name: name,
             description: desc,
             location: loc,

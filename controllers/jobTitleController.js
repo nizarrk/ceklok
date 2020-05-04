@@ -88,7 +88,7 @@ exports.insert = function(APP, req, callback) {
       function insertJobTitle(result, callback) {
         job_title
           .build({
-            code: result,
+            code: result.code,
             name: name,
             description: desc
           })
@@ -133,7 +133,7 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  if (req.body.name && req.body.desc && req.body.id) {
+  if (req.body.name && req.body.desc && req.body.id && req.body.status) {
     APP.models.company[req.user.db].mysql.job_title
       .update(
         {

@@ -84,7 +84,7 @@ exports.insert = function(APP, req, callback) {
       function insertAbsentType(result, callback) {
         APP.models.company[req.user.db].mysql.absent_type
           .build({
-            code: result,
+            code: result.code,
             name: name,
             description: desc,
             type: type,
@@ -140,6 +140,7 @@ exports.update = function(APP, req, callback) {
           name: req.body.name,
           description: req.body.desc,
           updated_at: new Date(),
+          status: req.body.status,
           action_by: req.user.id
         },
         {

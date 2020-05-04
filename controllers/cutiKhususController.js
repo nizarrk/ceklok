@@ -86,15 +86,14 @@ exports.insert = function(APP, req, callback) {
 
       function insertCutiKhusus(result, callback) {
         cuti_type
-          .build({
-            code: result,
+          .create({
+            code: result.code,
             name: name,
             description: desc,
             type: type,
             days: days,
             action_by: req.user.id
           })
-          .save()
           .then(result => {
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {

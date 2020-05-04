@@ -1835,7 +1835,7 @@ exports.addSuratPeringatan = (APP, req, callback) => {
               });
             } else {
               callback(null, {
-                code: result,
+                code: result.code,
                 employee: res.dataValues
               });
             }

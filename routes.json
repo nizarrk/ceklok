@@ -885,7 +885,7 @@
     "method": "post",
     "controller": "presenceController",
     "function": "getSettingsCompany",
-    "level": 1,
+    "level": 2,
     "auth": true
   },
   "/presence/setting/insert": {
