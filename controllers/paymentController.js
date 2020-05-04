@@ -216,6 +216,69 @@ exports.paymentTypeDetail = (APP, req, callback) => {
   );
 };
 
+exports.paymentMethodList = function(APP, req, callback) {
+  let query;
+
+  async.waterfall(
+    [
+      function checkLevel(callback) {
+        if (req.user.level === 1) {
+          query = APP.models.mysql.payment_method;
+          callback(null, {});
+        } else if (req.user.level === 2) {
+          query = APP.models.company[req.user.db].mysql.payment_method_active;
+          callback(null, {
+            status: 1
+          });
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: 'PLQ97',
+            message: 'User level invalid'
+          });
+        }
+      },
+
+      function getList(data, callback) {
+        query
+          .findAll({
+            attributes: ['id', 'name', 'description', 'status'],
+            where: data !== {} ? data : 1 + 1
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                id: 'PLQ97',
+                message: 'Data tidak ditemukan'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                id: 'PLP00',
+                message: 'Data ditemukan!',
+                data: res
+              });
+            }
+          })
+          .catch(err => {
+            console.log('Error PLQ98', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'PLQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( getList )'
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.paymentTypeListCompany = (APP, req, callback) => {
   APP.db.sequelize
     .query(

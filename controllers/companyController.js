@@ -55,15 +55,15 @@ exports.getCompanyDetails = (APP, req, callback) => {
   let mysql = APP.models.mysql;
   let params = {};
 
-  if (req.user.company && req.user.admin) {
+  if (req.user.level == 2) {
     params.id = req.user.company;
   }
 
-  if (req.user.superadmin) {
+  if (req.user.level == 1) {
     params.id = req.body.id;
   }
 
-  if (!req.user.admin && !req.user.superadmin) {
+  if (req.user.level !== 2 && req.user.level !== 1) {
     return callback({
       code: 'INVALID_REQUEST',
       message: 'Anda tidak memiliki akses ke fitur ini'
@@ -120,17 +120,17 @@ exports.editCompanyProfile = (APP, req, callback) => {
       res
         .update({
           established_date: req.body.established,
-          // name: req.body.name,
+          name: req.body.name,
           description: req.body.desc,
-          company_field: req.body.field
-          // address: req.body.address,
-          // kelurahan: req.body.kel,
-          // kecamatan: req.body.kec,
-          // city: req.body.city,
-          // province: req.body.prov,
-          // zipcode: req.body.zip,
-          // msisdn: 'default',
-          // tlp: req.body.telp,
+          company_field: req.body.field,
+          address: req.body.address,
+          kelurahan: req.body.kel,
+          kecamatan: req.body.kec,
+          city: req.body.city,
+          province: req.body.prov,
+          zipcode: req.body.zip,
+          msisdn: 'default',
+          tlp: req.body.telp
         })
         .then(updated => {
           callback(null, {

@@ -400,15 +400,24 @@ exports.login = (APP, req, callback) => {
                 attributes: ['id', 'image']
               }
             ],
-            attributes: ['id', 'company_code', 'name', 'password', 'photo', 'initial_login', 'status'],
+            attributes: [
+              'id',
+              'company_code',
+              'name',
+              'password',
+              'photo',
+              'initial_login',
+              'login_attempt',
+              'status',
+              'created_at',
+              'updated_at'
+            ],
             where: {
               user_name: req.body.username,
               company_code: req.body.company
             }
           })
           .then(rows => {
-            console.log(rows[0].employee_faces);
-
             if (rows.length == 0) {
               callback({
                 code: 'NOT_FOUND',
@@ -421,7 +430,19 @@ exports.login = (APP, req, callback) => {
                   message: 'User have to wait for admin to verify their account first!'
                 });
               } else {
-                callback(null, rows);
+                // let now = new Date().getTime();
+                // let updated = new Date(rows[0].updated_at).getTime();
+                // console.log(rows[0].login_attempt >= 3 && now > updated);
+
+                if (rows[0].login_attempt < 3) {
+                  callback(null, rows);
+                } else {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message:
+                      'Anda telah mencapai limit kesalahan login! Silahkan menghubungi tim operasional untuk membuka akses pada akun anda kembali!'
+                  });
+                }
               }
             }
           })
@@ -438,24 +459,90 @@ exports.login = (APP, req, callback) => {
           .compare(req.body.pass, rows[0].password)
           .then(res => {
             if (res === true) {
-              callback(null, {
-                id: rows[0].id,
-                company_code: rows[0].company_code,
-                name: rows[0].name,
-                photo: rows[0].photo,
-                initial_login: rows[0].initial_login,
-                employee_faces: rows[0].employee_faces
-              });
+              // reset failed attempt counter
+              employee
+                .update(
+                  {
+                    login_attempt: 0,
+                    updated_at: new Date()
+                  },
+                  {
+                    where: {
+                      id: rows[0].id
+                    }
+                  }
+                )
+                .then(() => {
+                  callback(null, {
+                    id: rows[0].id,
+                    company_code: rows[0].company_code,
+                    name: rows[0].name,
+                    photo: rows[0].photo,
+                    initial_login: rows[0].initial_login,
+                    employee_faces: rows[0].employee_faces
+                  });
+                })
+                .catch(err => {
+                  callback({
+                    code: 'ERR_DATABASE',
+                    data: err
+                  });
+                });
             } else {
-              callback({
-                code: 'INVALID_REQUEST',
-                message: 'Invalid Username or Password'
-              });
+              // update failed attempt counter
+              employee
+                .update(
+                  {
+                    login_attempt: rows[0].login_attempt + 1,
+                    updated_at: new Date()
+                  },
+                  {
+                    where: {
+                      id: rows[0].id
+                    }
+                  }
+                )
+                .then(() => {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Invalid Username or Password'
+                  });
+                })
+                .catch(err => {
+                  callback({
+                    code: 'ERR_DATABASE',
+                    data: err
+                  });
+                });
             }
           })
           .catch(err => {
             callback({
               code: 'ERR',
+              data: err
+            });
+          });
+      },
+
+      function initialLoginStatus(rows, callback) {
+        employee
+          .update(
+            {
+              initial_login: 1
+            },
+            {
+              where: {
+                id: rows.id
+              }
+            }
+          )
+          .then(() => {
+            callback(null, rows);
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
               data: err
             });
           });
@@ -877,7 +964,20 @@ exports.resetPassword = (APP, req, callback) => {
             } else {
               if (new Date().getTime() <= new Date(res.expired_time).getTime()) {
                 if (res.email == email) {
-                  callback(null, true);
+                  res
+                    .update({
+                      expired: true
+                    })
+                    .then(updated => {
+                      callback(null, true);
+                    })
+                    .catch(err => {
+                      console.log(err);
+                      callback({
+                        code: 'ERR_DATABASE',
+                        data: err
+                      });
+                    });
                 } else {
                   callback({
                     code: 'INVALID_REQUEST',
@@ -941,13 +1041,13 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function encryptPassword(result, callback) {
-        let pass = APP.validation.password(pass);
-        if (pass === true) {
+        let checkPass = APP.validation.password(pass);
+        if (checkPass === true) {
           bcrypt.hash(pass, 10).then(hashed => {
             callback(null, hashed);
           });
         } else {
-          callback(pass);
+          callback(checkPass);
         }
       },
 

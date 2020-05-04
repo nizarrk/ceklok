@@ -1211,10 +1211,11 @@ exports.checkInOutProcess = (APP, req, callback) => {
 };
 
 exports.getHistoryCheckInOut = (APP, req, callback) => {
-  let params = '1+1';
+  let params = `1+1 ORDER BY ${req.user.db}.presence.date DESC`;
 
   if (req.body.datestart && req.body.dateend) {
-    params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}'`;
+    params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}' 
+              ORDER BY ${req.user.db}.presence.date DESC`;
   }
 
   if (req.user.level === 3) {
@@ -1223,7 +1224,7 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
 
   if (req.body.datestart && req.body.dateend && req.user.level === 3) {
     params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}'
-              AND presence.user_id = ${req.user.id}`;
+              AND presence.user_id = ${req.user.id} ORDER BY ${req.user.db}.presence.date DESC`;
   }
 
   let query = `SELECT 

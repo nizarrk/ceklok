@@ -51,54 +51,46 @@ exports.getById = function(APP, req, callback) {
 };
 
 exports.insert = function(APP, req, callback) {
+  let { job_title } = APP.models.company[req.user.db].mysql;
+  let { name, desc } = req.body;
   async.waterfall(
     [
-      function generateCode(callback) {
-        let pad = 'JT000';
-        let kode = '';
+      function checkbody(callback) {
+        if (name && desc) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
 
-        APP.models.company[req.user.db].mysql.job_title
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
-          })
-          .then(res => {
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              kode = pad.substring(0, pad.length - str.length) + str;
-
-              callback(null, kode);
-            } else {
-              console.log('ada');
-              console.log(res[0].code);
-
-              let lastID = res[0].code;
-              let replace = lastID.replace('JT', '');
-              console.log(replace);
-
-              let str = parseInt(replace) + 1;
-              kode = pad.substring(0, pad.length - str.toString().length) + str;
-
-              callback(null, kode);
-            }
+      function generateCode(result, callback) {
+        let kode = APP.generateCode(job_title, 'JT');
+        Promise.resolve(kode)
+          .then(x => {
+            callback(null, {
+              code: x
+            });
           })
           .catch(err => {
             console.log(err);
-
             callback({
-              code: 'ERR_DATABASE',
+              code: 'ERR',
+              id: '?',
+              message: 'Terjadi Kesalahan, mohon coba kembali',
               data: err
             });
           });
       },
 
       function insertJobTitle(result, callback) {
-        APP.models.company[req.user.db].mysql.job_title
+        job_title
           .build({
             code: result,
-            name: req.body.name,
-            description: req.body.desc
+            name: name,
+            description: desc
           })
           .save()
           .then(result => {
@@ -141,58 +133,67 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.job_title
-    .update(
-      {
-        name: req.body.name,
-        description: req.body.desc,
-        status: req.body.status
-      },
-      {
-        where: {
-          id: req.body.id
+  if (req.body.name && req.body.desc && req.body.id) {
+    APP.models.company[req.user.db].mysql.job_title
+      .update(
+        {
+          name: req.body.name,
+          description: req.body.desc,
+          status: req.body.status,
+          updated_at: new Date(),
+          action_by: req.user.id
+        },
+        {
+          where: {
+            id: req.body.id
+          }
         }
-      }
-    )
-    .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
+      )
+      .then(result => {
+        // if (!result || (result && !result[0])) {
+        //   let params = 'No data updated'; //This is only example, Object can also be used
+        //   return callback(null, {
+        //     code: 'UPDATE_NONE',
+        //     data: params
+        //   });
+        // }
+
+        let params = 'Update Success'; //This is only example, Object can also be used
         return callback(null, {
-          code: 'UPDATE_NONE',
-          data: params
+          code: 'UPDATE_SUCCESS',
+          data: result
         });
-      }
+      })
+      .catch(err => {
+        console.log('iki error', err);
 
-      let params = 'Update Success'; //This is only example, Object can also be used
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: params
-      });
-    })
-    .catch(err => {
-      console.log('iki error', err);
+        if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+          let params = 'Error! Empty Query'; //This is only example, Object can also be used
+          return callback({
+            code: 'UPDATE_NONE',
+            data: params
+          });
+        }
 
-      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-        let params = 'Error! Empty Query'; //This is only example, Object can also be used
+        if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+          let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+          return callback({
+            code: 'DUPLICATE',
+            data: params
+          });
+        }
+
         return callback({
-          code: 'UPDATE_NONE',
-          data: params
+          code: 'ERR_DATABASE',
+          data: err
         });
-      }
-
-      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-        return callback({
-          code: 'DUPLICATE',
-          data: params
-        });
-      }
-
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
       });
+  } else {
+    callback({
+      code: 'INVALID_REQUEST',
+      message: 'Kesalahan pada parameter!'
     });
+  }
 };
 
 exports.updateStatus = function(APP, req, callback) {
@@ -208,18 +209,18 @@ exports.updateStatus = function(APP, req, callback) {
       }
     )
     .then(result => {
-      if (!result || (result && !result[0])) {
-        let params = 'No data updated'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
+      // if (!result || (result && !result[0])) {
+      //   let params = 'No data updated'; //This is only example, Object can also be used
+      //   return callback(null, {
+      //     code: 'UPDATE_NONE',
+      //     data: params
+      //   });
+      // }
 
       let params = 'Update Success'; //This is only example, Object can also be used
       return callback(null, {
         code: 'UPDATE_SUCCESS',
-        data: params
+        data: result
       });
     })
     .catch(err => {
@@ -286,7 +287,7 @@ exports.delete = function(APP, req, callback) {
               callback({
                 code: 'INVALID_REQUEST',
                 id: '',
-                message: 'Terdapat employee aktif sedang mengunakan grading ini!'
+                message: 'Terdapat employee aktif sedang mengunakan job title ini!'
               });
             }
           })

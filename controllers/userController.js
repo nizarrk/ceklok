@@ -571,72 +571,186 @@ exports.getDetailsUser = (APP, req, callback) => {
 };
 
 exports.editUserAdminCompany = (APP, req, callback) => {
-  APP.models.mysql.admin
-    .update(
-      {
-        name: req.body.name,
-        gender: req.body.gender,
-        pob: req.body.pob,
-        dob: req.body.dob,
-        address: req.body.address,
-        kelurahan: req.body.kel,
-        kecamatan: req.body.kec,
-        city: req.body.city,
-        province: req.body.prov,
-        zipcode: req.body.zip,
-        msisdn: 'default',
-        tlp: req.body.telp,
-        email: req.body.email,
-        user_name: req.body.username
-      },
-      {
-        where: {
-          id: req.body.id
+  let { id, name, gender, pob, dob, address, telp, email, username, user_type_id } = req.body;
+  let { admin } = APP.models.mysql;
+  let { user_type } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (id && name && gender && pob && dob && address && telp && email && username && user_type_id) {
+          if (gender == '1' || gender == '2' || gender == '3') {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter gender!'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
         }
+      },
+
+      function checkUserType(result, callback) {
+        user_type
+          .findOne({
+            where: {
+              id: user_type_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'User Type tidak ditemukan!'
+              });
+            } else {
+              callback(null, true);
+            }
+          });
+      },
+
+      function editUser(result, callback) {
+        admin
+          .update(
+            {
+              user_type_id: user_type_id,
+              name: name,
+              gender: gender,
+              pob: pob,
+              dob: dob,
+              address: address,
+              // kelurahan: kel,
+              // kecamatan: kec,
+              // city: city,
+              // province: prov,
+              // zipcode: zip,
+              // msisdn: 'default',
+              tlp: telp,
+              email: email,
+              user_name: username
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       }
-    )
-    .then(res => {
-      callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: res
-      });
-    })
-    .catch(err => {
-      console.log(err);
-      callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.editUserAdminCeklok = (APP, req, callback) => {
-  APP.models.mysql.admin_app
-    .update(
-      {
-        name: req.body.name,
-        email: req.body.email,
-        user_name: req.body.username
-      },
-      {
-        where: {
-          id: req.body.id
+  let { id, name, gender, pob, dob, address, telp, email, username, user_type_id } = req.body;
+  let { admin_app, user_type } = APP.models.mysql;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (id && name && gender && pob && dob && address && telp && email && username && user_type_id) {
+          if (gender == '1' || gender == '2' || gender == '3') {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter gender!'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
         }
+      },
+
+      function checkUserType(result, callback) {
+        user_type
+          .findOne({
+            where: {
+              id: user_type_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'User Type tidak ditemukan!'
+              });
+            } else {
+              callback(null, true);
+            }
+          });
+      },
+
+      function editUser(result, callback) {
+        admin_app
+          .update(
+            {
+              user_type_id: user_type_id,
+              name: name,
+              gender: gender,
+              pob: pob,
+              dob: dob,
+              address: address,
+              // kelurahan: kel,
+              // kecamatan: kec,
+              // city: city,
+              // province: prov,
+              // zipcode: zip,
+              // msisdn: 'default',
+              tlp: telp,
+              email: email,
+              user_name: username
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       }
-    )
-    .then(res => {
-      callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: res
-      });
-    })
-    .catch(err => {
-      console.log(err);
-      callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.editCompanyStatus = (APP, req, callback) => {

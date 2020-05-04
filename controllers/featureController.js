@@ -269,7 +269,7 @@ exports.addEndpoint = (APP, req, callback) => {
           .findAndCountAll({ where: { endpoint: url, status: 1 } })
           .then(res => {
             if (res.count > 0) {
-              callback(null, {
+              callback({
                 code: 'INVALID_REQUEST',
                 no: 'CMQ96',
                 message: 'endpoint invalid',
@@ -290,6 +290,7 @@ exports.addEndpoint = (APP, req, callback) => {
             });
           });
       },
+
       function checkMethod(data, callback) {
         if (
           method.toLowerCase() === 'post' ||
@@ -300,7 +301,7 @@ exports.addEndpoint = (APP, req, callback) => {
         ) {
           callback(null, true);
         } else {
-          callback(null, {
+          callback({
             code: 'INVALID_REQUEST',
             no: 'CMQ96',
             message: 'method invalid',
@@ -308,14 +309,15 @@ exports.addEndpoint = (APP, req, callback) => {
           });
         }
       },
+
       function checkDirectory(data, callback) {
         try {
           fs.readdir(path.join(__dirname, '../controllers'), (err, file) => {
             if (file.length > 0) {
               callback(null, file);
             } else {
-              callback(null, {
-                code: 'INVALID',
+              callback({
+                code: 'INVALID_REQUEST',
                 no: 'CMQ96',
                 message: 'directory tidak ditemukan',
                 data: {}
@@ -325,27 +327,30 @@ exports.addEndpoint = (APP, req, callback) => {
         } catch (err) {
           console.log('Error checkDirectory', err);
 
-          callback(null, {
+          callback({
             code: 'INVALID_REQUEST',
             no: 'CMQ96',
-            message: 'directory tidak di temukan',
+            message: 'directory tidak ditemukan',
             data: {}
           });
         }
       },
-      function cekController(data, callback) {
-        data.filter(x => x === controller.replace('.js', ''));
-        if (data.length > 0) {
+
+      function checkController(data, callback) {
+        let filtered = data.filter(x => x === controller.replace('.js', ''));
+
+        if (filtered.length > 0) {
           callback(null, true);
         } else {
-          callback(null, {
-            code: 'INVALID',
+          callback({
+            code: 'INVALID_REQUEST',
             no: 'CMQ96',
             message: 'controller tidak di temukan',
             data: {}
           });
         }
       },
+
       function checkSubfeature(data, callback) {
         subfeature.belongsTo(feature, { foreignKey: 'feature_id' });
 
@@ -371,8 +376,8 @@ exports.addEndpoint = (APP, req, callback) => {
 
               callback(null, data);
             } else {
-              callback(null, {
-                code: 'INVALID',
+              callback({
+                code: 'INVALID_REQUEST',
                 no: 'CMQ96',
                 message: 'sub feature id invalid',
                 data: {}
@@ -390,6 +395,7 @@ exports.addEndpoint = (APP, req, callback) => {
             });
           });
       },
+
       // function cekAuthAndBody( data , callback ) {
 
       //     if ( auth !== '0' || auth !== '1') {
@@ -412,32 +418,31 @@ exports.addEndpoint = (APP, req, callback) => {
 
       //     callback( null , true );
       // },
-      function insertEndpoint(data, callback) {
-        let endpoints = [];
-        req.body.endpoint.map((x, index) => {
-          let obj = {};
 
-          (obj.endpoint = url),
-            (obj.method = method),
-            (obj.directory = directory),
-            (obj.controller = controller.replace('.js', '')),
-            (obj.function = fungsi),
-            (obj.feature_name = data.feature_name),
-            (obj.feature_id = data.feature_id),
-            (obj.subfeature_id = subfeature_id),
-            (obj.activity = data.subfeature_name),
-            (obj.auth = auth),
-            // body = body,
-            (obj.created_by = req.user.id);
-        });
+      function insertEndpoint(data, callback) {
+        let obj = {};
+
+        (obj.endpoint = url),
+          (obj.method = method),
+          (obj.directory = directory),
+          (obj.controller = controller.replace('.js', '')),
+          (obj.function = fungsi),
+          (obj.feature_name = data.feature_name),
+          (obj.feature_id = data.feature_id),
+          (obj.subfeature_id = subfeature_id),
+          (obj.activity = data.subfeature_name),
+          (obj.auth = auth),
+          // body = body,
+          (obj.created_by = req.user.id);
+
         endpoint
-          .bulkCreate()
-          .then(() => {
+          .create(obj)
+          .then(created => {
             callback(null, {
               code: 'INSERT_SUCCESS',
               no: 'CMP00',
               message: 'Penambahan endpoint berhasil',
-              data: {}
+              data: created
             });
           })
           .catch(err => {

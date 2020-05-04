@@ -135,46 +135,36 @@ exports.getPricingDetails = function(APP, req, callback) {
 
 exports.insert = function(APP, req, callback) {
   let { pricing, pricing_feature } = APP.models.mysql;
+  let { name, desc, annual, monthly, onetime, annualmin, monthlymin, onetimemin, type } = req.body;
 
   APP.db.sequelize.transaction().then(t => {
     async.waterfall(
       [
-        function generateCode(callback) {
-          let pad = 'PRC000';
-          let kode = '';
+        function checkBody(callback) {
+          if (name && desc && annual && monthly && onetime && annualmin && monthlymin && onetimemin && type) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter!'
+            });
+          }
+        },
 
-          pricing
-            .findAll({
-              limit: 1,
-              order: [['id', 'DESC']]
-            })
-            .then(res => {
-              if (res.length == 0) {
-                console.log('kosong');
-                let str = '' + 1;
-                kode = pad.substring(0, pad.length - str.length) + str;
-
-                callback(null, kode);
-              } else {
-                console.log('ada');
-                console.log(res[0].code);
-
-                let lastID = res[0].code;
-                let replace = lastID.replace('PRC', '');
-                console.log(replace);
-
-                let str = parseInt(replace) + 1;
-                kode = pad.substring(0, pad.length - str.toString().length) + str;
-
-                callback(null, kode);
-              }
+        function generateCode(result, callback) {
+          let kode = APP.generateCode(pricing, 'PRC');
+          new Promise(resolve => {
+            resolve(kode);
+          })
+            .then(x => {
+              callback(null, x);
             })
             .catch(err => {
               console.log(err);
-
               callback({
-                code: 'ERR_DATABASE',
-                data: err
+                code: 'ERR',
+                id: '?',
+                message: 'Terjadi Kesalahan, mohon coba kembali'
               });
             });
         },
@@ -208,22 +198,23 @@ exports.insert = function(APP, req, callback) {
 
         function insertPricing(result, callback) {
           pricing
-            .build(
+            .create(
               {
                 code: result.kode,
-                name: req.body.name,
-                description: req.body.desc,
-                annual_price: req.body.annual,
-                monthly_price: req.body.monthly,
-                annual_minimum: req.body.annualmin,
-                monthly_minimum: req.body.monthlymin,
-                type: req.body.type,
+                name: name,
+                description: desc,
+                annual_price: annual,
+                monthly_price: monthly,
+                one_time_price: onetime,
+                annual_minimum: annualmin,
+                monthly_minimum: monthlymin,
+                one_time_minimum: onetimemin,
+                type: type,
                 image: result.path.slice(8),
                 action_by: req.user.id
               },
               { transaction: t }
             )
-            .save()
             .then(res => {
               callback(null, {
                 path: result.path,
@@ -317,23 +308,36 @@ exports.insert = function(APP, req, callback) {
 
 exports.update = function(APP, req, callback) {
   let { pricing } = APP.models.mysql;
+  let { id, name, desc, annual, monthly, onetime, annualmin, monthlymin, onetimemin, type } = req.body;
   async.waterfall(
     [
-      function getCurrentValues(callback) {
+      function checkBody(callback) {
+        if (id && name && desc && annual && monthly && onetime && annualmin && monthlymin && onetimemin && type) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
+
+      function getCurrentValues(result, callback) {
         pricing
           .findOne({
             where: {
-              id: req.body.id
+              id: id
             }
           })
           .then(res => {
             if (res == null) {
-              return callback({
+              callback({
                 code: 'NOT_FOUND',
                 message: 'Pricing tidak ditemukan'
               });
+            } else {
+              callback(null, res.dataValues);
             }
-            callback(null, res.dataValues);
           })
           .catch(err => {
             console.log('Error getCurrentValues', err);
@@ -351,12 +355,23 @@ exports.update = function(APP, req, callback) {
           let imagePath = './public/uploads/pricing/';
           // let path = imagePath + fileName + path.extname(req.files.image.name)
 
-          callback(null, {
-            path: imagePath + fileName + path.extname(req.files.image.name)
+          APP.fileCheck(req.files.image.data, 'image').then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'File yang diunggah tidak sesuai!'
+              });
+            } else {
+              callback(null, {
+                path: imagePath + fileName + path.extname(req.files.image.name),
+                upload: true
+              });
+            }
           });
         } catch (err) {
           callback(null, {
-            old: result.image
+            old: result.image,
+            upload: false
           });
         }
       },
@@ -365,20 +380,22 @@ exports.update = function(APP, req, callback) {
         pricing
           .update(
             {
-              name: req.body.name,
-              description: req.body.desc,
-              annual_price: req.body.annual,
-              monthly_price: req.body.monthly,
-              annual_minimum: req.body.annualmin,
-              monthly_minimum: req.body.monthlymin,
-              image: data.path ? data.path.slice(8) : data.old,
-              type: req.body.type,
+              name: name,
+              description: desc,
+              annual_price: annual,
+              monthly_price: monthly,
+              one_time_price: onetime,
+              annual_minimum: annualmin,
+              monthly_minimum: monthlymin,
+              one_time_minimum: onetimemin,
+              image: data.upload ? data.path.slice(8) : data.old,
+              type: type,
               updated_at: new Date(),
               action_by: req.user.id
             },
             {
               where: {
-                id: req.body.id
+                id: id
               }
             }
           )
@@ -391,7 +408,7 @@ exports.update = function(APP, req, callback) {
               });
             }
             // Use the mv() method to place the file somewhere on your server
-            if (req.files.image) {
+            if (data.upload) {
               req.files.image.mv(data.path, function(err) {
                 if (err) {
                   console.log(err);
@@ -448,48 +465,49 @@ exports.update = function(APP, req, callback) {
 exports.updatePricingFeature = function(APP, req, callback) {
   let { pricing_feature } = APP.models.mysql;
 
-  let feature = req.body.feature.split(','),
-    insert = [],
-    update = [];
+  let feature = req.body.feature.split(',');
+  let insert = [];
+  let update = [];
 
-  feature.map((x, index) => {
-    pricing_feature
-      .findOne({
-        where: {
-          pricing_id: req.body.pricing,
-          feature_id: x
-        }
-      })
-      .then(res => {
-        if (res == null) {
-          insert.push({
-            feature_id: x,
-            pricing_id: req.body.pricing
-          });
-
-          pricing_feature.bulkCreate(insert).then(() => {
-            console.log(`id ${x} inserted`);
-          });
-        } else {
-          res
-            .update({
-              status: res.status == 0 ? 1 : 0
-            })
-            .then(updated => {
-              console.log(`id ${x} updated`);
-              update.push(updated);
+  Promise.all(
+    feature.map((x, index) => {
+      return pricing_feature
+        .findOne({
+          where: {
+            pricing_id: req.body.pricing,
+            feature_id: x
+          }
+        })
+        .then(res => {
+          if (res == null) {
+            insert.push({
+              feature_id: x,
+              pricing_id: req.body.pricing
             });
-        }
-      });
-    if (feature.length == index + 1) {
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: {
-          inserted: insert,
-          updated: update
-        }
-      });
-    }
+
+            return pricing_feature.bulkCreate(insert).then(() => {
+              console.log(`id ${x} inserted`);
+            });
+          } else {
+            return res
+              .update({
+                status: res.status == 0 ? 1 : 0
+              })
+              .then(updated => {
+                console.log(`id ${x} updated`);
+                update.push(updated);
+              });
+          }
+        });
+    })
+  ).then(() => {
+    callback(null, {
+      code: 'UPDATE_SUCCESS',
+      data: {
+        inserted: insert,
+        updated: update
+      }
+    });
   });
 };
 

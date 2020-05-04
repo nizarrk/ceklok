@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 const csv = require('csvjson');
+const moment = require('moment');
 
 const generateEmployeeCode = async (APP, req, index) => {
   let tgl = new Date().getDate().toString();
@@ -723,8 +724,6 @@ exports.addEmployee = (APP, req, callback) => {
 };
 
 exports.importEmployeeData = (APP, req, callback) => {
-  console.log(req.files);
-
   async.waterfall(
     [
       function uploadDocuments(callback) {
@@ -732,7 +731,7 @@ exports.importEmployeeData = (APP, req, callback) => {
           () => {
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
-                code: 'ERR',
+                code: 'INVALID_REQUEST',
                 message: 'No files were uploaded.'
               });
             }
@@ -775,41 +774,45 @@ exports.importEmployeeData = (APP, req, callback) => {
             });
           }
           const dataObj = csv.toObject(file);
-          const arr = [];
-          dataObj.map((res, index) => {
-            let employeeCode = new Promise((resolve, reject) => {
-              resolve(generateEmployeeCode(APP, req, index + 1));
+          Promise.all(
+            dataObj.map((res, index) => {
+              res.name = APP.validation.checkCSV(res.name);
+              res.gender = APP.validation.checkCSV(res.gender);
+              res.pob = APP.validation.checkCSV(res.pob);
+              res.dob = APP.validation.checkCSV(res.dob);
+              res.address = APP.validation.checkCSV(res.address);
+
+              let employeeCode = new Promise((resolve, reject) => {
+                resolve(generateEmployeeCode(APP, req, index + 1));
+              });
+
+              res.plainPassword = Math.random()
+                .toString(36)
+                .slice(-8);
+
+              res.status = 0;
+              res.dob = moment(res.dob).format('YYYY-MM-DD');
+              res.company_code = req.user.code;
+              res.password = bcrypt.hashSync(res.plainPassword, 10);
+
+              return employeeCode.then(code => {
+                res.employee_code = code;
+                res.user_name = code.replace(req.user.code + '-', '') + '_' + res.name.split(' ')[0].toLowerCase();
+
+                return res;
+              });
+            })
+          )
+            .then(arr => {
+              callback(null, arr);
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR',
+                data: err
+              });
             });
-
-            let newDate = new Date(res.dob);
-            let tgl = newDate.getDate() + 1;
-
-            if (tgl.length == 1) {
-              tgl = '0' + newDate.getDate().toString();
-            }
-
-            let month = newDate.getMonth() + 1;
-            let year = newDate.getFullYear().toString();
-
-            res.plainPassword = Math.random()
-              .toString(36)
-              .slice(-8);
-
-            res.status = 0;
-            res.dob = new Date(`${year}-${month}-${tgl}`);
-            res.company_code = req.user.code;
-            res.password = bcrypt.hashSync(res.plainPassword, 10);
-
-            employeeCode.then(code => {
-              res.employee_code = code;
-              res.user_name = code.replace(req.user.code + '-', '') + '_' + res.name.split(' ')[0].toLowerCase();
-              arr.push(res);
-
-              if (index + 1 == dataObj.length) {
-                callback(null, arr);
-              }
-            });
-          });
         });
       },
 
@@ -971,7 +974,6 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
         trycatch(
           () => {
             if (result.upload) {
-              console.log('anjay');
               if (!req.files || Object.keys(req.files).length === 0) {
                 return callback({
                   code: 'INVALID_REQUEST',
@@ -981,10 +983,6 @@ exports.updateEmployeeInfo = (APP, req, callback) => {
               }
 
               APP.fileCheck(req.files.contract_upload.data, 'doc').then(res => {
-                console.log('anjay2');
-
-                console.log(res);
-
                 if (res == null) {
                   callback({
                     code: 'INVALID_REQUEST',
@@ -1443,127 +1441,253 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
 };
 
 exports.updateEmployeeRotasi = (APP, req, callback) => {
+  let { employee, department, job_title, grade } = APP.models.company[req.user.db].mysql;
+  let { id, grade_id, job_id, department_id } = req.body;
   async.waterfall(
     [
-      function checkEmployeeStatus(callback) {
-        APP.models.company[req.user.db].mysql.employee
+      function checkBody(callback) {
+        if (id && grade_id && job_id && department_id) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
+
+      function checkEmployeeStatus(result, callback) {
+        employee
           .findOne({
             where: {
-              id: req.body.id,
+              id: id,
               status: 1
             }
           })
           .then(res => {
             if (res == null) {
-              return callback({
-                code: 'NOT_FOUND'
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Employee tidak ditemukan!'
               });
+            } else {
+              callback(null, res.dataValues);
             }
-
-            callback(null, res);
           });
       },
 
-      function uploadDocuments(result, callback) {
-        trycatch(
-          () => {
-            if (!req.files || Object.keys(req.files).length === 0) {
-              return callback({
-                code: 'ERR',
-                message: 'No files were uploaded.'
-              });
+      function checkGrade(result, callback) {
+        grade
+          .findOne({
+            where: {
+              id: grade_id
             }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Grade tidak ditemukan!'
+              });
+            } else {
+              console.log(res.id);
+              console.log(grade_id);
 
-            APP.fileCheck(
-              [req.files.grade_upload.data, req.files.job_upload.data, req.files.department_upload.data],
-              ['doc', 'doc', 'doc']
-            ).then(res => {
-              if (res == null) {
-                callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'File yang diunggah tidak sesuai!'
-                });
-              } else {
-                let fileName = new Date().toISOString().replace(/:|\./g, '');
-                let gradePath = `./public/uploads/company_${req.user.code}/employee/grade/`;
-                let jobPath = `./public/uploads/company_${req.user.code}/employee/job_title/`;
-                let departmentPath = `./public/uploads/company_${req.user.code}/employee/department/`;
-
-                if (req.files.grade_upload) {
-                  req.files.grade_upload.mv(gradePath + fileName + path.extname(req.files.grade_upload.name), function(
-                    err
-                  ) {
-                    if (err)
-                      return callback({
-                        code: 'ERR'
-                      });
-                  });
-                }
-
-                if (req.files.job_upload) {
-                  req.files.job_upload.mv(jobPath + fileName + path.extname(req.files.job_upload.name), function(err) {
-                    if (err)
-                      return callback({
-                        code: 'ERR'
-                      });
-                  });
-                }
-
-                if (req.files.department_upload) {
-                  req.files.department_upload.mv(
-                    departmentPath + fileName + path.extname(req.files.department_upload.name),
-                    function(err) {
-                      if (err)
-                        return callback({
-                          code: 'ERR'
-                        });
-                    }
-                  );
-                }
+              if (result.grade_id == grade_id) {
+                console.log('grade id sama');
 
                 callback(null, {
-                  grade: req.files.grade_upload
-                    ? gradePath + fileName + path.extname(req.files.grade_upload.name)
-                    : result.grade_upload,
-                  job: req.files.job_upload
-                    ? jobPath + fileName + path.extname(req.files.job_upload.name)
-                    : result.job_title_upload,
-                  department: req.files.department_upload
-                    ? departmentPath + fileName + path.extname(req.files.department_upload.name)
-                    : result.department_upload
+                  data: result,
+                  upload: {
+                    grade: res.grade_upload
+                  },
+                  status: {
+                    grade: false
+                  }
+                });
+              } else {
+                console.log('grade id beda');
+                APP.fileCheck(req.files.grade_upload.data, 'doc').then(check => {
+                  console.log('masuk pengecekan upload grade');
+
+                  if (check == null) {
+                    callback({
+                      code: 'INVALID_REQUEST',
+                      message: 'File grade yang diunggah tidak sesuai!'
+                    });
+                  } else {
+                    console.log(check);
+
+                    let fileName = new Date().toISOString().replace(/:|\./g, '');
+                    let gradePath = `./public/uploads/company_${req.user.code}/employee/grade/`;
+
+                    callback(null, {
+                      data: result,
+                      upload: {
+                        grade: gradePath + fileName + path.extname(req.files.grade_upload.name)
+                      },
+                      status: {
+                        grade: true
+                      }
+                    });
+                  }
                 });
               }
-            });
-          },
-          err => {
+            }
+          })
+          .catch(err => {
             console.log(err);
-
             callback({
-              code: 'ERR',
+              code: 'ERR_DATABASE',
               data: err
             });
-          }
-        );
+          });
+      },
+
+      function checkDepartment(result, callback) {
+        department
+          .findOne({
+            where: {
+              id: department_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Department tidak ditemukan!'
+              });
+            } else {
+              if (result.data.department_id == department_id) {
+                result.status.department = false;
+                result.upload.department = res.department_upload;
+                callback(null, result);
+              } else {
+                result.status.department = true;
+
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let departmentPath = `./public/uploads/company_${req.user.code}/employee/department/`;
+
+                APP.fileCheck(req.files.department_upload.data, 'doc').then(check => {
+                  if (check == null) {
+                    callback({
+                      code: 'INVALID_REQUEST',
+                      message: 'File department yang diunggah tidak sesuai!'
+                    });
+                  } else {
+                    console.log(check);
+                    result.upload.department =
+                      departmentPath + fileName + path.extname(req.files.department_upload.name);
+                    callback(null, result);
+                  }
+                });
+              }
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function checkJobTitle(result, callback) {
+        job_title
+          .findOne({
+            where: {
+              id: job_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Job Title tidak ditemukan!'
+              });
+            } else {
+              if (result.data.job_title_id == job_id) {
+                result.status.job = false;
+                result.upload.job = res.job_title_upload;
+                callback(null, result);
+              } else {
+                result.status.job = true;
+
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let jobPath = `./public/uploads/company_${req.user.code}/employee/job_title/`;
+
+                APP.fileCheck(req.files.job_upload.data, 'doc').then(check => {
+                  if (check == null) {
+                    callback({
+                      code: 'INVALID_REQUEST',
+                      message: 'File job yang diunggah tidak sesuai!'
+                    });
+                  } else {
+                    console.log(check);
+                    result.upload.job = jobPath + fileName + path.extname(req.files.job_upload.name);
+                    callback(null, result);
+                  }
+                });
+              }
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       },
 
       function updateEmployeeRotasi(result, callback) {
-        APP.models.company[req.user.db].mysql.employee
+        employee
           .findOne({
             where: {
-              id: req.body.id
+              id: id
             }
           })
           .then(res => {
             res
               .update({
-                grade_id: req.body.grade,
-                grade_upload: result.grade,
-                job_title_id: req.body.job,
-                job_title_upload: result.job,
-                department_id: req.body.department,
-                department_upload: result.department
+                grade_id: grade_id,
+                grade_upload: result.status.grade ? result.upload.grade.slice(8) : result.upload.grade,
+                job_title_id: job_id,
+                job_title_upload: result.status.job ? result.upload.job.slice(8) : result.upload.job,
+                department_id: department_id,
+                department_upload: result.status.department
+                  ? result.upload.department.slice(8)
+                  : result.upload.department
               })
               .then(updated => {
+                if (result.status.grade) {
+                  req.files.grade_upload.mv(result.upload.grade, function(err) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
+                  });
+                }
+
+                if (result.status.job) {
+                  req.files.job_upload.mv(result.upload.job, function(err) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
+                  });
+                }
+
+                if (result.status.department) {
+                  req.files.department_upload.mv(result.upload.department, function(err) {
+                    if (err)
+                      return callback({
+                        code: 'ERR'
+                      });
+                  });
+                }
+
                 callback(null, { result, updated });
               })
               .catch(err => {
@@ -1642,8 +1766,9 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
 };
 
 exports.getSuratPeringatan = (APP, req, callback) => {
+  let params = req.user.level == 3 ? { where: { id: req.user.id } } : {};
   APP.models.company[req.user.db].mysql.violation
-    .findAll()
+    .findAll(params)
     .then(res => {
       callback(null, {
         code: res.length > 0 ? 'FOUND' : 'NOT_FOUND',
@@ -1660,36 +1785,59 @@ exports.getSuratPeringatan = (APP, req, callback) => {
 };
 
 exports.addSuratPeringatan = (APP, req, callback) => {
+  let { employee, violation } = APP.models.company[req.user.db].mysql;
+  let { id, name, desc } = req.body;
   async.waterfall(
     [
-      function generateCode(callback) {
-        let pad = 'VLT000';
-        let kode = '';
+      function checkBody(callback) {
+        if (id && name && desc) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
 
-        APP.models.company[req.user.db].mysql.violation
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
+      function generateCode(result, callback) {
+        let kode = APP.generateCode(violation, 'VLT');
+        Promise.resolve(kode)
+          .then(x => {
+            callback(null, {
+              code: x
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              id: '?',
+              message: 'Terjadi Kesalahan, mohon coba kembali',
+              data: err
+            });
+          });
+      },
+
+      function checkEmployee(result, callback) {
+        employee
+          .findOne({
+            where: {
+              id: id,
+              status: 1 //aktif
+            }
           })
           .then(res => {
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              kode = pad.substring(0, pad.length - str.length) + str;
-
-              callback(null, kode);
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Employee tidak ditemukan atau tidak dalam status aktif!'
+              });
             } else {
-              console.log('ada');
-              console.log(res[0].code);
-
-              let lastID = res[0].code;
-              let replace = lastID.replace('VLT', '');
-              console.log(replace);
-
-              let str = parseInt(replace) + 1;
-              kode = pad.substring(0, pad.length - str.toString().length) + str;
-
-              callback(null, kode);
+              callback(null, {
+                code: result,
+                employee: res.dataValues
+              });
             }
           })
           .catch(err => {
@@ -1723,7 +1871,8 @@ exports.addSuratPeringatan = (APP, req, callback) => {
                 let docPath = `./public/uploads/company_${req.user.code}/employee/doc/`;
 
                 callback(null, {
-                  code: result,
+                  employee: result.employee,
+                  code: result.code,
                   doc: req.files.doc_upload
                     ? docPath + fileName + path.extname(req.files.doc_upload.name)
                     : result.doc_upload
@@ -1743,22 +1892,11 @@ exports.addSuratPeringatan = (APP, req, callback) => {
       },
 
       function insertViolation(result, callback) {
-        // add employee to violation
-        APP.models.company[req.user.db].mysql.violation.belongsTo(APP.models.company[req.user.db].mysql.employee, {
-          targetKey: 'id',
-          foreignKey: 'employee_id'
-        });
-
         let counter = 1;
-        APP.models.company[req.user.db].mysql.violation
+        violation
           .findAll({
-            include: [
-              {
-                model: APP.models.company[req.user.db].mysql.employee
-              }
-            ],
             where: {
-              employee_id: req.body.id
+              employee_id: id
             },
             order: [['id', 'DESC']]
           })
@@ -1773,30 +1911,32 @@ exports.addSuratPeringatan = (APP, req, callback) => {
               }
             }
 
-            // upload file
-            if (req.files.doc_upload) {
-              req.files.doc_upload.mv(result.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
-            APP.models.company[req.user.db].mysql.violation
+            violation
               .create({
-                employee_id: req.body.id,
+                employee_id: id,
                 doc_upload: result.doc.slice(8), // slice 8 buat ngilangin './public'
                 code: result.code,
                 sequence: counter,
-                name: req.body.name,
-                description: req.body.desc
+                name: name,
+                description: desc,
+                action_by: req.user.id
               })
               .then(inserted => {
+                // upload file
+                if (req.files.doc_upload) {
+                  req.files.doc_upload.mv(result.doc, function(err) {
+                    if (err)
+                      return callback({
+                        code: 'INVALID_REQUEST',
+                        message: 'Kesalahan pada parametrer upload!'
+                      });
+                  });
+                }
+
                 //send email
                 APP.mailer.sendMail({
                   subject: 'Violation Warning',
-                  to: res[0].employee.email,
+                  to: result.employee.email,
                   data: {
                     desc: inserted.description
                   },

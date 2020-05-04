@@ -447,7 +447,7 @@ exports.broadcastDetail = (APP, req, callback) => {
       message: 'Kesalahan pada parameter'
     });
   } else {
-    let escape = req.body.id.replace(/[\\"*&-+`.,;:]/g, "'\\''");
+    let escape = APP.validation.rawQueryCheck(req.body.id);
     if (req.user.level === 2 || req.user.level === 3) {
       APP.db.sequelize
         .query(

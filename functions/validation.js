@@ -39,6 +39,29 @@ exports.password = str => {
     : true;
 };
 
+exports.rawQueryCheck = str => {
+  if (typeof str === 'string') {
+    return str.replace(/[\\"*&-+`.,;:]/g, "'\\''");
+  } else {
+    return str;
+  }
+};
+
+exports.checkCSV = str => {
+  let riskyChars = ['&', '=', '+', '-', '@'];
+
+  if (!str) return '';
+
+  const firstChar = str.charAt(0);
+  const isInjected = riskyChars.includes(firstChar);
+
+  if (!isInjected) return str;
+
+  const slicedStr = str.slice(1);
+
+  return slicedStr;
+};
+
 // exports.array = (arr) => {
 // 	return (!validateJS.isArray(arr)) ? { code: 'INVALID_REQUEST', info: { invalidArray: arr } : true;
 // };
