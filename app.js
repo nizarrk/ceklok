@@ -602,6 +602,7 @@ async.series(
               console.log('masuk level 4');
               if (req.user.level == 2 || req.user.level == 3) {
                 console.log('masuk level 2 3');
+                next();
               } else {
                 console.log('level token tidak valid!');
                 res.status(401).send({
@@ -615,6 +616,7 @@ async.series(
               console.log('masuk level 5');
               if (req.user.level == 1 || req.user.level == 2) {
                 console.log('masuk level 1 2');
+                next();
               } else {
                 console.log('level token tidak valid!');
                 res.status(401).send({
@@ -628,6 +630,7 @@ async.series(
               console.log('masuk level 0');
               if (req.user.level == 1 || req.user.level == 2 || req.user.level == 3) {
                 console.log('masuk level 1 2 3');
+                next();
               } else {
                 console.log('level token tidak valid!');
                 res.status(401).send({
@@ -641,6 +644,7 @@ async.series(
               console.log('masuk level 1 2 3');
               if (req.user.level == routes[endpoint].level) {
                 console.log('level token valid!');
+                next();
               } else {
                 console.log('level token tidak valid!');
                 res.status(401).send({
@@ -662,7 +666,6 @@ async.series(
               });
             }
           }
-          next();
         });
       }
       app[routes[endpoint].method](endpoint, (req, res) => {
