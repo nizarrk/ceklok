@@ -1,10 +1,10 @@
 version: '3.7'
 
 services:
-  app:
+  dev-ceklok-coreplatform:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     volumes:
       - /home/apps/config_env/ceklok/ceklok-core-platform/.env:/usr/src/app/.env
       - /home/apps/logs_pm2:/usr/src/log

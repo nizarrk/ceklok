@@ -1,14 +1,14 @@
 version: '3.7'
 
 services:
-  app:
+  release-ceklok-coreplatform:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.release
     volumes:
       - /home/apps/config_env/ceklok/ceklok-core-platform/.env:/usr/src/app/.env
       - /home/apps/logs_pm2:/usr/src/log
-      # - /home/apps/cdn_image/ekyc-cdn:/usr/src/app/public
+      - /home/apps/cdn_image/ceklok-core-platform:/usr/src/app/public
     ports:
       - 3012:3012
     tty: true
