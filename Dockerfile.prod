@@ -1,0 +1,20 @@
+FROM gitlab.vascomm.co.id:4567/backend-docker-image/node-10-slim:latest
+
+# set linux proxy
+#ENV http_proxy http://192.168.13.6:3128
+#ENV https_proxy http://192.168.13.6:3128
+
+# set npm proxy
+#RUN npm config set proxy http://192.168.13.6:3128 && npm config set https-proxy http://192.168.13.6:3128
+
+# change our application's nodejs dependencies:
+WORKDIR /usr/src/app
+
+COPY package.json .
+# COPY package-lock.json .
+RUN npm install --production
+
+COPY . .
+
+#ecosystem file ecosystem.json
+CMD ["pm2-docker", "start", "ecosystem.docker.json"]
