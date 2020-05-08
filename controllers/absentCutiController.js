@@ -196,11 +196,11 @@ exports.getById = (APP, req, callback) => {
 
 exports.insert = function(APP, req, callback) {
   let { absent_cuti, absent_type, cuti_type, employee, schedule } = APP.models.company[req.user.db].mysql;
-  let { type, typeid, datestart, dateend, timestart, timeend, desc } = req.body;
+  let { type, typeid, codeid, datestart, dateend, timestart, timeend, desc } = req.body;
   async.waterfall(
     [
       function checkBody(callback) {
-        if (type && typeid && datestart && dateend && timestart && timeend) {
+        if (type && typeid && codeid && datestart && dateend && timestart && timeend) {
           callback(null, true);
         } else {
           callback({
@@ -228,12 +228,12 @@ exports.insert = function(APP, req, callback) {
       },
 
       function checkType(result, callback) {
-        if (req.body.type == 0) {
+        if (type == 0) {
           // 0 = absent
           absent_type
             .findOne({
               where: {
-                id: req.body.typeid
+                id: typeid
               }
             })
             .then(res => {
@@ -258,12 +258,12 @@ exports.insert = function(APP, req, callback) {
                 data: err
               });
             });
-        } else if (req.body.type == 1) {
+        } else if (type == 1) {
           // 1 = cuti
           cuti_type
             .findOne({
               where: {
-                id: req.body.typeid
+                id: typeid
               }
             })
             .then(res => {
@@ -351,17 +351,17 @@ exports.insert = function(APP, req, callback) {
         });
 
         // 0 = absent
-        if (req.body.type == 0) {
+        if (type == 0) {
           // ijin durasi hari
           if (data.typeid == 1) {
-            let date1 = moment(req.body.datestart);
-            let date2 = moment(req.body.dateend);
+            let date1 = moment(datestart);
+            let date2 = moment(dateend);
             let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
             let listDate = [];
             let dateMove = new Date(date1);
-            let strDate = req.body.datestart;
+            let strDate = datestart;
 
-            while (strDate < req.body.dateend) {
+            while (strDate < dateend) {
               strDate = dateMove.toISOString().slice(0, 10);
               dateMove.setDate(dateMove.getDate() + 1);
               let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
@@ -383,8 +383,8 @@ exports.insert = function(APP, req, callback) {
 
           // ijin durasi jam
           else if (data.typeid == 0) {
-            let date = req.body.datestart;
-            req.body.dateend = date;
+            let date = datestart;
+            dateend = date;
 
             callback(null, {
               kode: data.kode,
@@ -393,9 +393,7 @@ exports.insert = function(APP, req, callback) {
               time:
                 data.cut == 0
                   ? '00:00:00'
-                  : moment
-                      .utc(moment(req.body.timeend, 'HH:mm:ss').diff(moment(req.body.timestart, 'HH:mm:ss')))
-                      .format('HH:mm:ss')
+                  : moment.utc(moment(timeend, 'HH:mm:ss').diff(moment(timestart, 'HH:mm:ss'))).format('HH:mm:ss')
             });
           } else {
             callback({
@@ -406,17 +404,17 @@ exports.insert = function(APP, req, callback) {
         }
 
         // 1 = cuti
-        else if (req.body.type == 1) {
+        else if (type == 1) {
           // 0 = cuti reguler
           if (data.typeid == 0) {
-            let date1 = moment(req.body.datestart);
-            let date2 = moment(req.body.dateend);
+            let date1 = moment(datestart);
+            let date2 = moment(dateend);
             let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
             let listDate = [];
             let dateMove = new Date(date1);
-            let strDate = req.body.datestart;
+            let strDate = datestart;
 
-            while (strDate < req.body.dateend) {
+            while (strDate < dateend) {
               strDate = dateMove.toISOString().slice(0, 10);
               dateMove.setDate(dateMove.getDate() + 1);
 
@@ -444,7 +442,7 @@ exports.insert = function(APP, req, callback) {
 
           // 1 = cuti khusus
           else if (data.typeid == 1) {
-            let startDate = moment(req.body.datestart),
+            let startDate = moment(datestart),
               days = data.days - 1, // -1 biar hari pertama keitung cuti
               defaultDays = startDate
                 .clone()
@@ -477,20 +475,16 @@ exports.insert = function(APP, req, callback) {
             WHERE
               user_id = ${req.user.id} 
             AND
-              '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              req.body.dateend
-            }' <= date_format(date_end, '%Y-%m-%d')
+              '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${dateend}' <= date_format(date_end, '%Y-%m-%d')
             OR
               user_id = ${req.user.id} 
             AND
-              '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              req.body.datestart
-            }' <= date_format(date_end, '%Y-%m-%d')
+              '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${datestart}' <= date_format(date_end, '%Y-%m-%d')
             OR
               user_id = ${req.user.id} 
             AND
-              '${result.dateend ? result.dateend : req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
-              result.dateend ? result.dateend : req.body.dateend
+              '${result.dateend ? result.dateend : dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
+              result.dateend ? result.dateend : dateend
             }' <= date_format(date_end, '%Y-%m-%d')`
           )
           .then(res => {
@@ -560,15 +554,15 @@ exports.insert = function(APP, req, callback) {
         absent_cuti
           .build({
             code: data.kode,
-            type: req.body.type,
-            absent_cuti_type_id: req.body.typeid,
-            absent_cuti_type_code: req.body.codeid,
-            user_id: req.user.admin == true ? req.body.user : req.user.id,
-            date_start: req.body.datestart,
-            date_end: data.dateend ? data.dateend : req.body.dateend,
-            time_start: req.body.timestart,
-            time_end: req.body.timeend,
-            description: req.body.desc,
+            type: type,
+            absent_cuti_type_id: typeid,
+            absent_cuti_type_code: codeid,
+            user_id: req.user.id,
+            date_start: datestart,
+            date_end: data.dateend ? data.dateend : dateend,
+            time_start: timestart,
+            time_end: timeend,
+            description: desc,
             count: data.days,
             time_total: data.time,
             upload: data.doc.slice(8) // slice 8 buat ngilangin './public'
@@ -641,13 +635,13 @@ exports.insert = function(APP, req, callback) {
                 to: emailList,
                 data: {
                   code: result.data.kode,
-                  absent_type_id: req.body.type,
-                  user_id: req.user.admin == true ? req.body.user : req.user.id,
-                  date_start: req.body.datestart,
-                  date_end: req.body.dateend,
-                  time_start: req.body.timestart,
-                  time_end: req.body.timeend,
-                  description: req.body.desc,
+                  absent_type_id: type,
+                  user_id: req.user.id,
+                  date_start: datestart,
+                  date_end: dateend,
+                  time_start: timestart,
+                  time_end: timeend,
+                  description: desc,
                   count: result.data.days,
                   time_total: result.data.time
                 },
@@ -680,13 +674,25 @@ exports.insert = function(APP, req, callback) {
 
 exports.update = function(APP, req, callback) {
   let { absent_cuti, absent_type, cuti_type, employee, schedule } = APP.models.company[req.user.db].mysql;
+  let { status, type, typeid, codeid, datestart, dateend, timestart, timeend, id, desc } = req.body;
   async.waterfall(
     [
+      function checkBody(callback) {
+        if (status && type && typeid && codeid && datestart && dateend && timestart && timeend) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
       function getDetails(callback) {
         absent_cuti
           .findOne({
             where: {
-              id: req.body.id
+              id: id
             }
           })
           .then(res => {
@@ -710,12 +716,12 @@ exports.update = function(APP, req, callback) {
       },
 
       function checkType(result, callback) {
-        if (req.body.type == 0) {
+        if (type == 0) {
           // 0 = absent
           absent_type
             .findOne({
               where: {
-                id: req.body.typeid
+                id: typeid
               }
             })
             .then(res => {
@@ -739,12 +745,12 @@ exports.update = function(APP, req, callback) {
                 data: err
               });
             });
-        } else if (req.body.type == 1) {
+        } else if (type == 1) {
           // 1 = cuti
           cuti_type
             .findOne({
               where: {
-                id: req.body.typeid
+                id: typeid
               }
             })
             .then(res => {
@@ -824,17 +830,17 @@ exports.update = function(APP, req, callback) {
         });
 
         // 0 = absent
-        if (req.body.type == 0) {
+        if (type == 0) {
           // ijin durasi hari
           if (data.typeid == 1) {
-            let date1 = moment(req.body.datestart);
-            let date2 = moment(req.body.dateend);
+            let date1 = moment(datestart);
+            let date2 = moment(dateend);
             let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
             let listDate = [];
             let dateMove = new Date(date1);
-            let strDate = req.body.datestart;
+            let strDate = datestart;
 
-            while (strDate < req.body.dateend) {
+            while (strDate < dateend) {
               strDate = dateMove.toISOString().slice(0, 10);
               dateMove.setDate(dateMove.getDate() + 1);
               let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
@@ -856,16 +862,14 @@ exports.update = function(APP, req, callback) {
 
           // ijin durasi jam
           else if (data.typeid == 0) {
-            let date = req.body.datestart;
-            req.body.dateend = date;
+            let date = datestart;
+            dateend = date;
 
             callback(null, {
               result: data.result,
               days: 0,
               typeid: data.typeid,
-              time: moment
-                .utc(moment(req.body.timeend, 'HH:mm:ss').diff(moment(req.body.timestart, 'HH:mm:ss')))
-                .format('HH:mm:ss')
+              time: moment.utc(moment(timeend, 'HH:mm:ss').diff(moment(timestart, 'HH:mm:ss'))).format('HH:mm:ss')
             });
           } else {
             callback({
@@ -876,17 +880,17 @@ exports.update = function(APP, req, callback) {
         }
 
         // 1 = cuti
-        else if (req.body.type == 1) {
+        else if (type == 1) {
           // 0 = cuti reguler
           if (data.typeid == 0) {
-            let date1 = moment(req.body.datestart);
-            let date2 = moment(req.body.dateend);
+            let date1 = moment(datestart);
+            let date2 = moment(dateend);
             let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
             let listDate = [];
             let dateMove = new Date(date1);
-            let strDate = req.body.datestart;
+            let strDate = datestart;
 
-            while (strDate < req.body.dateend) {
+            while (strDate < dateend) {
               strDate = dateMove.toISOString().slice(0, 10);
               dateMove.setDate(dateMove.getDate() + 1);
 
@@ -914,7 +918,7 @@ exports.update = function(APP, req, callback) {
 
           // 1 = cuti khusus
           else if (data.typeid == 1) {
-            let startDate = moment(req.body.datestart),
+            let startDate = moment(datestart),
               days = data.days - 1, // -1 biar hari pertama keitung cuti
               defaultDays = startDate
                 .clone()
@@ -941,9 +945,9 @@ exports.update = function(APP, req, callback) {
       },
 
       function checkTgl(result, callback) {
-        let dateend = result.dateend ? result.dateend : req.body.dateend;
+        let dateend = result.dateend ? result.dateend : dateend;
         if (
-          result.result.date_start.getTime() == new Date(req.body.datestart).getTime() &&
+          result.result.date_start.getTime() == new Date(datestart).getTime() &&
           result.result.date_end.getTime() == new Date(dateend).getTime()
         ) {
           callback(null, result);
@@ -954,16 +958,12 @@ exports.update = function(APP, req, callback) {
               WHERE
                 user_id = ${req.user.id} 
               AND
-                '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
-                req.body.dateend
-              }' <= date_format(date_end, '%Y-%m-%d')
+                '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${dateend}' <= date_format(date_end, '%Y-%m-%d')
               OR
-                '${req.body.datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${
-                req.body.datestart
-              }' <= date_format(date_end, '%Y-%m-%d')
+                '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${datestart}' <= date_format(date_end, '%Y-%m-%d')
               OR
-                '${result.dateend ? result.dateend : req.body.dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
-                result.dateend ? result.dateend : req.body.dateend
+                '${result.dateend ? result.dateend : dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
+                result.dateend ? result.dateend : dateend
               }' <= date_format(date_end, '%Y-%m-%d')`
             )
             .then(res => {
@@ -993,7 +993,7 @@ exports.update = function(APP, req, callback) {
           () => {
             console.log('uploadPath');
 
-            if (data.result.absent_cuti_type_code == req.body.codeid) {
+            if (data.result.absent_cuti_type_code == codeid) {
               console.log('gausah upload');
 
               callback(null, {
@@ -1041,18 +1041,18 @@ exports.update = function(APP, req, callback) {
         absent_cuti
           .update(
             {
-              type: req.body.type,
-              absent_cuti_type_id: req.body.typeid,
-              absent_cuti_type_code: req.body.codeid,
-              user_id: req.user.admin == true ? req.body.user : req.user.id,
-              date_start: req.body.datestart,
-              date_end: data.dateend ? data.dateend : req.body.dateend,
-              time_start: req.body.timestart,
-              time_end: req.body.timeend,
-              description: req.body.desc,
+              type: type,
+              absent_cuti_type_id: typeid,
+              absent_cuti_type_code: codeid,
+              user_id: req.user.id,
+              date_start: datestart,
+              date_end: data.dateend ? data.dateend : dateend,
+              time_start: timestart,
+              time_end: timeend,
+              description: desc,
               count: data.days,
               time_total: data.time,
-              status: req.body.status, // 0 = requested 1 = approved, 2 = reject
+              status: status, // 0 = requested 1 = approved, 2 = reject
               upload: data.upload ? data.doc.slice(8) : data.doc // slice 8 buat ngilangin './public'
             },
             {
