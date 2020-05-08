@@ -950,10 +950,24 @@
     "function": "login",
     "auth": false
   },
-  "/auth/ceklok/verifycompany": {
+  "/verify/company": {
     "method": "post",
-    "controller": "authCeklokController",
+    "controller": "verifyController",
     "function": "verifyCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/verify/feature": {
+    "method": "post",
+    "controller": "verifyController",
+    "function": "verifyFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/verify/payment": {
+    "method": "post",
+    "controller": "verifyController",
+    "function": "verifyPayment",
     "level": 1,
     "auth": true
   },

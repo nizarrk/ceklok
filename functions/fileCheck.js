@@ -10,14 +10,18 @@
 const fileType = require('file-type');
 const imageExts = new Set(['jpg', 'jpeg', 'png']);
 const docExts = new Set(['docx', 'xlsx', 'pptx', 'pdf']);
+const allExts = new Set(['jpg', 'jpeg', 'png', 'docx', 'xlsx', 'pptx', 'pdf']);
 
 const checkFile = async (input, type) => {
   if (type == 'image') {
     const ret = await fileType.fromBuffer(input);
     return imageExts.has(ret && ret.ext) ? ret : null;
-  } else {
+  } else if (type == 'doc') {
     const ret = await fileType.fromBuffer(input);
     return docExts.has(ret && ret.ext) ? ret : null;
+  } else {
+    const ret = await fileType.fromBuffer(input);
+    return allExts.has(ret && ret.ext) ? ret : null;
   }
 };
 

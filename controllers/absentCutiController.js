@@ -233,7 +233,8 @@ exports.insert = function(APP, req, callback) {
               } else {
                 callback(null, {
                   kode: result,
-                  typeid: res.type
+                  typeid: res.type,
+                  cut: res.type_cut
                 });
               }
             })
@@ -312,6 +313,7 @@ exports.insert = function(APP, req, callback) {
               callback(null, {
                 kode: result.kode,
                 typeid: result.typeid,
+                cut: result.cut,
                 days: result.days,
                 left: res.total_cuti,
                 schedule: {
@@ -357,7 +359,7 @@ exports.insert = function(APP, req, callback) {
               }
             }
 
-            let work_skip = APP.time.timeXday(data.schedule.time, diff);
+            let work_skip = data.cut == 0 ? '00:00:00' : APP.time.timeXday(data.schedule.time, diff);
 
             callback(null, {
               kode: data.kode,
@@ -376,9 +378,12 @@ exports.insert = function(APP, req, callback) {
               kode: data.kode,
               days: 0,
               typeid: data.typeid,
-              time: moment
-                .utc(moment(req.body.timeend, 'HH:mm:ss').diff(moment(req.body.timestart, 'HH:mm:ss')))
-                .format('HH:mm:ss')
+              time:
+                data.cut == 0
+                  ? '00:00:00'
+                  : moment
+                      .utc(moment(req.body.timeend, 'HH:mm:ss').diff(moment(req.body.timestart, 'HH:mm:ss')))
+                      .format('HH:mm:ss')
             });
           } else {
             callback({
@@ -502,12 +507,12 @@ exports.insert = function(APP, req, callback) {
           () => {
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
-                code: 'ERR',
+                code: 'INVALID_REQUEST',
                 message: 'No files were uploaded.'
               });
             }
 
-            APP.fileCheck(req.files.doc_upload.data, 'doc').then(res => {
+            APP.fileCheck(req.files.doc_upload.data, 'all').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',

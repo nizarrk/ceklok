@@ -11,7 +11,7 @@ exports.get = function(APP, req, callback) {
 
   pricing.hasMany(pricing_feature, {
     targetKey: 'id',
-    foreignKey: 'feature_id'
+    foreignKey: 'pricing_id'
   });
 
   pricing_feature.belongsTo(feature, {

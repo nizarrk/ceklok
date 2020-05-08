@@ -773,37 +773,57 @@ exports.importEmployeeData = (APP, req, callback) => {
               data: err
             });
           }
-          const dataObj = csv.toObject(file);
+          const dataObj = csv.toObject(file, {
+            delimiter: /[,|;]+/, // optional
+            quote: '"' // optional
+          });
           Promise.all(
-            dataObj.map((res, index) => {
-              res.name = APP.validation.checkCSV(res.name);
-              res.gender = APP.validation.checkCSV(res.gender);
-              res.pob = APP.validation.checkCSV(res.pob);
-              res.dob = APP.validation.checkCSV(res.dob);
-              res.address = APP.validation.checkCSV(res.address);
+            dataObj.map((x, index) => {
+              let plainPassword = Math.random()
+                .toString(36)
+                .slice(-8);
+
+              let gender =
+                APP.validation.checkCSV(x['Gender (L / P)']) == 'L'
+                  ? 1
+                  : APP.validation.checkCSV(x['Gender (L / P)']) == 'P'
+                  ? 2
+                  : 3;
 
               let employeeCode = new Promise((resolve, reject) => {
                 resolve(generateEmployeeCode(APP, req, index + 1));
               });
 
-              res.plainPassword = Math.random()
-                .toString(36)
-                .slice(-8);
-
-              res.status = 0;
-              res.dob = moment(res.dob).format('YYYY-MM-DD');
-              res.company_code = req.user.code;
-              res.password = bcrypt.hashSync(res.plainPassword, 10);
-
               return employeeCode.then(code => {
-                res.employee_code = code;
-                res.user_name = code.replace(req.user.code + '-', '') + '_' + res.name.split(' ')[0].toLowerCase();
+                let obj = {
+                  nik: APP.validation.checkCSV(x.NIK),
+                  name: APP.validation.checkCSV(x.Name),
+                  gender: gender,
+                  pob: APP.validation.checkCSV(x['Tempat Lahir']),
+                  dob: APP.validation.checkCSV(x['Tanggal Lahir']),
+                  address: APP.validation.checkCSV(x.Alamat),
+                  tlp: APP.validation.checkCSV(x.Telp),
+                  email: APP.validation.checkCSV(x.Email),
+                  grade_id: APP.validation.checkCSV(x.Grading),
+                  job_title_id: APP.validation.checkCSV(x['Job Title']),
+                  department_id: APP.validation.checkCSV(x.Department),
+                  schedule_id: APP.validation.checkCSV(x['Shift Type']),
+                  status_contract_id: APP.validation.checkCSV(x['Status Contract']),
+                  status: 1,
+                  employee_code: code,
+                  company_code: req.user.code,
+                  user_name: code.replace(req.user.code + '-', '') + '_' + x.Name.split(' ')[0].toLowerCase(),
+                  plainPassword: plainPassword,
+                  password: bcrypt.hashSync(plainPassword, 10)
+                };
 
-                return res;
+                return obj;
               });
             })
           )
             .then(arr => {
+              // console.log(arr);
+
               callback(null, arr);
             })
             .catch(err => {
@@ -817,89 +837,113 @@ exports.importEmployeeData = (APP, req, callback) => {
       },
 
       function checkEmailEmployee(result, callback) {
-        result.map((data, index) => {
-          APP.models.company[req.user.db].mysql.employee
-            .findAll({
-              where: {
-                email: data.email
-              }
-            })
-            .then(res => {
-              if (res && res.length > 0) {
-                return callback({
-                  code: 'DUPLICATE',
-                  message: `Error! Duplicate Email! ${data.email}`,
-                  info: {
-                    dataCount: res.length,
-                    parameter: 'email'
-                  }
-                });
-              }
-              if (result.length == index + 1) {
-                return callback(null, result);
-              }
-            })
-            .catch(err => {
-              console.log('iki error email', err);
+        Promise.all(
+          result.map((data, index) => {
+            APP.models.company[req.user.db].mysql.employee
+              .findAll({
+                where: {
+                  email: data.email
+                }
+              })
+              .then(res => {
+                if (res && res.length > 0) {
+                  return data.email;
+                } else {
+                  return true;
+                }
+              })
+              .catch(err => {
+                console.log('iki error email', err);
 
-              return callback({
-                code: 'ERR_DATABASE',
-                data: err
+                return callback({
+                  code: 'ERR_DATABASE',
+                  data: err
+                });
               });
+          })
+        )
+          .then(arr => {
+            let filtered = arr.filter(x => x !== true);
+            if (filtered.length > 0) {
+              callback({
+                code: 'DUPLICATE',
+                message: `Error! Duplicate Email! ${filtered}`
+              });
+            } else {
+              callback(null, result);
+            }
+          })
+          .catch(err => {
+            console.log('Error checkEmailEmployee', err);
+            callback({
+              code: 'ERR',
+              data: err
             });
-        });
+          });
       },
 
       function checkTelpEmployee(result, callback) {
-        result.map((data, index) => {
-          APP.models.company[req.user.db].mysql.employee
-            .findAll({
-              where: {
-                tlp: data.tlp
-              }
-            })
-            .then(res => {
-              if (res && res.length > 0) {
-                return callback({
-                  code: 'DUPLICATE',
-                  message: `Error! Duplicate telp ${data.tlp}!`,
-                  info: {
-                    dataCount: res.length,
-                    parameter: 'telp'
-                  }
-                });
-              }
-              if (result.length == index + 1) {
-                return callback(null, result);
-              }
-            })
-            .catch(err => {
-              console.log('iki error telp', err);
+        Promise.all(
+          result.map((data, index) => {
+            return APP.models.company[req.user.db].mysql.employee
+              .findAll({
+                where: {
+                  tlp: data.tlp
+                }
+              })
+              .then(res => {
+                if (res && res.length > 0) {
+                  return data.tlp;
+                } else {
+                  return true;
+                }
+              })
+              .catch(err => {
+                console.log('iki error telp', err);
 
-              return callback({
-                code: 'ERR_DATABASE',
-                data: err
+                return callback({
+                  code: 'ERR_DATABASE',
+                  data: err
+                });
               });
+          })
+        )
+          .then(arr => {
+            let filtered = arr.filter(x => x !== true);
+            if (filtered.length > 0) {
+              callback({
+                code: 'DUPLICATE',
+                message: `Error! Duplicate Telp! ${filtered}`
+              });
+            } else {
+              callback(null, result);
+            }
+          })
+          .catch(err => {
+            console.log('Error checkTelpEmployee', err);
+            callback({
+              code: 'ERR',
+              data: err
             });
-        });
+          });
       },
 
       function insertData(result, callback) {
         APP.models.company[req.user.db].mysql.employee
           .bulkCreate(result)
           .then(res => {
-            result.map(data => {
-              // send to email
-              APP.mailer.sendMail({
-                subject: 'Account Created',
-                to: data.email,
-                data: {
-                  username: data.user_name,
-                  pass: data.plainPassword
-                },
-                file: 'create_employee.html'
-              });
-            });
+            // result.map(data => {
+            //   // send to email
+            //   APP.mailer.sendMail({
+            //     subject: 'Account Created',
+            //     to: data.email,
+            //     data: {
+            //       username: data.user_name,
+            //       pass: data.plainPassword
+            //     },
+            //     file: 'create_employee.html'
+            //   });
+            // });
 
             callback(null, {
               code: 'INSERT_SUCCESS',
@@ -1559,10 +1603,13 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
               });
             } else {
               if (result.data.department_id == department_id) {
+                console.log('department id sama');
+
                 result.status.department = false;
                 result.upload.department = res.department_upload;
                 callback(null, result);
               } else {
+                console.log('department id beda');
                 result.status.department = true;
 
                 let fileName = new Date().toISOString().replace(/:|\./g, '');
@@ -1608,10 +1655,12 @@ exports.updateEmployeeRotasi = (APP, req, callback) => {
               });
             } else {
               if (result.data.job_title_id == job_id) {
+                console.log('job id sama');
                 result.status.job = false;
                 result.upload.job = res.job_title_upload;
                 callback(null, result);
               } else {
+                console.log('job id beda');
                 result.status.job = true;
 
                 let fileName = new Date().toISOString().replace(/:|\./g, '');

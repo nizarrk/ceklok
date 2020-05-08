@@ -48,7 +48,7 @@ exports.getById = function(APP, req, callback) {
 
 exports.insert = function(APP, req, callback) {
   let { absent_type } = APP.models.company[req.user.db].mysql;
-  let { name, desc, type } = req.body;
+  let { name, desc, type, cut } = req.body;
   async.waterfall(
     [
       function checkBody(callback) {
@@ -88,6 +88,7 @@ exports.insert = function(APP, req, callback) {
             name: name,
             description: desc,
             type: type,
+            type_cut: cut,
             action_by: req.user.id
           })
           .save()

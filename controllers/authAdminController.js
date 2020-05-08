@@ -7,8 +7,8 @@ const async = require('async');
 const path = require('path');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
-const dbName = 'ceklok_VST1912090';
 const moment = require('moment');
+const verifyController = require('./verifyController');
 
 exports.checkExistingEmailCompany = (APP, req, callback) => {
   APP.models.mysql.company
@@ -399,19 +399,30 @@ exports.register = (APP, req, callback) => {
               }
 
               let total =
-                req.body.payment.type == '1' ? res.monthly_price : req.body.payment.type == '2' ? res.annual_price : 0;
+                req.body.payment.type == '1'
+                  ? res.monthly_price
+                  : req.body.payment.type == '2'
+                  ? res.annual_price
+                  : req.body.payment.type == '3'
+                  ? res.one_time_price
+                  : 0;
 
               let subscription =
                 req.body.payment.type == '1'
                   ? res.monthly_minimum
                   : req.body.payment.type == '2'
                   ? res.annual_minimum
+                  : req.body.payment.type == '3'
+                  ? res.one_time_minimum
                   : 0;
+
+              let free = total == 0 ? true : false;
 
               callback(null, {
                 admin: data.admin,
                 company: data.company,
                 paymentInfo: {
+                  free: free,
                   total: total,
                   subscription: subscription
                 }
@@ -434,7 +445,7 @@ exports.register = (APP, req, callback) => {
                 subscription_type: req.body.payment.type,
                 subscription: data.paymentInfo.subscription,
                 total: data.paymentInfo.total,
-                status: 0
+                status: data.paymentInfo.free ? 1 : 0
               },
               { transaction: t }
             )
@@ -545,8 +556,6 @@ exports.register = (APP, req, callback) => {
         },
 
         function sendInvoice(data, callback) {
-          console.log(data);
-
           //send to email
           APP.mailer.sendMail({
             subject: 'Invoice',
@@ -570,6 +579,11 @@ exports.register = (APP, req, callback) => {
         if (err) {
           t.rollback();
           return callback(err);
+        }
+        if (result.data.payment.total == 0) {
+          console.log('masuk free');
+
+          return verifyController.tes(APP, result.data, req, callback);
         }
 
         callback(null, result);
