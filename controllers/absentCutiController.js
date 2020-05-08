@@ -610,7 +610,53 @@ exports.insert = function(APP, req, callback) {
           });
       },
 
+      function getDetails(result, callback) {
+        let query;
+        if (type == 0) {
+          query = absent_type;
+        } else if (type == 1) {
+          query = cuti_type;
+        }
+
+        absent_cuti.belongsTo(query, {
+          targetKey: 'id',
+          foreignKey: 'absent_cuti_type_id'
+        });
+
+        absent_cuti.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+
+        absent_cuti
+          .findOne({
+            include: [
+              {
+                model: query
+              },
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name', 'company_code', 'employee_code']
+              }
+            ],
+            where: {
+              id: result.row.id
+            }
+          })
+          .then(res => {
+            callback(null, res.dataValues);
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
       function sendMailToAdmin(result, callback) {
+        let reqtype = type == 0 ? result.absent_type : result.cuti_type;
         APP.models.mysql.admin
           .findAll({
             where: {
@@ -625,18 +671,6 @@ exports.insert = function(APP, req, callback) {
               });
             } else {
               let emailList = [];
-              let dataEmail = {
-                code: result.data.kode,
-                absent_type_id: type,
-                user_id: req.user.id,
-                date_start: datestart,
-                date_end: dateend,
-                time_start: timestart,
-                time_end: timeend,
-                description: desc,
-                count: result.data.days,
-                time_total: result.data.time
-              };
 
               res.map(data => {
                 emailList.push(data.email);
@@ -645,7 +679,14 @@ exports.insert = function(APP, req, callback) {
               APP.mailer.sendMail({
                 subject: 'New Leave Permission Request',
                 to: emailList,
-                data: dataEmail,
+                data: {
+                  name: result.employee.name,
+                  type: reqtype.name,
+                  datestart: result.datestart,
+                  dateend: result.dateend,
+                  count: result.count,
+                  desc: result.description
+                },
                 file: 'leave_permission.html'
               });
 
@@ -826,130 +867,138 @@ exports.update = function(APP, req, callback) {
       },
 
       function checkDay(data, callback) {
-        moment.updateLocale('us', {
-          workingWeekdays: data.schedule.workday
-        });
+        try {
+          moment.updateLocale('us', {
+            workingWeekdays: data.schedule.workday
+          });
 
-        // 0 = absent
-        if (type == 0) {
-          // ijin durasi hari
-          if (data.typeid == 1) {
-            let date1 = moment(datestart);
-            let date2 = moment(dateend);
-            let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
-            let listDate = [];
-            let dateMove = new Date(date1);
-            let strDate = datestart;
+          // 0 = absent
+          if (type == 0) {
+            // ijin durasi hari
+            if (data.typeid == 1) {
+              let date1 = moment(datestart);
+              let date2 = moment(dateend);
+              let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
+              let listDate = [];
+              let dateMove = new Date(date1);
+              let strDate = datestart;
 
-            while (strDate < dateend) {
-              strDate = dateMove.toISOString().slice(0, 10);
-              dateMove.setDate(dateMove.getDate() + 1);
-              let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
+              while (strDate < dateend) {
+                strDate = dateMove.toISOString().slice(0, 10);
+                dateMove.setDate(dateMove.getDate() + 1);
+                let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
 
-              if (!checkDay) {
-                listDate.push(strDate);
+                if (!checkDay) {
+                  listDate.push(strDate);
+                }
               }
-            }
 
-            let work_skip = APP.time.timeXday(data.schedule.time, diff);
+              let work_skip = APP.time.timeXday(data.schedule.time, diff);
 
-            return callback(null, {
-              result: data.result,
-              days: diff - listDate.length,
-              typeid: data.typeid,
-              time: work_skip
-            });
-          }
-
-          // ijin durasi jam
-          else if (data.typeid == 0) {
-            let date = datestart;
-            dateend = date;
-
-            callback(null, {
-              result: data.result,
-              days: 0,
-              typeid: data.typeid,
-              time: moment.utc(moment(timeend, 'HH:mm:ss').diff(moment(timestart, 'HH:mm:ss'))).format('HH:mm:ss')
-            });
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              message: 'Tipe absent tidak tersedia'
-            });
-          }
-        }
-
-        // 1 = cuti
-        else if (type == 1) {
-          // 0 = cuti reguler
-          if (data.typeid == 0) {
-            let date1 = moment(datestart);
-            let date2 = moment(dateend);
-            let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
-            let listDate = [];
-            let dateMove = new Date(date1);
-            let strDate = datestart;
-
-            while (strDate < dateend) {
-              strDate = dateMove.toISOString().slice(0, 10);
-              dateMove.setDate(dateMove.getDate() + 1);
-
-              let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
-
-              if (!checkDay) {
-                listDate.push(strDate);
-              }
-            }
-
-            // cek sisa jatah cuti reguler employee
-            if (data.left < diff - listDate.length) {
-              callback({
-                code: 'INVALID_REQUEST',
-                message: 'Jatah cuti kurang dari permintaan cuti'
-              });
-            } else {
-              callback(null, {
+              return callback(null, {
                 result: data.result,
                 days: diff - listDate.length,
-                typeid: data.typeid
+                typeid: data.typeid,
+                time: work_skip
+              });
+            }
+
+            // ijin durasi jam
+            else if (data.typeid == 0) {
+              let date = datestart;
+              dateend = date;
+
+              callback(null, {
+                result: data.result,
+                days: 0,
+                typeid: data.typeid,
+                time: moment.utc(moment(timeend, 'HH:mm:ss').diff(moment(timestart, 'HH:mm:ss'))).format('HH:mm:ss')
+              });
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Tipe absent tidak tersedia'
               });
             }
           }
 
-          // 1 = cuti khusus
-          else if (data.typeid == 1) {
-            let startDate = moment(datestart),
-              days = data.days - 1, // -1 biar hari pertama keitung cuti
-              defaultDays = startDate
-                .clone()
-                .add(days, 'days')
-                .format('YYYY-MM-DD'),
-              bussinessDays = startDate
-                .clone()
-                .businessAdd(days)
-                .format('YYYY-MM-DD');
+          // 1 = cuti
+          else if (type == 1) {
+            // 0 = cuti reguler
+            if (data.typeid == 0) {
+              let date1 = moment(datestart);
+              let date2 = moment(dateend);
+              let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
+              let listDate = [];
+              let dateMove = new Date(date1);
+              let strDate = datestart;
 
-            callback(null, {
-              result: data.result,
-              days: data.days,
-              typeid: data.typeid,
-              dateend: bussinessDays
-            });
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              message: 'Tipe cuti tidak tersedia'
-            });
+              while (strDate < dateend) {
+                strDate = dateMove.toISOString().slice(0, 10);
+                dateMove.setDate(dateMove.getDate() + 1);
+
+                let checkDay = moment(strDate, 'YYYY-MM-DD').isBusinessDay();
+
+                if (!checkDay) {
+                  listDate.push(strDate);
+                }
+              }
+
+              // cek sisa jatah cuti reguler employee
+              if (data.left < diff - listDate.length) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'Jatah cuti kurang dari permintaan cuti'
+                });
+              } else {
+                callback(null, {
+                  result: data.result,
+                  days: diff - listDate.length,
+                  typeid: data.typeid
+                });
+              }
+            }
+
+            // 1 = cuti khusus
+            else if (data.typeid == 1) {
+              let startDate = moment(datestart),
+                days = data.days - 1, // -1 biar hari pertama keitung cuti
+                defaultDays = startDate
+                  .clone()
+                  .add(days, 'days')
+                  .format('YYYY-MM-DD'),
+                bussinessDays = startDate
+                  .clone()
+                  .businessAdd(days)
+                  .format('YYYY-MM-DD');
+
+              callback(null, {
+                result: data.result,
+                days: data.days,
+                typeid: data.typeid,
+                dateend: bussinessDays
+              });
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Tipe cuti tidak tersedia'
+              });
+            }
           }
+        } catch (err) {
+          console.log(err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
         }
       },
 
       function checkTgl(result, callback) {
-        let dateend = result.dateend ? result.dateend : dateend;
+        let customDateend = result.dateend ? result.dateend : dateend;
         if (
           result.result.date_start.getTime() == new Date(datestart).getTime() &&
-          result.result.date_end.getTime() == new Date(dateend).getTime()
+          result.result.date_end.getTime() == new Date(customDateend).getTime()
         ) {
           callback(null, result);
         } else {
@@ -959,12 +1008,12 @@ exports.update = function(APP, req, callback) {
               WHERE
                 user_id = ${req.user.id} 
               AND
-                '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${dateend}' <= date_format(date_end, '%Y-%m-%d')
+                '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${customDateend}' <= date_format(date_end, '%Y-%m-%d')
               OR
                 '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${datestart}' <= date_format(date_end, '%Y-%m-%d')
               OR
-                '${result.dateend ? result.dateend : dateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
-                result.dateend ? result.dateend : dateend
+                '${result.dateend ? result.dateend : customDateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
+                result.dateend ? result.dateend : customDateend
               }' <= date_format(date_end, '%Y-%m-%d')`
             )
             .then(res => {

@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = function(mongo) {
-  if (mongo.models._logs) return mongo.models._logs;
+  if (mongo.models._logs_email) return mongo.models._logs_email;
 
   const ModelSchema = mongo.Schema({
     feature_id: String,
@@ -12,6 +12,7 @@ module.exports = function(mongo) {
     },
     request: String,
     response: String,
+    data: String,
     status: String,
     ip: String,
     user_id: String,
@@ -25,5 +26,5 @@ module.exports = function(mongo) {
     elapsed_time: String
   });
 
-  return mongo.model('_logs', ModelSchema);
+  return mongo.model('_logs_email', ModelSchema);
 };

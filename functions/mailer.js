@@ -3,8 +3,10 @@ const nodemailer = require('nodemailer');
 const mustache = require('mustache');
 const fs = require('fs');
 const path = require('path');
+const db = require('../db').mongo;
 
 exports.sendMail = data => {
+  let { _logs_email } = db.models;
   fs.readFile(path.join(__dirname, '../config/template/', data.file), 'utf8', (err, file) => {
     if (err) throw err;
 
@@ -28,9 +30,34 @@ exports.sendMail = data => {
 
     transporter.sendMail(mailOptions, function(error, info) {
       if (error) {
-        console.log(error);
+        _logs_email
+          .create({
+            data: JSON.stringify(data),
+            date: new Date(),
+            error: true
+          })
+          .then(() => {
+            console.log('error send email');
+            console.log(error);
+          })
+          .catch(err => {
+            console.log('Error create', err);
+          });
       } else {
-        console.log('Email sent: ' + info.response);
+        console.log('berhasil harusnya');
+
+        _logs_email
+          .create({
+            data: JSON.stringify(data),
+            date: new Date(),
+            error: false
+          })
+          .then(() => {
+            console.log('Email sent: ' + info.response);
+          })
+          .catch(err => {
+            console.log('Error create', err);
+          });
       }
     });
   });

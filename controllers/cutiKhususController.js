@@ -55,7 +55,19 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function checkBody(callback) {
-        if (name && desc && type && days) {
+        if (name && desc && type) {
+          if (type == 1) {
+            if (days) {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter days!'
+              });
+            }
+          } else {
+            callback(null, true);
+          }
           callback(null, true);
         } else {
           callback({
@@ -136,7 +148,7 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  if (req.body.name && req.body.status && req.body.desc && req.body.days && req.body.id) {
+  if (req.body.name && req.body.status && req.body.desc && req.body.id) {
     APP.models.company[req.user.db].mysql.cuti_type
       .update(
         {

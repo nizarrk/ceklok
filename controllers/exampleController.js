@@ -20,16 +20,62 @@ const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 exports.test = function(APP, req, callback) {
-  APP.fileCheck(req.files.upload.data, 'csv').then(res => {
-    if (res == null) {
-      callback({
-        code: 'INVALID_REQUEST',
-        message: 'File yang diunggah tidak sesuai!'
-      });
-    } else {
-      console.log(res);
-    }
+  let { absent_cuti, absent_type, cuti_type, employee } = APP.models.company.ceklok_VST203231.mysql;
+  let query;
+  if (req.body.type == 0) {
+    query = absent_type;
+  } else if (req.body.type == 1) {
+    query = cuti_type;
+  }
+
+  absent_cuti.belongsTo(query, {
+    targetKey: 'id',
+    foreignKey: 'absent_cuti_type_id'
   });
+
+  absent_cuti.belongsTo(employee, {
+    targetKey: 'id',
+    foreignKey: 'user_id'
+  });
+
+  absent_cuti
+    .findOne({
+      include: [
+        {
+          model: query
+        },
+        {
+          model: employee,
+          attributes: ['id', 'nik', 'name', 'company_code', 'employee_code']
+        }
+      ],
+      where: {
+        id: 27
+      }
+    })
+    .then(res => {
+      callback(null, {
+        code: 'OK',
+        data: res
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+  // APP.fileCheck(req.files.upload.data, 'csv').then(res => {
+  //   if (res == null) {
+  //     callback({
+  //       code: 'INVALID_REQUEST',
+  //       message: 'File yang diunggah tidak sesuai!'
+  //     });
+  //   } else {
+  //     console.log(res);
+  //   }
+  // });
   // let tes = rsa.encrypt({
   //   username: 'nrk123',
   //   pass: 'h3jfsi1l',
