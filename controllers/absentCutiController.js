@@ -200,7 +200,7 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function checkBody(callback) {
-        if (type && typeid && datestart && dateend && timestart && timeend && desc) {
+        if (type && typeid && datestart && dateend && timestart && timeend) {
           callback(null, true);
         } else {
           callback({
