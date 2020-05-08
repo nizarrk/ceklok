@@ -639,10 +639,6 @@ exports.insert = function(APP, req, callback) {
               };
 
               res.map(data => {
-                // APP.models.mongo._logs_email
-                //   .create({
-                //     endpoint: req.or
-                //   })
                 emailList.push(data.email);
               });
               //send to email
@@ -693,7 +689,7 @@ exports.update = function(APP, req, callback) {
         }
       },
 
-      function getDetails(callback) {
+      function getDetails(result, callback) {
         absent_cuti
           .findOne({
             where: {
