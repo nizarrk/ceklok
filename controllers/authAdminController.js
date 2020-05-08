@@ -583,7 +583,7 @@ exports.register = (APP, req, callback) => {
         if (result.data.payment.total == 0) {
           console.log('masuk free');
 
-          return verifyController.tes(APP, result.data, req, callback);
+          return verifyController.freemiumVerify(APP, result.data, req, callback);
         }
 
         callback(null, result);

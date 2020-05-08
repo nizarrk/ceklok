@@ -9,9 +9,7 @@ const trycatch = require('trycatch');
 const key = require('../config/jwt-key.json');
 const jwt = require('jsonwebtoken');
 
-exports.tes = (APP, result, req, callback) => {
-  console.log(result);
-
+exports.freemiumVerify = (APP, result, req, callback) => {
   let {
     admin_app,
     payment,
@@ -105,8 +103,8 @@ exports.tes = (APP, result, req, callback) => {
             res
               .update({
                 company_code: data.companyCode,
-                payment_status: 0,
-                status: 0
+                payment_status: 1,
+                status: 1
               })
               .then(result => {
                 callback(null, { company: result, code: data.companyCode });
@@ -142,9 +140,9 @@ exports.tes = (APP, result, req, callback) => {
           .then(res => {
             res
               .update({
-                // user_type_id: 1,
+                user_type_id: 1,
                 company_code: data.code,
-                status: 0
+                status: 1
               })
               .then(result => {
                 callback(null, {
@@ -971,11 +969,11 @@ exports.verifyCompany = (APP, req, callback) => {
               res
                 .update(
                   {
-                    status: 0
-                    // image_admin: data.path.slice(8),
-                    // updated_at: new Date(),
-                    // approved_at: new Date(),
-                    // approved_by: req.user.id
+                    status: 1,
+                    image_admin: data.path.slice(8),
+                    updated_at: new Date(),
+                    approved_at: new Date(),
+                    approved_by: req.user.id
                   },
                   { transaction: t }
                 )
@@ -1100,8 +1098,8 @@ exports.verifyCompany = (APP, req, callback) => {
                 .update(
                   {
                     company_code: data.companyCode,
-                    payment_status: 0,
-                    status: 0
+                    payment_status: 1,
+                    status: 1
                   },
                   { transaction: t }
                 )
@@ -1143,9 +1141,9 @@ exports.verifyCompany = (APP, req, callback) => {
               res
                 .update(
                   {
-                    // user_type_id: 1,
+                    user_type_id: 1,
                     company_code: data.code,
-                    status: 0
+                    status: 1
                   },
                   { transaction: t }
                 )
