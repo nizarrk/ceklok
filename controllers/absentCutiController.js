@@ -625,26 +625,31 @@ exports.insert = function(APP, req, callback) {
               });
             } else {
               let emailList = [];
+              let dataEmail = {
+                code: result.data.kode,
+                absent_type_id: type,
+                user_id: req.user.id,
+                date_start: datestart,
+                date_end: dateend,
+                time_start: timestart,
+                time_end: timeend,
+                description: desc,
+                count: result.data.days,
+                time_total: result.data.time
+              };
 
               res.map(data => {
+                // APP.models.mongo._logs_email
+                //   .create({
+                //     endpoint: req.or
+                //   })
                 emailList.push(data.email);
               });
               //send to email
               APP.mailer.sendMail({
                 subject: 'New Leave Permission Request',
                 to: emailList,
-                data: {
-                  code: result.data.kode,
-                  absent_type_id: type,
-                  user_id: req.user.id,
-                  date_start: datestart,
-                  date_end: dateend,
-                  time_start: timestart,
-                  time_end: timeend,
-                  description: desc,
-                  count: result.data.days,
-                  time_total: result.data.time
-                },
+                data: dataEmail,
                 file: 'leave_permission.html'
               });
 
@@ -674,11 +679,11 @@ exports.insert = function(APP, req, callback) {
 
 exports.update = function(APP, req, callback) {
   let { absent_cuti, absent_type, cuti_type, employee, schedule } = APP.models.company[req.user.db].mysql;
-  let { status, type, typeid, codeid, datestart, dateend, timestart, timeend, id, desc } = req.body;
+  let { type, typeid, codeid, datestart, dateend, timestart, timeend, id, desc } = req.body;
   async.waterfall(
     [
       function checkBody(callback) {
-        if (status && type && typeid && codeid && datestart && dateend && timestart && timeend) {
+        if (type && typeid && codeid && datestart && dateend && timestart && timeend) {
           callback(null, true);
         } else {
           callback({
@@ -1052,7 +1057,7 @@ exports.update = function(APP, req, callback) {
               description: desc,
               count: data.days,
               time_total: data.time,
-              status: status, // 0 = requested 1 = approved, 2 = reject
+              // status: status, // 0 = requested 1 = approved, 2 = reject
               upload: data.upload ? data.doc.slice(8) : data.doc // slice 8 buat ngilangin './public'
             },
             {
