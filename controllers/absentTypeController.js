@@ -52,7 +52,7 @@ exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
       function checkBody(callback) {
-        if (name && desc && type) {
+        if (name && desc && type && cut) {
           callback(null, true);
         } else {
           callback({
@@ -134,11 +134,13 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  if (req.body.status && req.body.name && req.body.desc && req.body.id) {
+  if (req.body.status && req.body.type && req.body.cut && req.body.name && req.body.desc && req.body.id) {
     APP.models.company[req.user.db].mysql.absent_type
       .update(
         {
           name: req.body.name,
+          type: req.body.type,
+          type_cut: req.body.cut,
           description: req.body.desc,
           updated_at: new Date(),
           status: req.body.status,

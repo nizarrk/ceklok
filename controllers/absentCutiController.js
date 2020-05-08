@@ -196,9 +196,21 @@ exports.getById = (APP, req, callback) => {
 
 exports.insert = function(APP, req, callback) {
   let { absent_cuti, absent_type, cuti_type, employee, schedule } = APP.models.company[req.user.db].mysql;
+  let { type, typeid, datestart, dateend, timestart, timeend, desc } = req.body;
   async.waterfall(
     [
-      function generateCode(callback) {
+      function checkBody(callback) {
+        if (type && typeid && datestart && dateend && timestart && timeend && desc) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter'
+          });
+        }
+      },
+
+      function generateCode(data, callback) {
         let kode = APP.generateCode(absent_cuti, 'AC');
         Promise.resolve(kode)
           .then(x => {
