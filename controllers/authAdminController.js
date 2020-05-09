@@ -852,8 +852,19 @@ exports.login = (APP, req, callback) => {
       },
 
       function checkAdmin(index, callback) {
+        APP.models.mysql.admin.belongsTo(APP.models.mysql.company, {
+          targetKey: 'id',
+          foreignKey: 'company_id'
+        });
+
         APP.models.mysql.admin
           .findAll({
+            include: [
+              {
+                model: APP.models.mysql.company,
+                attributes: ['id', 'name']
+              }
+            ],
             attributes: [
               'id',
               'company_id',
@@ -931,6 +942,7 @@ exports.login = (APP, req, callback) => {
                     id: rows[0].id,
                     company_id: rows[0].company_id,
                     company_code: rows[0].company_code,
+                    company_name: rows[0].company.name,
                     name: rows[0].name,
                     photo: rows[0].photo,
                     initial_login: rows[0].initial_login
