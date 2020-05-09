@@ -217,13 +217,12 @@ exports.dashboardEmployeePresenceDetail = (APP, req, callback) => {
 };
 
 exports.dashboardAdminCompany = (APP, req, callback) => {
-  console.log(req.user.db);
-
   let {
     employee,
     presence,
     presence_monthly,
     presence_setting,
+    presence_period,
     grade,
     job_title,
     schedule,
@@ -249,11 +248,13 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
 
       function getTotalEmployee(result, callback) {
         employee
-          .findAndCountAll()
+          .count()
           .then(res => {
             callback(null, {
               feature: result,
-              employee: res
+              employee: {
+                count: res
+              }
             });
           })
           .catch(err => {
@@ -307,6 +308,31 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
           });
       },
 
+      function getPresencePeriod(result, callback) {
+        presence_period
+          .findAll({
+            limit: 1,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            callback(null, {
+              feature: result.feature,
+              employee: result.employee,
+              grade: result.grade,
+              job_title: result.job_title,
+              period: res[0].dataValues
+            });
+          })
+          .catch(err => {
+            console.log('Error getPresencePeriod', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getPresencePeriod',
+              data: err
+            });
+          });
+      },
+
       function getMostActiveEmployee(result, callback) {
         let arr = [];
         presence_monthly.belongsTo(employee, {
@@ -321,6 +347,9 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
                 attributes: ['id', 'nik', 'name']
               }
             ],
+            where: {
+              presence_period_id: result.period.id
+            },
             limit: 5
           })
           .then(res => {
@@ -351,6 +380,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
               employee: result.employee,
               grade: result.grade,
               job_title: result.job_title,
+              period: result.period,
               most_active: arr
             });
           })
@@ -378,6 +408,9 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
                 attributes: ['id', 'nik', 'name']
               }
             ],
+            where: {
+              presence_period_id: result.period.id
+            },
             limit: 5
           })
           .then(res => {
@@ -408,6 +441,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
               employee: result.employee,
               grade: result.grade,
               job_title: result.job_title,
+              period: result.period,
               most_active: result.most_active,
               under_performed: arr
             });
@@ -475,6 +509,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
               employee: result.employee,
               grade: result.grade,
               job_title: result.job_title,
+              period: result.period,
               most_active: result.most_active,
               under_performed: result.under_performed,
               last_check_in: arr,
@@ -523,17 +558,54 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
             }
           })
           .then(res => {
-            callback(null, {
-              feature: result.feature,
-              employee: result.employee,
-              grade: result.grade,
-              job_title: result.job_title,
-              most_active: result.most_active,
-              under_performed: result.under_performed,
-              last_check_in: result.last_check_in,
-              last_check_out: result.last_check_out,
-              yesterday: res
-            });
+            let wa = 0;
+            let nci = 0;
+            let nco = 0;
+            let hadir = 0;
+            let cuti = 0;
+            let absen = 0;
+            let izin = 0;
+
+            Promise.all(
+              res.rows.map(x => {
+                let obj = {};
+
+                obj.hadir = x.presence_setting_id == 1 ? hadir++ : hadir; // H
+                obj.nci = x.presence_setting_id == 2 ? nci++ : nci; // NCI
+                obj.nco = x.presence_setting_id == 3 ? nco++ : nco; // NCO
+                obj.wa = x.presence_setting_id == 4 ? wa++ : wa; // WA
+                obj.absen = x.presence_setting_id == 5 ? absen++ : absen; // A
+                obj.cuti = x.presence_setting_id == 7 ? cuti++ : cuti; // C
+                obj.izin = x.presence_setting_id == 6 ? izin++ : izin; // I
+
+                return obj;
+              })
+            )
+              .then(arr => {
+                callback(null, {
+                  feature: result.feature,
+                  employee: result.employee,
+                  grade: result.grade,
+                  job_title: result.job_title,
+                  period: result.period,
+                  most_active: result.most_active,
+                  under_performed: result.under_performed,
+                  last_check_in: result.last_check_in,
+                  last_check_out: result.last_check_out,
+                  yesterday: {
+                    recap: arr[arr.length - 1],
+                    data: res
+                  }
+                });
+              })
+              .catch(err => {
+                console.log('Error Promise getYesterdayPresence', err);
+                callback({
+                  code: 'ERR',
+                  message: 'Error Promise getYesterdayPresence',
+                  data: err
+                });
+              });
           })
           .catch(err => {
             console.log('Error getYesterdayPresence', err);
@@ -602,6 +674,7 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
                   employee: result.employee,
                   grade: result.grade,
                   job_title: result.job_title,
+                  period: result.period,
                   most_active: result.most_active,
                   under_performed: result.under_performed,
                   last_check_in: result.last_check_in,
@@ -630,15 +703,17 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
       },
 
       function getMonthlyPresence(result, callback) {
-        console.log(result.today);
-
         let hadir = 0;
         let cuti = 0;
         let absen = 0;
         let izin = 0;
 
         presence_monthly
-          .findAndCountAll()
+          .findAndCountAll({
+            where: {
+              presence_period_id: result.period.id
+            }
+          })
           .then(res => {
             Promise.all(
               res.rows.map(x => {
