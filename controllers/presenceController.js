@@ -1211,19 +1211,19 @@ exports.checkInOutProcess = (APP, req, callback) => {
 };
 
 exports.getHistoryCheckInOut = (APP, req, callback) => {
-  let params = `1+1 ORDER BY ${req.user.db}.presence.date DESC`;
+  let params = ` ORDER BY ${req.user.db}.presence.date DESC`;
 
   if (req.body.datestart && req.body.dateend) {
-    params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}' 
+    params = ` WHERE ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}' 
               ORDER BY ${req.user.db}.presence.date DESC`;
   }
 
   if (req.user.level === 3) {
-    params = ` presence.user_id = ${req.user.id}`;
+    params = ` WHERE presence.user_id = ${req.user.id} ORDER BY ${req.user.db}.presence.date DESC`;
   }
 
   if (req.body.datestart && req.body.dateend && req.user.level === 3) {
-    params = ` ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}'
+    params = ` WHERE ${req.user.db}.presence.date BETWEEN '${req.body.datestart}' AND '${req.body.dateend}'
               AND presence.user_id = ${req.user.id} ORDER BY ${req.user.db}.presence.date DESC`;
   }
 
@@ -1260,9 +1260,8 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
               LEFT OUTER JOIN 
                 ${req.user.db}.branch AS check_out_branch ON presence.check_out_branch_id = check_out_branch.id
               LEFT OUTER JOIN
-                ${req.user.db}.presence_setting AS presence_setting ON presence.presence_setting_id = presence_setting.id
-              WHERE  
-                ${params}`;
+                ${req.user.db}.presence_setting AS presence_setting ON presence.presence_setting_id = presence_setting.id  
+              ${params}`;
 
   APP.db.sequelize
     .query(query)
