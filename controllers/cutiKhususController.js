@@ -148,60 +148,85 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  if (req.body.name && req.body.status && req.body.desc && req.body.id) {
-    APP.models.company[req.user.db].mysql.cuti_type
-      .update(
-        {
-          name: req.body.name,
-          description: req.body.desc,
-          days: req.body.days,
-          status: req.body.status,
-          updated_at: new Date(),
-          action_by: req.user.id
-        },
-        {
-          where: {
-            id: req.body.id
+  let { name, desc, type, days, status, id } = req.body;
+  let { cuti_type } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (name && status && desc && id) {
+          if (status == '1' || status == '0') {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter status!'
+            });
           }
-        }
-      )
-      .then(result => {
-        let params = 'Update Success'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_SUCCESS',
-          data: params
-        });
-      })
-      .catch(err => {
-        console.log('iki error', err);
-
-        if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-          let params = 'Error! Empty Query'; //This is only example, Object can also be used
-          return callback({
-            code: 'UPDATE_NONE',
-            data: params
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
           });
         }
+      },
 
-        if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-          let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-          return callback({
-            code: 'DUPLICATE',
-            data: params
+      function update(data, callback) {
+        cuti_type
+          .update(
+            {
+              name: name,
+              description: desc,
+              days: days,
+              type: type,
+              status: status,
+              updated_at: new Date(),
+              action_by: req.user.id
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(result => {
+            let params = 'Update Success'; //This is only example, Object can also be used
+            return callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: params
+            });
+          })
+          .catch(err => {
+            console.log('iki error', err);
+
+            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
+              return callback({
+                code: 'UPDATE_NONE',
+                data: params
+              });
+            }
+
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+              return callback({
+                code: 'DUPLICATE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: JSON.stringify(err)
+            });
           });
-        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
 
-        return callback({
-          code: 'ERR_DATABASE',
-          data: JSON.stringify(err)
-        });
-      });
-  } else {
-    callback({
-      code: 'INVALID_REQUEST',
-      message: 'Kesalahan pada parameter!'
-    });
-  }
+      callback(null, result);
+    }
+  );
 };
 
 exports.updateStatus = function(APP, req, callback) {
@@ -330,8 +355,8 @@ exports.delete = function(APP, req, callback) {
           .then(deleted => {
             if (!deleted)
               return callback(null, {
-                code: 'DELETE_NONE',
-                data: params.where
+                code: 'INVALID_REQUEST',
+                message: 'Cuti khusus tidak ditemukan!'
               });
 
             return callback(null, {

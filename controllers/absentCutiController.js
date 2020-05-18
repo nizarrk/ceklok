@@ -233,7 +233,8 @@ exports.insert = function(APP, req, callback) {
           absent_type
             .findOne({
               where: {
-                id: typeid
+                id: typeid,
+                status: 1
               }
             })
             .then(res => {
@@ -312,7 +313,8 @@ exports.insert = function(APP, req, callback) {
               }
             ],
             where: {
-              id: req.user.id
+              id: req.user.id,
+              status: 1
             }
           })
           .then(res => {
@@ -354,9 +356,15 @@ exports.insert = function(APP, req, callback) {
         if (type == 0) {
           // ijin durasi hari
           if (data.typeid == 1) {
+            console.log('ijin durasi hari');
+
             let date1 = moment(datestart);
             let date2 = moment(dateend);
+            console.log(date2.diff(date1, 'days'));
+
             let diff = date2.diff(date1, 'days') + 1; // +1 biar hari pertama keitung cuti
+            console.log(diff);
+
             let listDate = [];
             let dateMove = new Date(date1);
             let strDate = datestart;
@@ -370,6 +378,8 @@ exports.insert = function(APP, req, callback) {
                 listDate.push(strDate);
               }
             }
+
+            console.log(listDate);
 
             let work_skip = data.cut == 0 ? '00:00:00' : APP.time.timeXday(data.schedule.time, diff);
 
@@ -469,6 +479,8 @@ exports.insert = function(APP, req, callback) {
       },
 
       function checkTgl(result, callback) {
+        console.log(result);
+
         APP.db.sequelize
           .query(
             `SELECT * FROM ${req.user.db}.absent_cuti
@@ -679,11 +691,12 @@ exports.insert = function(APP, req, callback) {
               APP.mailer.sendMail({
                 subject: 'New Leave Permission Request',
                 to: emailList,
+                company: req.user.code,
                 data: {
                   name: result.employee.name,
                   type: reqtype.name,
-                  datestart: result.datestart,
-                  dateend: result.dateend,
+                  datestart: moment(result.date_start).format('DD-MM-YYYY'),
+                  dateend: moment(result.date_end).format('DD-MM-YYYY'),
                   count: result.count,
                   desc: result.description
                 },
@@ -763,7 +776,8 @@ exports.update = function(APP, req, callback) {
           absent_type
             .findOne({
               where: {
-                id: typeid
+                id: typeid,
+                status: 1
               }
             })
             .then(res => {
@@ -841,7 +855,8 @@ exports.update = function(APP, req, callback) {
               }
             ],
             where: {
-              id: req.user.id
+              id: req.user.id,
+              status: 1
             }
           })
           .then(res => {

@@ -47,43 +47,35 @@ exports.getById = function(APP, req, callback) {
 };
 
 exports.insert = function(APP, req, callback) {
+  let { status_contract } = APP.models.company[req.user.db].mysql;
+  let { name, desc, setting, cuti } = req.body;
   async.waterfall(
     [
-      function generateCode(callback) {
-        let pad = 'ES000';
-        let kode = '';
+      function checkBody(callback) {
+        if (name && desc && setting && cuti) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
 
-        APP.models.company[req.user.db].mysql.status_contract
-          .findAll({
-            limit: 1,
-            order: [['id', 'DESC']]
-          })
-          .then(res => {
-            if (res.length == 0) {
-              console.log('kosong');
-              let str = '' + 1;
-              kode = pad.substring(0, pad.length - str.length) + str;
-
-              callback(null, kode);
-            } else {
-              console.log('ada');
-              console.log(res[0].code);
-
-              let lastID = res[0].code;
-              let replace = lastID.replace('ES', '');
-              console.log(replace);
-
-              let str = parseInt(replace) + 1;
-              kode = pad.substring(0, pad.length - str.toString().length) + str;
-
-              callback(null, kode);
-            }
+      function generateCode(result, callback) {
+        let kode = APP.generateCode(status_contract, 'ES');
+        Promise.resolve(kode)
+          .then(x => {
+            callback(null, {
+              code: x
+            });
           })
           .catch(err => {
             console.log(err);
-
             callback({
-              code: 'ERR_DATABASE',
+              code: 'ERR',
+              id: '?',
+              message: 'Terjadi Kesalahan, mohon coba kembali',
               data: err
             });
           });
@@ -92,11 +84,11 @@ exports.insert = function(APP, req, callback) {
       function insertEmployeeStatus(result, callback) {
         APP.models.company[req.user.db].mysql.status_contract
           .build({
-            code: result,
-            name: req.body.name,
-            description: req.body.desc,
-            leave_setting: req.body.setting,
-            leave_permission: req.body.cuti
+            code: result.code,
+            name: name,
+            description: desc,
+            leave_setting: setting,
+            leave_permission: cuti
           })
           .save()
           .then(result => {
@@ -141,60 +133,91 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.status_contract
-    .update(
-      {
-        name: req.body.name,
-        description: req.body.desc,
-        leave_setting: req.body.setting,
-        leave_permission: req.body.cuti,
-        status: req.body.status
-      },
-      {
-        where: {
-          id: req.body.id
+  let { name, desc, id, status, setting, cuti } = req.body;
+  let { status_contract } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (name && desc && id && status && setting && cuti) {
+          if (status == '1' || (status == '0' && setting == '1') || setting == '0') {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter status atau setting!'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
         }
+      },
+
+      function update(data, callback) {
+        status_contract
+          .update(
+            {
+              name: name,
+              description: desc,
+              leave_setting: setting,
+              leave_permission: cuti,
+              status: status,
+              updated_at: new Date(),
+              action_by: req.user.id
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(result => {
+            // if (!result || (result && !result[0])) {
+            //   return callback({
+            //     code: 'INVALID_REQUEST',
+            //     message: 'Status contract tidak ditemukan!'
+            //   });
+            // }
+
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: result
+            });
+          })
+          .catch(err => {
+            console.log('iki error', err);
+
+            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
+              return callback({
+                code: 'UPDATE_NONE',
+                data: params
+              });
+            }
+
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+              return callback({
+                code: 'DUPLICATE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       }
-    )
-    .then(result => {
-      // if (!result || (result && !result[0])) {
-      //   let params = 'No data updated'; //This is only example, Object can also be used
-      //   return callback(null, {
-      //     code: 'UPDATE_NONE',
-      //     data: params
-      //   });
-      // }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
 
-      let params = 'Update Success'; //This is only example, Object can also be used
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        data: params
-      });
-    })
-    .catch(err => {
-      console.log('iki error', err);
-
-      if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-        let params = 'Error! Empty Query'; //This is only example, Object can also be used
-        return callback({
-          code: 'UPDATE_NONE',
-          data: params
-        });
-      }
-
-      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-        return callback({
-          code: 'DUPLICATE',
-          data: params
-        });
-      }
-
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+      callback(null, result);
+    }
+  );
 };
 
 exports.updateStatus = function(APP, req, callback) {
@@ -311,11 +334,11 @@ exports.delete = function(APP, req, callback) {
             }
           })
           .then(deleted => {
-            // if (!deleted)
-            //   return callback(null, {
-            //     code: 'DELETE_NONE',
-            //     data: params.where
-            //   });
+            if (!deleted)
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Status Contract tidak ditemukan!'
+              });
 
             callback(null, {
               code: 'DELETE_SUCCESS',

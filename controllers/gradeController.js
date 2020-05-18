@@ -235,33 +235,53 @@ exports.insert = function(APP, req, callback) {
 
 exports.update = function(APP, req, callback) {
   let { grade, grade_benefit } = APP.models.company[req.user.db].mysql;
+  let { name, desc, id, benefit, status } = req.body;
   APP.db.sequelize.transaction().then(t => {
     async.waterfall(
       [
-        function updateGrade(callback) {
+        function checkBody(callback) {
+          if (name && desc && id && benefit && status) {
+            if (status == '1' || status == '0') {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter status!'
+              });
+            }
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter!'
+            });
+          }
+        },
+
+        function updateGrade(data, callback) {
           grade
             .update(
               {
-                name: req.body.name,
-                description: req.body.desc
+                name: name,
+                description: desc,
+                status: status,
+                updated_at: new Date(),
+                action_by: req.user.id
               },
               {
                 where: {
-                  id: req.body.id
+                  id: id
                 }
               },
               { transaction: t }
             )
             .then(result => {
               // if (!result || (result && !result[0])) {
-              //   let params = 'No data updated'; //This is only example, Object can also be used
-              //   return callback(null, {
-              //     code: 'UPDATE_NONE',
-              //     data: params
+              //   return callback({
+              //     code: 'INVALID_REQUEST',
+              //     message: 'Grade tidak ditemukan!'
               //   });
               // }
 
-              let params = 'Update Success'; //This is only example, Object can also be used
               return callback(null, true);
             })
             .catch(err => {
@@ -291,13 +311,13 @@ exports.update = function(APP, req, callback) {
         },
 
         function updateGradeBenefit(data, callback) {
-          if (req.body.benefit === null) {
+          if (benefit === null) {
             callback(null, {
               code: 'UPDATE_SUCCESS',
               message: 'Benefit Grade berhasil diubah!'
             });
           } else {
-            let benefit = req.body.benefit.split(','),
+            let benefit = benefit.split(','),
               insert = [],
               update = [];
 
@@ -306,7 +326,7 @@ exports.update = function(APP, req, callback) {
                 return grade_benefit
                   .findOne({
                     where: {
-                      grade_id: req.body.id,
+                      grade_id: id,
                       benefit_id: x
                     }
                   })
@@ -314,13 +334,13 @@ exports.update = function(APP, req, callback) {
                     if (res == null) {
                       insert.push({
                         benefit_id: x,
-                        grade_id: req.body.id
+                        grade_id: id
                       });
 
                       return grade_benefit
                         .create({
                           benefit_id: x,
-                          grade_id: req.body.id
+                          grade_id: id
                         })
                         .then(() => {
                           console.log(`id ${x} inserted`);
@@ -535,11 +555,11 @@ exports.delete = function(APP, req, callback) {
             }
           })
           .then(deleted => {
-            // if (!deleted)
-            //   return callback(null, {
-            //     code: 'DELETE_NONE',
-            //     data: params.where
-            //   });
+            if (!deleted)
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Grade tidak ditemukan!'
+              });
 
             callback(null, deleted);
           })

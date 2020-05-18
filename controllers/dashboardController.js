@@ -269,12 +269,14 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
 
       function getTotalGrading(result, callback) {
         grade
-          .findAndCountAll()
+          .count()
           .then(res => {
             callback(null, {
               feature: result.feature,
               employee: result.employee,
-              grade: res
+              grade: {
+                count: res
+              }
             });
           })
           .catch(err => {
@@ -289,13 +291,15 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
 
       function getTotalJobTitle(result, callback) {
         job_title
-          .findAndCountAll()
+          .count()
           .then(res => {
             callback(null, {
               feature: result.feature,
               employee: result.employee,
               grade: result.grade,
-              job_title: res
+              job_title: {
+                count: res
+              }
             });
           })
           .catch(err => {
@@ -456,17 +460,15 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
           });
       },
 
-      function getlastCheckInOut(result, callback) {
-        let arr = [];
-        let arr2 = [];
-
+      function getlastCheckIn(result, callback) {
         presence.belongsTo(employee, {
           targetKey: 'id',
           foreignKey: 'user_id'
         });
 
         presence
-          .findAndCountAll({
+          .findAll({
+            attributes: ['id', 'check_in'],
             include: [
               {
                 model: employee,
@@ -476,34 +478,10 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
             where: {
               date: moment().format('YYYY-MM-DD')
             },
+            order: [['check_in', 'DESC']],
             limit: 1
           })
           .then(res => {
-            res.rows.map((x, i) => {
-              let obj = {};
-              let obj2 = {};
-
-              obj.user = x.employee.dataValues;
-              obj.check_in = x.check_in;
-              obj.date = x.date;
-              obj.dur_checkin = APP.time.timeToDuration(x.check_in);
-              obj2.user = x.employee.dataValues;
-              obj2.check_out = x.check_out;
-              obj2.date = x.date;
-              obj2.dur_checkout = APP.time.timeToDuration(x.check_out);
-
-              arr.push(obj);
-              arr2.push(obj2);
-            });
-
-            arr.sort(function(a, b) {
-              return b.dur_checkin - a.dur_checkin;
-            });
-
-            arr2.sort(function(a, b) {
-              return b.dur_checkout - a.dur_checkout;
-            });
-
             callback(null, {
               feature: result.feature,
               employee: result.employee,
@@ -512,8 +490,52 @@ exports.dashboardAdminCompany = (APP, req, callback) => {
               period: result.period,
               most_active: result.most_active,
               under_performed: result.under_performed,
-              last_check_in: arr,
-              last_check_out: arr2
+              last_check_in: res
+              // last_check_out: arr2
+            });
+          })
+          .catch(err => {
+            console.log('Error getlastCheckInOut', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error getlastCheckInOut',
+              data: err
+            });
+          });
+      },
+
+      function getlastCheckOut(result, callback) {
+        presence.belongsTo(employee, {
+          targetKey: 'id',
+          foreignKey: 'user_id'
+        });
+
+        presence
+          .findAll({
+            attributes: ['id', 'check_out'],
+            include: [
+              {
+                model: employee,
+                attributes: ['id', 'nik', 'name']
+              }
+            ],
+            where: {
+              date: moment().format('YYYY-MM-DD')
+            },
+            order: [['check_out', 'DESC']],
+            limit: 1
+          })
+          .then(res => {
+            callback(null, {
+              feature: result.feature,
+              employee: result.employee,
+              grade: result.grade,
+              job_title: result.job_title,
+              period: result.period,
+              most_active: result.most_active,
+              under_performed: result.under_performed,
+              last_check_in: result.last_check_in,
+              last_check_out: res
             });
           })
           .catch(err => {

@@ -158,69 +158,91 @@ exports.insert = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.update = function(APP, req, callback) {
-  if (req.body.name && req.body.desc && req.body.loc && req.body.status) {
-    APP.models.company[req.user.db].mysql.department
-      .update(
-        {
-          name: req.body.name,
-          description: req.body.desc,
-          location: req.body.loc,
-          status: req.body.status,
-          updated_at: new Date(),
-          action_by: req.user.id
-        },
-        {
-          where: {
-            id: req.body.id
+  let { name, desc, id, loc, status } = req.body;
+  let { department } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (name && desc && id && status) {
+          if (status == '1' || status == '0') {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter status!'
+            });
           }
-        }
-      )
-      .then(result => {
-        // if (!result || (result && !result[0])) {
-        //   let params = 'No data updated'; //This is only example, Object can also be used
-        //   return callback(null, {
-        //     code: 'UPDATE_NONE',
-        //     data: params
-        //   });
-        // }
-
-        let params = 'Update Success'; //This is only example, Object can also be used
-        return callback(null, {
-          code: 'UPDATE_SUCCESS',
-          data: result,
-          message: 'Department berhasil diupdate!'
-        });
-      })
-      .catch(err => {
-        console.log('iki error', err);
-
-        if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-          let params = 'Error! Empty Query'; //This is only example, Object can also be used
-          return callback({
-            code: 'UPDATE_NONE',
-            data: params
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
           });
         }
+      },
 
-        if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-          let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-          return callback({
-            code: 'DUPLICATE',
-            data: params
+      function update(data, callback) {
+        department
+          .update(
+            {
+              name: name,
+              description: desc,
+              location: loc,
+              status: status,
+              updated_at: new Date(),
+              action_by: req.user.id
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(result => {
+            if (!result || (result && !result[0])) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Department tidak ditemukan!'
+              });
+            }
+
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: result,
+              message: 'Department berhasil diupdate!'
+            });
+          })
+          .catch(err => {
+            console.log('iki error', err);
+
+            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+              let params = 'Error! Empty Query'; //This is only example, Object can also be used
+              return callback({
+                code: 'UPDATE_NONE',
+                data: params
+              });
+            }
+
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+              return callback({
+                code: 'DUPLICATE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
           });
-        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
 
-        return callback({
-          code: 'ERR_DATABASE',
-          data: err
-        });
-      });
-  } else {
-    callback({
-      code: 'INVALID_REQUEST',
-      message: 'Kesalahan pada parameter!'
-    });
-  }
+      callback(null, result);
+    }
+  );
 };
 
 exports.updateStatus = function(APP, req, callback) {
@@ -360,11 +382,11 @@ exports.delete = function(APP, req, callback) {
             }
           })
           .then(deleted => {
-            // if (!deleted)
-            //   return callback(null, {
-            //     code: 'DELETE_NONE',
-            //     data: params.where
-            //   });
+            if (!deleted)
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Department tidak ditemukan!'
+              });
 
             callback(null, {
               code: 'DELETE_SUCCESS',

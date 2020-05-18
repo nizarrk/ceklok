@@ -32,9 +32,11 @@ exports.sendMail = data => {
       if (error) {
         _logs_email
           .create({
+            company: data.company,
+            subject: data.subject,
             data: JSON.stringify(data),
             date: new Date(),
-            error: true
+            status: 'failed'
           })
           .then(() => {
             console.log('error send email');
@@ -44,13 +46,13 @@ exports.sendMail = data => {
             console.log('Error create', err);
           });
       } else {
-        console.log('berhasil harusnya');
-
         _logs_email
           .create({
+            company: data.company,
+            subject: data.subject,
             data: JSON.stringify(data),
             date: new Date(),
-            error: false
+            status: 'success'
           })
           .then(() => {
             console.log('Email sent: ' + info.response);

@@ -251,59 +251,90 @@ exports.customInsert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.benefit
-    .update(
-      {
-        name: req.body.name,
-        description: req.body.desc,
-        status: req.body.status
-      },
-      {
-        where: {
-          id: req.body.id
+  let { name, desc, id, status } = req.body;
+  let { benefit } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (name && desc && id && status) {
+          if (status == '1' || status == '0') {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter status!'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
         }
+      },
+
+      function update(data, callback) {
+        benefit
+          .update(
+            {
+              name: name,
+              description: desc,
+              status: status,
+              updated_at: new Date(),
+              action_by: req.user.id
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(result => {
+            // if (!result || (result && !result[0])) {
+            //   return callback({
+            //     code: 'INVALID_REQUEST',
+            //     message: 'Benefit tidak ditemukan!'
+            //   });
+            // }
+
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              message: 'Benefit berhasil diubah!',
+              data: result
+            });
+          })
+          .catch(err => {
+            console.log('iki error', err);
+
+            // if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+            //   let params = 'Error! Empty Query'; //This is only example, Object can also be used
+            //   return callback({
+            //     code: 'UPDATE_NONE',
+            //     data: params
+            //   });
+            // }
+
+            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+              return callback({
+                code: 'DUPLICATE',
+                data: params
+              });
+            }
+
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       }
-    )
-    .then(result => {
-      // if (!result || (result && !result[0])) {
-      //   let params = 'No data updated'; //This is only example, Object can also be used
-      //   return callback(null, {
-      //     code: 'UPDATE_NONE',
-      //     data: params
-      //   });
-      // }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
 
-      let params = 'Update Success'; //This is only example, Object can also be used
-      return callback(null, {
-        code: 'UPDATE_SUCCESS',
-        message: 'Benefit berhasil diubah!',
-        data: result
-      });
-    })
-    .catch(err => {
-      console.log('iki error', err);
-
-      // if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-      //   let params = 'Error! Empty Query'; //This is only example, Object can also be used
-      //   return callback({
-      //     code: 'UPDATE_NONE',
-      //     data: params
-      //   });
-      // }
-
-      if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-        let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-        return callback({
-          code: 'DUPLICATE',
-          data: params
-        });
-      }
-
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+      callback(null, result);
+    }
+  );
 };
 
 exports.updateStatus = function(APP, req, callback) {
@@ -414,31 +445,93 @@ exports.updateCustom = function(APP, req, callback) {
 };
 
 exports.delete = function(APP, req, callback) {
-  let params = {
-    where: {
-      id: req.body.id
-    }
-  };
-  APP.models.company[req.user.db].mysql.benefit
-    .destroy(params)
-    .then(deleted => {
-      if (!deleted)
-        return callback(null, {
-          code: 'DELETE_NONE',
-          data: params.where
-        });
+  let { grade_benefit, benefit } = APP.models.company[req.user.db].mysql;
+  async.waterfall(
+    [
+      function checkParam(callback) {
+        if (req.user.level === 2) {
+          if (req.body.id) {
+            callback(null, true);
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              id: '?',
+              message: 'Kesalahan pada parameter id'
+            });
+          }
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            id: '?',
+            message: 'Invalid User level'
+          });
+        }
+      },
 
-      return callback(null, {
-        code: 'DELETE_SUCCESS',
-        data: params.where
-      });
-    })
-    .catch(err => {
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+      function checkGradeBenefit(data, callback) {
+        grade_benefit
+          .findAll({
+            where: {
+              benefit_id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res.length == 0) {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                id: '',
+                message: 'Terdapat grade sedang mengunakan benefit ini!'
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: '?',
+              message: '?',
+              data: err
+            });
+          });
+      },
+
+      function deleteBenefit(data, callback) {
+        benefit
+          .destroy({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(deleted => {
+            if (!deleted)
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'Benefit tidak ditemukan!'
+              });
+
+            callback(null, {
+              code: 'DELETE_SUCCESS',
+              id: '?',
+              message: '',
+              data: deleted
+            });
+          })
+          .catch(err => {
+            return callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.deleteCustom = function(APP, req, callback) {

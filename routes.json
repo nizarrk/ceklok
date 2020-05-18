@@ -1516,5 +1516,19 @@
     "function": "deleteKnowledge",
     "level": 1,
     "auth": true
+  },
+  "/operational/email/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "listSentEmail",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/email/resend": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "resendEmail",
+    "level": 1,
+    "auth": true
   }
 }

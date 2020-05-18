@@ -1321,3 +1321,95 @@ exports.deleteKnowledge = (APP, req, callback) => {
       });
   }
 };
+
+exports.listSentEmail = (APP, req, callback) => {
+  let { _logs_email } = APP.models.mongo;
+
+  _logs_email
+    .find()
+    .then(res => {
+      if (res.length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'List Email tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
+exports.resendEmail = (APP, req, callback) => {
+  let { _logs_email } = APP.models.mongo;
+  let { id } = req.body;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (id) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter id!'
+          });
+        }
+      },
+
+      function getDetailsEmail(data, callback) {
+        _logs_email
+          .findOne({
+            _id: id
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'List Email tidak ditemukan!'
+              });
+            } else {
+              callback(null, JSON.parse(res.data));
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function resendMail(data, callback) {
+        try {
+          APP.mailer.sendMail(data);
+          callback(null, {
+            code: 'OK',
+            message: 'Berhasil mengirim ulang email!',
+            data: data
+          });
+        } catch (err) {
+          console.log(err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
