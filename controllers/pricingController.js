@@ -441,42 +441,7 @@ exports.update = function(APP, req, callback) {
         },
 
         function updatePricingFeature(data, callback) {
-          let features = feature.split(',');
-          let insert = [];
-          let update = [];
-
-          Promise.all(
-            features.map((x, index) => {
-              return pricing_feature
-                .findOne({
-                  where: {
-                    pricing_id: id,
-                    feature_id: x
-                  }
-                })
-                .then(res => {
-                  if (res == null) {
-                    insert.push({
-                      feature_id: x,
-                      pricing_id: id
-                    });
-
-                    return pricing_feature.bulkCreate(insert).then(() => {
-                      console.log(`id ${x} inserted`);
-                    });
-                  } else {
-                    return res
-                      .update({
-                        status: res.status == 0 ? 1 : 0
-                      })
-                      .then(updated => {
-                        console.log(`id ${x} updated`);
-                        update.push(updated);
-                      });
-                  }
-                });
-            })
-          ).then(() => {
+          if (feature === null) {
             // Use the mv() method to place the file somewhere on your server
             if (data.upload) {
               req.files.image.mv(data.path, function(err) {
@@ -494,13 +459,70 @@ exports.update = function(APP, req, callback) {
 
             callback(null, {
               code: 'UPDATE_SUCCESS',
-              data: {
-                result: data.result,
-                inserted: insert,
-                updated: update
-              }
+              data: data.result
             });
-          });
+          } else {
+            let features = feature.split(',');
+            let insert = [];
+            let update = [];
+
+            Promise.all(
+              features.map((x, index) => {
+                return pricing_feature
+                  .findOne({
+                    where: {
+                      pricing_id: id,
+                      feature_id: x
+                    }
+                  })
+                  .then(res => {
+                    if (res == null) {
+                      insert.push({
+                        feature_id: x,
+                        pricing_id: id
+                      });
+
+                      return pricing_feature.bulkCreate(insert).then(() => {
+                        console.log(`id ${x} inserted`);
+                      });
+                    } else {
+                      return res
+                        .update({
+                          status: res.status == 0 ? 1 : 0
+                        })
+                        .then(updated => {
+                          console.log(`id ${x} updated`);
+                          update.push(updated);
+                        });
+                    }
+                  });
+              })
+            ).then(() => {
+              // Use the mv() method to place the file somewhere on your server
+              if (data.upload) {
+                req.files.image.mv(data.path, function(err) {
+                  if (err) {
+                    console.log(err);
+
+                    return callback({
+                      code: 'ERR',
+                      id: 'PVS01',
+                      message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
+                    });
+                  }
+                });
+              }
+
+              callback(null, {
+                code: 'UPDATE_SUCCESS',
+                data: {
+                  result: data.result,
+                  inserted: insert,
+                  updated: update
+                }
+              });
+            });
+          }
         }
       ],
       (err, result) => {
