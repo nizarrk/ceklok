@@ -29,6 +29,9 @@ exports.get = function(APP, req, callback) {
       include: [
         {
           model: pricing_feature,
+          where: {
+            status: 1
+          },
           attributes: ['id', 'feature_id'],
           include: [
             {
@@ -72,6 +75,11 @@ exports.getPricingDetails = function(APP, req, callback) {
   let { pricing, pricing_feature, feature, feature_type } = APP.models.mysql;
   let arr = [];
 
+  pricing.hasMany(pricing_feature, {
+    sourceKey: 'id',
+    foreignKey: 'pricing_id'
+  });
+
   pricing_feature.belongsTo(feature, {
     targetKey: 'id',
     foreignKey: 'feature_id'
@@ -84,44 +92,37 @@ exports.getPricingDetails = function(APP, req, callback) {
 
   pricing
     .findOne({
+      include: [
+        {
+          model: pricing_feature,
+          include: [
+            {
+              model: feature,
+              include: [
+                {
+                  model: feature_type
+                }
+              ]
+            }
+          ]
+        }
+      ],
       where: {
         id: req.body.id
       }
     })
     .then(rows => {
       if (rows == null) {
-        return callback({
+        callback({
           code: 'NOT_FOUND',
           message: 'List pricing tidak ditemukan'
         });
-      }
-      let obj = {};
-
-      obj.pricing = rows.dataValues;
-
-      pricing_feature
-        .findAll({
-          include: [
-            {
-              model: feature,
-              attributes: ['id', 'name', 'description'],
-              include: [
-                {
-                  model: feature_type,
-                  attributes: ['id', 'name', 'description']
-                }
-              ]
-            }
-          ],
-          where: {
-            pricing_id: req.body.id
-          }
-        })
-        .then(res => {
-          res.map(z => {
-            obj.feature = z.dataValues;
-          });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: rows
         });
+      }
     })
     .catch(err => {
       console.log(err);
@@ -482,14 +483,17 @@ exports.update = function(APP, req, callback) {
                         pricing_id: id
                       });
 
-                      return pricing_feature.bulkCreate(insert).then(() => {
+                      return pricing_feature.bulkCreate(insert, { transaction: t }).then(() => {
                         console.log(`id ${x} inserted`);
                       });
                     } else {
                       return res
-                        .update({
-                          status: res.status == 0 ? 1 : 0
-                        })
+                        .update(
+                          {
+                            status: res.status == 0 ? 1 : 0
+                          },
+                          { transaction: t }
+                        )
                         .then(updated => {
                           console.log(`id ${x} updated`);
                           update.push(updated);
