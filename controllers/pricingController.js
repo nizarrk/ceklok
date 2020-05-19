@@ -307,106 +307,176 @@ exports.insert = function(APP, req, callback) {
 };
 
 exports.update = function(APP, req, callback) {
-  let { pricing } = APP.models.mysql;
-  let { id, name, desc, annual, monthly, onetime, annualmin, monthlymin, onetimemin, type } = req.body;
-  async.waterfall(
-    [
-      function checkBody(callback) {
-        if (id && name && desc && annual && monthly && onetime && annualmin && monthlymin && onetimemin && type) {
-          callback(null, true);
-        } else {
-          callback({
-            code: 'INVALID_REQUEST',
-            message: 'Kesalahan pada parameter!'
-          });
-        }
-      },
+  let { pricing, pricing_feature } = APP.models.mysql;
+  let { id, name, desc, annual, monthly, onetime, annualmin, monthlymin, onetimemin, type, feature } = req.body;
 
-      function getCurrentValues(result, callback) {
-        pricing
-          .findOne({
-            where: {
-              id: id
-            }
-          })
-          .then(res => {
-            if (res == null) {
-              callback({
-                code: 'NOT_FOUND',
-                message: 'Pricing tidak ditemukan'
-              });
-            } else {
-              callback(null, res.dataValues);
-            }
-          })
-          .catch(err => {
-            console.log('Error getCurrentValues', err);
+  APP.db.sequelize.transaction().then(t => {
+    async.waterfall(
+      [
+        function checkBody(callback) {
+          if (id && name && desc && annual && monthly && onetime && annualmin && monthlymin && onetimemin && type) {
+            callback(null, true);
+          } else {
             callback({
-              code: 'ERR_DATABASE',
-              message: 'Error getCurrentValues',
-              data: err
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter!'
             });
-          });
-      },
+          }
+        },
 
-      function uploadPath(result, callback) {
-        try {
-          let fileName = new Date().toISOString().replace(/:|\./g, '');
-          let imagePath = './public/uploads/pricing/';
-          // let path = imagePath + fileName + path.extname(req.files.image.name)
-
-          APP.fileCheck(req.files.image.data, 'image').then(res => {
-            if (res == null) {
-              callback({
-                code: 'INVALID_REQUEST',
-                message: 'File yang diunggah tidak sesuai!'
-              });
-            } else {
-              callback(null, {
-                path: imagePath + fileName + path.extname(req.files.image.name),
-                upload: true
-              });
-            }
-          });
-        } catch (err) {
-          callback(null, {
-            old: result.image,
-            upload: false
-          });
-        }
-      },
-
-      function updatePricing(data, callback) {
-        pricing
-          .update(
-            {
-              name: name,
-              description: desc,
-              annual_price: annual,
-              monthly_price: monthly,
-              one_time_price: onetime,
-              annual_minimum: annualmin,
-              monthly_minimum: monthlymin,
-              one_time_minimum: onetimemin,
-              image: data.upload ? data.path.slice(8) : data.old,
-              type: type,
-              updated_at: new Date(),
-              action_by: req.user.id
-            },
-            {
+        function getCurrentValues(result, callback) {
+          pricing
+            .findOne({
               where: {
                 id: id
               }
-            }
-          )
-          .then(result => {
-            if (!result || (result && !result[0])) {
-              let params = 'No data updated'; //This is only example, Object can also be used
-              return callback(null, {
-                code: 'UPDATE_NONE',
-                data: params
+            })
+            .then(res => {
+              if (res == null) {
+                callback({
+                  code: 'NOT_FOUND',
+                  message: 'Pricing tidak ditemukan'
+                });
+              } else {
+                callback(null, res.dataValues);
+              }
+            })
+            .catch(err => {
+              console.log('Error getCurrentValues', err);
+              callback({
+                code: 'ERR_DATABASE',
+                message: 'Error getCurrentValues',
+                data: err
               });
-            }
+            });
+        },
+
+        function uploadPath(result, callback) {
+          try {
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let imagePath = './public/uploads/pricing/';
+            // let path = imagePath + fileName + path.extname(req.files.image.name)
+
+            APP.fileCheck(req.files.image.data, 'image').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                callback(null, {
+                  path: imagePath + fileName + path.extname(req.files.image.name),
+                  upload: true
+                });
+              }
+            });
+          } catch (err) {
+            callback(null, {
+              old: result.image,
+              upload: false
+            });
+          }
+        },
+
+        function updatePricing(data, callback) {
+          pricing
+            .update(
+              {
+                name: name,
+                description: desc,
+                annual_price: annual,
+                monthly_price: monthly,
+                one_time_price: onetime,
+                annual_minimum: annualmin,
+                monthly_minimum: monthlymin,
+                one_time_minimum: onetimemin,
+                image: data.upload ? data.path.slice(8) : data.old,
+                type: type,
+                updated_at: new Date(),
+                action_by: req.user.id
+              },
+              {
+                where: {
+                  id: id
+                },
+                transaction: t
+              }
+            )
+            .then(result => {
+              // if (!result || (result && !result[0])) {
+              //   let params = 'No data updated'; //This is only example, Object can also be used
+              //   return callback(null, {
+              //     code: 'UPDATE_NONE',
+              //     data: params
+              //   });
+              // }
+
+              data.result = result;
+              return callback(null, data);
+            })
+            .catch(err => {
+              console.log('iki error', err);
+
+              if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
+                let params = 'Error! Empty Query'; //This is only example, Object can also be used
+                return callback({
+                  code: 'UPDATE_NONE',
+                  data: params
+                });
+              }
+
+              if (err.original && err.original.code === 'ER_DUP_ENTRY') {
+                let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
+                return callback({
+                  code: 'DUPLICATE',
+                  data: params
+                });
+              }
+
+              return callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        },
+
+        function updatePricingFeature(data, callback) {
+          let features = feature.split(',');
+          let insert = [];
+          let update = [];
+
+          Promise.all(
+            features.map((x, index) => {
+              return pricing_feature
+                .findOne({
+                  where: {
+                    pricing_id: id,
+                    feature_id: x
+                  }
+                })
+                .then(res => {
+                  if (res == null) {
+                    insert.push({
+                      feature_id: x,
+                      pricing_id: id
+                    });
+
+                    return pricing_feature.bulkCreate(insert).then(() => {
+                      console.log(`id ${x} inserted`);
+                    });
+                  } else {
+                    return res
+                      .update({
+                        status: res.status == 0 ? 1 : 0
+                      })
+                      .then(updated => {
+                        console.log(`id ${x} updated`);
+                        update.push(updated);
+                      });
+                  }
+                });
+            })
+          ).then(() => {
             // Use the mv() method to place the file somewhere on your server
             if (data.upload) {
               req.files.image.mv(data.path, function(err) {
@@ -422,55 +492,38 @@ exports.update = function(APP, req, callback) {
               });
             }
 
-            let params = 'Update Success'; //This is only example, Object can also be used
-            return callback(null, {
+            callback(null, {
               code: 'UPDATE_SUCCESS',
-              data: params
-            });
-          })
-          .catch(err => {
-            console.log('iki error', err);
-
-            if (err.original && err.original.code === 'ER_EMPTY_QUERY') {
-              let params = 'Error! Empty Query'; //This is only example, Object can also be used
-              return callback({
-                code: 'UPDATE_NONE',
-                data: params
-              });
-            }
-
-            if (err.original && err.original.code === 'ER_DUP_ENTRY') {
-              let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
-              return callback({
-                code: 'DUPLICATE',
-                data: params
-              });
-            }
-
-            return callback({
-              code: 'ERR_DATABASE',
-              data: err
+              data: {
+                result: data.result,
+                inserted: insert,
+                updated: update
+              }
             });
           });
+        }
+      ],
+      (err, result) => {
+        if (err) {
+          t.rollback();
+          return callback(err);
+        }
+        t.commit();
+        callback(null, result);
       }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
-
-      callback(null, result);
-    }
-  );
+    );
+  });
 };
 
 exports.updatePricingFeature = function(APP, req, callback) {
   let { pricing_feature } = APP.models.mysql;
 
-  let feature = req.body.feature.split(',');
+  let features = req.body.feature.split(',');
   let insert = [];
   let update = [];
 
   Promise.all(
-    feature.map((x, index) => {
+    features.map((x, index) => {
       return pricing_feature
         .findOne({
           where: {
