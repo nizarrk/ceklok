@@ -472,7 +472,8 @@ exports.delete = function(APP, req, callback) {
         grade_benefit
           .findAll({
             where: {
-              benefit_id: req.body.id
+              benefit_id: req.body.id,
+              status: 1
             }
           })
           .then(res => {

@@ -240,8 +240,12 @@ exports.update = function(APP, req, callback) {
     async.waterfall(
       [
         function checkBody(callback) {
-          if (name && desc && id && benefit && status) {
+          if (name && desc && id && status) {
+            console.log('1');
+
             if (status == '1' || status == '0') {
+              console.log('2');
+
               callback(null, true);
             } else {
               callback({
@@ -250,6 +254,8 @@ exports.update = function(APP, req, callback) {
               });
             }
           } else {
+            console.log('3');
+
             callback({
               code: 'INVALID_REQUEST',
               message: 'Kesalahan pada parameter!'
@@ -270,9 +276,9 @@ exports.update = function(APP, req, callback) {
               {
                 where: {
                   id: id
-                }
-              },
-              { transaction: t }
+                },
+                transaction: t
+              }
             )
             .then(result => {
               // if (!result || (result && !result[0])) {
@@ -317,12 +323,12 @@ exports.update = function(APP, req, callback) {
               message: 'Benefit Grade berhasil diubah!'
             });
           } else {
-            let benefit = benefit.split(','),
+            let benefits = benefit.split(','),
               insert = [],
               update = [];
 
             Promise.all(
-              benefit.map((x, index) => {
+              benefits.map((x, index) => {
                 return grade_benefit
                   .findOne({
                     where: {

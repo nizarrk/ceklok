@@ -150,9 +150,11 @@ exports.insert = (APP, req, callback) => {
       function uploadPath(data, callback) {
         trycatch(
           () => {
+            console.log(req.files);
+
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
-                code: 'ERR',
+                code: 'INVALID_REQUEST',
                 message: 'No files were uploaded.'
               });
             }

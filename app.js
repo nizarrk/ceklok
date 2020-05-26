@@ -507,61 +507,94 @@ async.series(
       );
     });
 
-    // CRON GENERATE DAILY ABSENCE EVERY 02.19
-    schedule.scheduleJob('19 2 * * *', function() {
+    // CRON GENERATE DAILY ABSENCE
+    let rule = new schedule.RecurrenceRule();
+    // rule.dayOfWeek = [0, 6];
+    rule.hour = [1, 2, 3, 4, 5];
+    // rule.minute = [45, 46, 47];
+    schedule.scheduleJob(rule, function() {
+      // console.log(rule.hour);
       db.sequelize
         .query('SELECT company_code FROM ceklok.company WHERE status = 1')
         .then(res => {
           Promise.all(
             res[0].map((x, i) => {
+              let arr = rule.minute;
               console.log(`Looping ke: ${i}`);
               console.log(`Company: ${x.company_code}`);
 
-              return presence.generateDailyPresence(
-                APP,
-                {
-                  body: {
-                    company: x.company_code
-                  }
-                },
-                (err, result) => {
-                  if (err)
-                    return resOutput(
+              return db.sequelize
+                .query(
+                  `
+                SELECT 
+                  value 
+                FROM 
+                  ${process.env.MYSQL_NAME}_${x.company_code}.presence_setting 
+                WHERE
+                  presence_setting_id = 2
+                `
+                )
+                .then(res => {
+                  let result = rule.hour.filter(x => x == res[0][0].value);
+
+                  if (result.length > 0 && new Date().getMinutes() === result[0]) {
+                    console.log(result);
+                    console.log(`Company: ${x.company_code}`);
+
+                    return presence.generateDailyPresence(
                       APP,
                       {
                         body: {
                           company: x.company_code
-                        },
-                        originalUrl: '/presence/generatepresence',
-                        customDate: new Date()
+                        }
                       },
-                      false,
-                      err,
-                      'err'
-                    );
+                      (err, result) => {
+                        if (err)
+                          return resOutput(
+                            APP,
+                            {
+                              body: {
+                                company: x.company_code
+                              },
+                              originalUrl: '/presence/generatepresence',
+                              customDate: new Date()
+                            },
+                            false,
+                            err,
+                            'err'
+                          );
 
-                  return resOutput(
-                    APP,
-                    {
-                      body: {
-                        company: x.company_code
-                      },
-                      originalUrl: '/presence/generatepresence',
-                      customDate: new Date()
-                    },
-                    false,
-                    result,
-                    'ok'
-                  );
-                }
-              );
+                        return resOutput(
+                          APP,
+                          {
+                            body: {
+                              company: x.company_code
+                            },
+                            originalUrl: '/presence/generatepresence',
+                            customDate: new Date()
+                          },
+                          false,
+                          result,
+                          'ok'
+                        );
+                      }
+                    );
+                  }
+                })
+                .catch(err => {
+                  console.log('Query Get Value Failed!', err);
+                });
             })
-          ).then(() => {
-            console.log('CRON Successfully Executed!');
-          });
+          )
+            .then(() => {
+              console.log('CRON Successfully Executed!');
+            })
+            .catch(err => {
+              console.log('CRON Failed!', err);
+            });
         })
         .catch(err => {
-          console.log('CRON Failed!', err);
+          console.log('Query Active Company Failed!', err);
         });
     });
 

@@ -68,7 +68,6 @@ exports.insert = function(APP, req, callback) {
           } else {
             callback(null, true);
           }
-          callback(null, true);
         } else {
           callback({
             code: 'INVALID_REQUEST',
@@ -192,7 +191,7 @@ exports.update = function(APP, req, callback) {
             let params = 'Update Success'; //This is only example, Object can also be used
             return callback(null, {
               code: 'UPDATE_SUCCESS',
-              data: params
+              data: result
             });
           })
           .catch(err => {

@@ -957,49 +957,94 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
 exports.dashboardAdminCeklokFeature = (APP, req, callback) => {
   let { _logs } = APP.models.mongo;
   let { endpoint } = APP.models.mysql;
-  let arr = [];
   let count = {};
   let all = 0;
-  endpoint
-    .findAndCountAll({
-      attributes: ['endpoint']
-    })
-    .then(res => {
-      res.rows.map((x, i) => {
-        arr.push(x.dataValues.endpoint);
-      });
 
-      Promise.all(
-        arr.map((y, i) => {
-          return _logs
-            .count({
-              endpoint: y
-            })
-            .then(logs => {
-              console.log(logs);
-
-              all += logs;
-              count[arr[i]] = logs;
-
-              return true;
-            })
-            .catch(err => {
-              console.log('Error getFeatureUsage', err);
-              callback({
-                code: 'ERR_DATABASE',
-                message: 'Error getFeatureUsage',
-                data: err
+  async.waterfall(
+    [
+      function getEndpoints(callback) {
+        endpoint
+          .findAndCountAll({
+            attributes: ['endpoint']
+          })
+          .then(res => {
+            Promise.all(
+              res.rows.map((x, i) => {
+                return x.dataValues.endpoint;
+              })
+            )
+              .then(arr => {
+                callback(null, arr);
+              })
+              .catch(err => {
+                console.log('Error getEndpoints', err);
+                callback({
+                  code: 'ERR',
+                  message: 'Error getEndpoints',
+                  data: err
+                });
               });
+          })
+          .catch(err => {
+            console.log('Error db getEndpoints', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error db getEndpoints',
+              data: err
             });
-        })
-      ).then(() => {
-        callback(null, {
-          code: 'OK',
-          data: {
-            feature_access: count,
-            all_feature_usage: all
-          }
-        });
-      });
-    });
+          });
+      },
+
+      function countEndpointFeatures(arr, callback) {
+        Promise.all(
+          arr.map((y, i) => {
+            return _logs
+              .count({
+                endpoint: y
+              })
+              .then(logs => {
+                console.log(logs);
+
+                all += logs;
+                count[arr[i]] = logs;
+
+                return true;
+              })
+              .catch(err => {
+                console.log('Error db countEndpointFeatures', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  message: 'Error db countEndpointFeatures',
+                  data: err
+                });
+              });
+          })
+        )
+          .then(() => {
+            callback(null, {
+              code: 'OK',
+              data: {
+                feature_access: count,
+                all_feature_usage: all
+              }
+            });
+
+            return;
+          })
+          .catch(err => {
+            console.log('Error countEndpointFeatures', err);
+            callback({
+              code: 'ERR',
+              message: 'Error countEndpointFeatures',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
