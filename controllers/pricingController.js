@@ -309,14 +309,33 @@ exports.insert = function(APP, req, callback) {
 
 exports.update = function(APP, req, callback) {
   let { pricing, pricing_feature } = APP.models.mysql;
-  let { id, name, desc, annual, monthly, onetime, annualmin, monthlymin, onetimemin, type, feature } = req.body;
+  let { id, name, desc, annual, monthly, status, onetime, annualmin, monthlymin, onetimemin, type, feature } = req.body;
 
   APP.db.sequelize.transaction().then(t => {
     async.waterfall(
       [
         function checkBody(callback) {
-          if (id && name && desc && annual && monthly && onetime && annualmin && monthlymin && onetimemin && type) {
-            callback(null, true);
+          if (
+            id &&
+            name &&
+            desc &&
+            annual &&
+            monthly &&
+            status &&
+            onetime &&
+            annualmin &&
+            monthlymin &&
+            onetimemin &&
+            type
+          ) {
+            if (status == '1' || status == '0') {
+              callback(null, true);
+            } else {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kesalahan pada parameter status!'
+              });
+            }
           } else {
             callback({
               code: 'INVALID_REQUEST',
@@ -393,6 +412,7 @@ exports.update = function(APP, req, callback) {
                 one_time_minimum: onetimemin,
                 image: data.upload ? data.path.slice(8) : data.old,
                 type: type,
+                status: status,
                 updated_at: new Date(),
                 action_by: req.user.id
               },
