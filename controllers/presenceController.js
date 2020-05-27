@@ -586,7 +586,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       if (found.length == 0) {
                         return presence_monthly
                           .create({
-                            presence_period_id: result.period,
+                            presence_period_id: result.period.id,
                             user_id: data.id,
                             date: moment().format('YYYY-MM-DD'),
                             total_time: '00:00:00',
