@@ -537,7 +537,7 @@ async.series(
                 .then(res => {
                   let result = rule.hour.filter(x => x == res[0][0].value);
 
-                  if (result.length > 0 && new Date().getMinutes() === result[0]) {
+                  if (result.length > 0 && new Date().getHours() === result[0]) {
                     console.log(result);
                     console.log(`Company: ${x.company_code}`);
 
