@@ -188,7 +188,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
               }
             ],
             where: {
-              presence_setting_id: result.status[3].id, // 'WA'
+              presence_setting_id: [result.status[0].id, result.status[3].id], // 'H' 'WA'
               date: {
                 $eq: yesterday.format('YYYY-MM-DD')
               }
@@ -196,7 +196,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
           })
           .then(res => {
             if (res.length == 0) {
-              console.log('Tidak ada WA');
+              console.log('Tidak ada WA & H');
               callback(null, {
                 status: result.status,
                 period: result.period,
@@ -1232,6 +1232,14 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
                 presence.check_out_device_id, presence.check_in_branch_id, 
                 presence.check_out_branch_id, presence.date, presence.check_in, 
                 presence.check_out, presence.total_time, presence.presence_setting_id, 
+                detail.latitude_checkin AS 'check_in_latitude',
+                detail.longitude_checkin AS 'check_in_longitude',
+                detail.latitude_checkout AS 'check_out_latitude',
+                detail.longitude_checkout AS 'check_out_longitude',
+                detail.image_checkin_a AS 'check_in_image_a',
+                detail.image_checkin_b AS 'check_in_image_b',
+                detail.image_checkout_a AS 'check_out_image_a',
+                detail.image_checkout_b AS 'check_out_image_b',
                 employee.id AS 'employee_id', 
                 employee.nik AS 'employee_nik', 
                 employee.name AS 'employee_name', 		
@@ -1249,6 +1257,8 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
                 presence_setting.description AS 'presence_status_description'
               FROM 
                 ${req.user.db}.presence AS presence 
+              LEFT OUTER JOIN
+              ${req.user.db}.presence_detail AS detail ON presence.id = detail.presence_id
               LEFT OUTER JOIN 
                 ${req.user.db}.employee AS employee ON presence.user_id = employee.id 
               LEFT OUTER JOIN 
