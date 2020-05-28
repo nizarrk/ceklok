@@ -393,18 +393,28 @@ exports.insert = function(APP, req, callback) {
 
           // ijin durasi jam
           else if (data.typeid == 0) {
+            let time = moment.utc(moment(timeend, 'HH:mm:ss').diff(moment(timestart, 'HH:mm:ss'))).format('HH:mm:ss');
+            let timeDay = moment.duration(data.schedule.time).asMilliseconds() / 2;
+            let timeIzin = moment.duration(time).asMilliseconds();
             let date = datestart;
             dateend = date;
 
-            callback(null, {
-              kode: data.kode,
-              days: 0,
-              typeid: data.typeid,
-              time:
-                data.cut == 0
-                  ? '00:00:00'
-                  : moment.utc(moment(timeend, 'HH:mm:ss').diff(moment(timestart, 'HH:mm:ss'))).format('HH:mm:ss')
-            });
+            // if jam izin lebih dari setengah jam kerja per hari
+            if (timeIzin > timeDay) {
+              callback(null, {
+                kode: data.kode,
+                days: 1,
+                typeid: data.typeid,
+                time: data.schedule.time
+              });
+            } else {
+              callback(null, {
+                kode: data.kode,
+                days: 0,
+                typeid: data.typeid,
+                time: data.cut == 0 ? '00:00:00' : time
+              });
+            }
           } else {
             callback({
               code: 'INVALID_REQUEST',

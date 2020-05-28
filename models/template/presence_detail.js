@@ -35,10 +35,16 @@ module.exports = function(sequelize, Sequelize) {
       image_checkin_b: {
         type: Sequelize.STRING
       },
+      image_checkin_c: {
+        type: Sequelize.STRING
+      },
       image_checkout_a: {
         type: Sequelize.STRING
       },
       image_checkout_b: {
+        type: Sequelize.STRING
+      },
+      image_checkout_c: {
         type: Sequelize.STRING
       },
       status: {

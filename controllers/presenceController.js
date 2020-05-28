@@ -254,7 +254,10 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       });
                   }
 
-                  if (leaveDay.length == 0 && data.check_in == '00:00:00' && data.check_out == '00:00:00') {
+                  if (
+                    leaveDay.length == 0 &&
+                    (data.presence_setting_id == 1 || (data.check_in == '00:00:00' && data.check_out == '00:00:00'))
+                  ) {
                     // check izin dan cuti
                     APP.db.sequelize
                       .query(
@@ -270,22 +273,27 @@ exports.generateDailyPresence = (APP, req, callback) => {
                       )
                       .then(found => {
                         if (found[0].length == 0) {
-                          // Data Absent Cuti Not Found == Absent
-                          presence
-                            .update(
-                              {
-                                presence_setting_id: result.status[4].id, // 'A'
-                                total_minus: data.schedule.work_time
-                              },
-                              {
-                                where: {
-                                  id: data.id
+                          if (data.presence_setting_id == 1) {
+                            console.log('cek aja lur!!!', data.user_id);
+                          } else {
+                            console.log('absen nangdi lur?', data.user_id);
+                            // Data Absent Cuti Not Found == Absent
+                            presence
+                              .update(
+                                {
+                                  presence_setting_id: result.status[4].id, // 'A'
+                                  total_minus: data.schedule.work_time
+                                },
+                                {
+                                  where: {
+                                    id: data.id
+                                  }
                                 }
-                              }
-                            )
-                            .then(updated => {
-                              console.log('Hasil A', updated);
-                            });
+                              )
+                              .then(updated => {
+                                console.log('Hasil A', updated);
+                              });
+                          }
                         } else {
                           // Data Absent Cuti Found
                           return found[0].map(x => {
@@ -293,8 +301,9 @@ exports.generateDailyPresence = (APP, req, callback) => {
                               presence
                                 .update(
                                   {
-                                    presence_setting_id: result.status[5].id, // 'I'
-                                    total_minus: x.time_total
+                                    presence_setting_id:
+                                      data.presence_setting_id == 1 ? result.status[0].id : result.status[5].id, //'H' 'I'
+                                    total_minus: APP.time.timeDuration([x.time_total, found[0][0].time_total])
                                   },
                                   {
                                     where: {
@@ -1083,7 +1092,7 @@ exports.checkInOutProcess = (APP, req, callback) => {
       function uploadPath(result, callback) {
         try {
           if (result.type == 'checkin') {
-            let images = [req.body.upload1, req.body.upload2];
+            let images = [req.body.upload1, req.body.upload2, req.body.upload3];
             let fileName = `${moment().format('YYMMDD')}_checkin_image_`;
             let dir = `./public/uploads/company_${req.user.code}/employee/presence/${req.body.label}/`;
 
@@ -1108,7 +1117,7 @@ exports.checkInOutProcess = (APP, req, callback) => {
               });
             });
           } else {
-            let images = [req.body.upload1, req.body.upload2];
+            let images = [req.body.upload1, req.body.upload2, req.body.upload3];
             let fileName = `${moment().format('YYMMDD')}_checkout_image_`;
             let dir = `./public/uploads/company_${req.user.code}/employee/presence/${req.body.label}/`;
 
@@ -1152,7 +1161,8 @@ exports.checkInOutProcess = (APP, req, callback) => {
               latitude_checkin: req.body.lat,
               longitude_checkin: req.body.lng,
               image_checkin_a: result.path[0].slice(8),
-              image_checkin_b: result.path[1].slice(8)
+              image_checkin_b: result.path[1].slice(8),
+              image_checkin_c: result.path[2].slice(8)
             })
             .then(created => {
               callback(null, {
@@ -1178,7 +1188,8 @@ exports.checkInOutProcess = (APP, req, callback) => {
                 latitude_checkout: req.body.lat,
                 longitude_checkout: req.body.lng,
                 image_checkout_a: result.path[0].slice(8),
-                image_checkout_b: result.path[1].slice(8)
+                image_checkout_b: result.path[1].slice(8),
+                image_checkout_c: result.path[2].slice(8)
               },
               {
                 where: {
