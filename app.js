@@ -511,7 +511,7 @@ async.series(
     let rule = new schedule.RecurrenceRule();
     // rule.dayOfWeek = [0, 6];
     rule.hour = [1, 2, 3, 4, 5];
-    // rule.minute = [45, 46, 47];
+    rule.minute = 5;
     schedule.scheduleJob(rule, function() {
       // console.log(rule.hour);
       db.sequelize
