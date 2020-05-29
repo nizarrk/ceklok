@@ -1252,7 +1252,7 @@ exports.getHistoryCheckInOut = (APP, req, callback) => {
                 detail.image_checkin_c AS 'check_in_image_c',
                 detail.image_checkout_a AS 'check_out_image_a',
                 detail.image_checkout_b AS 'check_out_image_b',
-                detail.image_checkout_b AS 'check_out_image_c',
+                detail.image_checkout_c AS 'check_out_image_c',
                 employee.id AS 'employee_id', 
                 employee.nik AS 'employee_nik', 
                 employee.name AS 'employee_name', 		
