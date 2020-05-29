@@ -178,11 +178,26 @@ exports.getById = (APP, req, callback) => {
           message: 'Request tidak ditemukan!'
         });
       } else {
-        callback(null, {
-          code: 'FOUND',
-          message: 'Request Ditemukan!',
-          data: res
-        });
+        if (req.user.level == 3) {
+          if (res.user_id == req.user.id) {
+            callback(null, {
+              code: 'FOUND',
+              message: 'Request Ditemukan!',
+              data: res
+            });
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Invalid Access!'
+            });
+          }
+        } else {
+          callback(null, {
+            code: 'FOUND',
+            message: 'Request Ditemukan!',
+            data: res
+          });
+        }
       }
     })
     .catch(err => {
@@ -774,7 +789,18 @@ exports.update = function(APP, req, callback) {
                     'Tidak bisa mengubah permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
                 });
               } else {
-                callback(null, res.dataValues);
+                if (req.user.level == 3) {
+                  if (res.user_id == req.user.id) {
+                    callback(null, res.dataValues);
+                  } else {
+                    callback({
+                      code: 'INVALID_REQUEST',
+                      message: 'Invalid Access!'
+                    });
+                  }
+                } else {
+                  callback(null, res.dataValues);
+                }
               }
             }
           });
@@ -1190,27 +1216,67 @@ exports.update = function(APP, req, callback) {
 };
 
 exports.delete = function(APP, req, callback) {
-  APP.models.company[req.user.db].mysql.absent_cuti
-    .findOne({
-      where: {
-        id: req.body.id
-      }
-    })
-    .then(res => {
-      if (res == null) {
-        return callback({
-          code: 'NOT_FOUND',
-          message: 'Data absen atau cuti tidak ditemukan'
-        });
-      }
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (req.body.id) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
 
-      if (res.status !== 0) {
-        return callback({
-          code: 'INVALID_REQUEST',
-          message: 'Tidak bisa menghapus permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
-        });
-      } else {
-        res
+      function getDetails(data, callback) {
+        APP.models.company[req.user.db].mysql.absent_cuti
+          .findOne({
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Data absen atau cuti tidak ditemukan'
+              });
+            }
+
+            if (res.status !== 0) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message:
+                  'Tidak bisa menghapus permintaan absen atau cuti karena permintaan sudah di approve atau di tolak'
+              });
+            } else {
+              if (req.user.level == 3) {
+                if (res.user_id == req.user.id) {
+                  callback(null, res.dataValues);
+                } else {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Invalid Access!'
+                  });
+                }
+              } else {
+                callback(null, res.dataValues);
+              }
+            }
+          })
+          .catch(err => {
+            console.log('error findOne', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error findOne',
+              data: err
+            });
+          });
+      },
+
+      function deleteReq(data, callback) {
+        data
           .destroy()
           .then(() => {
             return callback(null, {
@@ -1226,15 +1292,13 @@ exports.delete = function(APP, req, callback) {
             });
           });
       }
-    })
-    .catch(err => {
-      console.log('error findOne', err);
-      callback({
-        code: 'ERR_DATABASE',
-        message: 'Error findOne',
-        data: err
-      });
-    });
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.updateStatus = (APP, req, callback) => {

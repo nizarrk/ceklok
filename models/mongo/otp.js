@@ -13,6 +13,7 @@ module.exports = function(mongo) {
       // specifying `index: true` is optional if you do `unique: true`
     },
     count: Number,
+    failed: Number,
     expired_time: String,
     expired: String,
     active: String,

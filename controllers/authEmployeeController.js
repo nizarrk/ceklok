@@ -752,6 +752,7 @@ exports.forgotPassword = (APP, req, callback) => {
                 .findByIdAndUpdate(res._id, {
                   otp: otp,
                   count: res.count == 3 ? 1 : res.count + 1,
+                  failed: 0,
                   expired_time: moment()
                     .add(1, 'days')
                     .format('YYYY-MM-DD HH:mm:ss'),
@@ -763,13 +764,7 @@ exports.forgotPassword = (APP, req, callback) => {
                 .then(result => {
                   callback(null, {
                     code: 'UPDATE_SUCCESS',
-                    data: {
-                      row: result,
-                      otp: otp
-                    },
-                    info: {
-                      dataCount: result.length
-                    }
+                    message: 'Berhasil melakukan Forgot Password!'
                   });
                 })
                 .catch(err => {
@@ -787,6 +782,7 @@ exports.forgotPassword = (APP, req, callback) => {
                 email: req.body.email,
                 otp: otp,
                 count: 1,
+                failed: 0,
                 endpoint: req.originalUrl,
                 expired_time: moment()
                   .add(1, 'days')
@@ -800,13 +796,7 @@ exports.forgotPassword = (APP, req, callback) => {
               .then(res => {
                 callback(null, {
                   code: 'INSERT_SUCCESS',
-                  data: {
-                    row: res,
-                    otp: otp
-                  },
-                  info: {
-                    dataCount: res.length
-                  }
+                  message: 'Berhasil melakukan Forgot Password!'
                 });
               })
               .catch(err => {
@@ -857,31 +847,86 @@ exports.forgotPassword = (APP, req, callback) => {
 };
 
 exports.checkOTP = (APP, req, callback) => {
-  APP.models.mongo.otp
-    .findOne({
-      email: req.body.email,
-      otp: req.body.otp
-    })
-    .then(res => {
-      if (res == null) {
-        return callback({
-          code: 'NOT_FOUND',
-          message: 'Kode OTP salah atau tidak ditemukan'
-        });
-      }
-      callback(null, {
-        code: 'FOUND',
-        data: res
-      });
-    })
-    .catch(err => {
-      console.log(err);
+  let { email, company, otp } = req.body;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (email && otp) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter!'
+          });
+        }
+      },
 
-      callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+      function checkOTP(data, callback) {
+        APP.models.mongo.otp
+          .findOne({
+            email: email,
+            company: company,
+            endpoint: '/auth/forgotpassword',
+            expired: false
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Kode OTP tidak ditemukan atau sudah kedaluarsa!'
+              });
+            } else {
+              callback(null, res);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function updateOTP(data, callback) {
+        let cond1 = new Date().getTime() <= new Date(data.expired_time).getTime();
+        let cond2 = data.date.getTime() === req.currentDate.getTime() && data.failed < 3;
+        console.log(cond1);
+        console.log(cond2);
+
+        if (cond1 && cond2 && data.otp == otp) {
+          callback(null, {
+            code: 'FOUND',
+            data: data
+          });
+        } else {
+          data
+            .update({
+              failed: data.failed == 3 ? 3 : data.failed + 1,
+              expired: !cond1 ? true : !cond2 ? true : false
+            })
+            .then(() => {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Kode OTP tidak sesuai!'
+              });
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
+        }
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.resetPassword = (APP, req, callback) => {
@@ -949,58 +994,7 @@ exports.resetPassword = (APP, req, callback) => {
       },
 
       function checkOTP(data, callback) {
-        APP.models.mongo.otp
-          .findOne({
-            otp: otp,
-            expired: false
-          })
-          .then(res => {
-            if (res == null) {
-              callback({
-                code: 'INVALID_REQUEST',
-                id: '',
-                message: 'OTP tidak ditemukan!'
-              });
-            } else {
-              if (new Date().getTime() <= new Date(res.expired_time).getTime()) {
-                if (res.email == email) {
-                  res
-                    .update({
-                      expired: true
-                    })
-                    .then(updated => {
-                      callback(null, true);
-                    })
-                    .catch(err => {
-                      console.log(err);
-                      callback({
-                        code: 'ERR_DATABASE',
-                        data: err
-                      });
-                    });
-                } else {
-                  callback({
-                    code: 'INVALID_REQUEST',
-                    id: '',
-                    message: 'OTP tidak valid!'
-                  });
-                }
-              } else {
-                callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'OTP Expired! Silahkan mengajukan kode OTP baru!'
-                });
-              }
-            }
-          })
-          .catch(err => {
-            console.log('Error checkOTP', err);
-            callback({
-              code: 'ERR_DATABASE',
-              id: '',
-              data: err
-            });
-          });
+        module.exports.checkOTP(APP, req, callback);
       },
 
       function checkCompany(data, callback) {
