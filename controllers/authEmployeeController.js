@@ -813,8 +813,6 @@ exports.forgotPassword = (APP, req, callback) => {
 
       function sendEmail(data, callback) {
         try {
-          console.log(data.data.row.otp);
-
           //send to email
           APP.mailer.sendMail({
             subject: 'Reset Password',
