@@ -822,8 +822,6 @@ exports.importEmployeeData = (APP, req, callback) => {
             })
           )
             .then(arr => {
-              // console.log(arr);
-
               callback(null, arr);
             })
             .catch(err => {
@@ -839,7 +837,7 @@ exports.importEmployeeData = (APP, req, callback) => {
       function checkEmailEmployee(result, callback) {
         Promise.all(
           result.map((data, index) => {
-            APP.models.company[req.user.db].mysql.employee
+            return APP.models.company[req.user.db].mysql.employee
               .findAll({
                 where: {
                   email: data.email
