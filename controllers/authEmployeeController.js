@@ -821,8 +821,8 @@ exports.forgotPassword = (APP, req, callback) => {
 
           callback(null, {
             code: 'OK',
-            message: 'Berhasil melakukan lupa password!',
-            data: data
+            message: 'Berhasil melakukan lupa password!'
+            // data: data
           });
         } catch (err) {
           console.log('Error sendMail', err);
