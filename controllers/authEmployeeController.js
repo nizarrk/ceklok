@@ -717,20 +717,20 @@ exports.forgotPassword = (APP, req, callback) => {
           req.body.level == 1
             ? {
                 email: req.body.email,
-                date: req.currentDate,
+                // date: req.currentDate,
                 endpoint: req.originalUrl
               }
             : req.body.level == 2
             ? {
                 email: req.body.email,
-                date: req.currentDate,
+                // date: req.currentDate,
                 company: result.company_code,
                 endpoint: req.originalUrl
               }
             : req.body.level == 3
             ? {
                 email: req.body.email,
-                date: req.currentDate,
+                // date: req.currentDate,
                 company: result.company_code,
                 endpoint: req.originalUrl
               }
@@ -761,11 +761,9 @@ exports.forgotPassword = (APP, req, callback) => {
                   time: req.customTime,
                   elapsed_time: req.elapsedTime || '0'
                 })
-                .then(result => {
-                  callback(null, {
-                    code: 'UPDATE_SUCCESS',
-                    message: 'Berhasil melakukan Forgot Password!'
-                  });
+                .then(updated => {
+                  updated.new_otp = otp;
+                  callback(null, updated);
                 })
                 .catch(err => {
                   console.log('Error update createOTP', err);
@@ -793,11 +791,9 @@ exports.forgotPassword = (APP, req, callback) => {
                 time: req.customTime,
                 elapsed_time: req.elapsedTime || '0'
               })
-              .then(res => {
-                callback(null, {
-                  code: 'INSERT_SUCCESS',
-                  message: 'Berhasil melakukan Forgot Password!'
-                });
+              .then(created => {
+                created.new_otp = otp;
+                callback(null, created);
               })
               .catch(err => {
                 console.log('Error insert createOTP', err);
@@ -818,14 +814,15 @@ exports.forgotPassword = (APP, req, callback) => {
             subject: 'Reset Password',
             to: req.body.email,
             data: {
-              otp: data.data.otp
+              otp: data.new_otp
             },
             file: 'forgot_password.html'
           });
 
           callback(null, {
-            code: data.code,
-            data: data.data
+            code: 'OK',
+            message: 'Berhasil melakukan lupa password!',
+            data: data
           });
         } catch (err) {
           console.log('Error sendMail', err);
