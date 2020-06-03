@@ -1,9 +1,25 @@
 {
+  "/csrf/get": {
+    "method": "post",
+    "controller": "csrfController",
+    "function": "get",
+    "level": 0,
+    "auth": false
+  },
+  "/csrf/generate": {
+    "method": "post",
+    "controller": "csrfController",
+    "function": "getById",
+    "level": 0,
+    "csrf": true,
+    "auth": false
+  },
   "/test/connection": {
     "method": "post",
     "controller": "exampleController",
     "function": "test",
     "level": 0,
+    "csrf": true,
     "auth": false
   },
   "/test/tes": {

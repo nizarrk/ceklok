@@ -21,8 +21,9 @@ const msisdn = require('express-msisdn');
 const randomString = require('crypto-random-string');
 const presence = require('./controllers/presenceController');
 const cors = require('cors');
-
 const schedule = require('node-schedule');
+const csurf = require('csurf');
+const cookieParser = require('cookie-parser');
 
 // Your Database configurations.
 const db = require('./db.js');
@@ -59,6 +60,8 @@ app.use(
 
 // add msisdn middleware
 app.use(msisdn());
+
+app.use(cookieParser());
 
 /**
  * ExpressJS basic middlewares.
@@ -626,6 +629,35 @@ async.series(
         }
         next();
       });
+
+      //<----- CSRF CONFIG ----->
+      app.use(endpoint, csurf({ cookie: true }));
+
+      app.use(endpoint, (req, res, next) => {
+        res.cookie('XSRF-TOKEN', req.csrfToken());
+        res.locals.csrftoken = req.csrfToken();
+        next();
+      });
+
+      app.use(endpoint, (err, req, res, next) => {
+        if (err.code != 'EBADCSRFTOKEN') return next(err);
+        if (!routes[endpoint].csrf) {
+          // handle CSRF token errors here
+          res.status(401).send({
+            code: '01',
+            status: 401,
+            from: '',
+            info: {},
+            message: 'CSRF INVALID',
+            error: true
+          });
+        } else {
+          next();
+        }
+      });
+
+      //<----- END CSRF CONFIG ----->
+
       if (routes[endpoint].auth) {
         app.use(endpoint, require('./functions/verifyToken'));
 
