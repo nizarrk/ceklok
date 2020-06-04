@@ -3,24 +3,145 @@
 const async = require('async');
 
 exports.get = function(APP, req, callback) {
-  let { user_type } = APP.models.mysql;
-  user_type
-    .findAll()
-    .then(rows => {
-      return callback(null, {
-        code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
-        data: rows,
-        info: {
-          dataCount: rows.length
+  let query;
+
+  async.waterfall(
+    [
+      function checkLevel(callback) {
+        if (req.user.level == 2) {
+          query = APP.models.company[req.user.db].mysql.user_type;
+          callback(null, true);
+        } else {
+          query = APP.models.mysql.user_type;
+          callback(null, true);
         }
-      });
-    })
-    .catch(err => {
-      return callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+      },
+
+      function getData(data, callback) {
+        query
+          .findAll()
+          .then(rows => {
+            if (rows.length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Data tidak ditemukan!'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                message: 'Data ditemukan!',
+                data: rows
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.getById = function(APP, req, callback) {
+  let user_type;
+  let user_type_feature;
+  let feature = APP.models.mysql.feature;
+  let subfeature = APP.models.mysql.subfeature;
+
+  async.waterfall(
+    [
+      function checkLevel(callback) {
+        if (req.user.level == 2) {
+          user_type = APP.models.company[req.user.db].mysql.user_type;
+          user_type_feature = APP.models.company[req.user.db].mysql.user_type_feature;
+
+          callback(null, true);
+        } else {
+          user_type = APP.models.mysql.user_type;
+          user_type_feature = APP.models.mysql.user_type_feature;
+
+          callback(null, true);
+        }
+      },
+
+      function getData(data, callback) {
+        user_type.hasMany(user_type_feature, {
+          sourceKey: 'id',
+          foreignKey: 'user_type_id'
+        });
+
+        user_type_feature.belongsTo(subfeature, {
+          targetKey: 'id',
+          foreignKey: 'subfeature_id'
+        });
+
+        subfeature.belongsTo(feature, {
+          targetKey: 'id',
+          foreignKey: 'feature_id'
+        });
+
+        user_type
+          .findOne({
+            include: [
+              {
+                model: user_type_feature,
+                attributes: ['id', 'user_type_id', 'subfeature_id'],
+                include: [
+                  {
+                    model: subfeature,
+                    attributes: ['id', 'name', 'description'],
+                    include: [
+                      {
+                        model: feature,
+                        attributes: ['id', 'name', 'description']
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            where: {
+              id: req.body.id
+            }
+          })
+          .then(rows => {
+            if (rows == null) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Data tidak ditemukan!'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                message: 'Data ditemukan!',
+                data: rows
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.createUserType = function(APP, req, callback) {

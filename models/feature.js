@@ -45,7 +45,9 @@ module.exports = function(sequelize, Sequelize) {
         defaultValue: '127.0.0.1'
       }
     },
-    {}
+    {
+      schema: 'ceklok' // add this line
+    }
   );
 
   // Model.associate = function(models) {};
