@@ -1015,6 +1015,20 @@
     "level": 1,
     "auth": true
   },
+  "/user/type/get": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "get",
+    "level": 5,
+    "auth": true
+  },
+  "/user/type/getbyid": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "getById",
+    "level": 5,
+    "auth": true
+  },
   "/user/type/insert": {
     "method": "post",
     "controller": "userTypeController",
