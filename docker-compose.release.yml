@@ -15,12 +15,10 @@ services:
     container_name: release-ceklok-coreplatform
     image: gitlab.vascomm.co.id:4567/ceklok/ceklok-core-platform:latest_release
     networks:
-      ceklok :
-        aliases:
-          - ceklok-core
+      - vascomm-app
     restart: always
 
 networks:
-  ceklok:
-    name: ceklok
+  vascomm-app:
+    name: vascomm-app
     driver: bridge
