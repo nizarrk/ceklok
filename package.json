@@ -32,6 +32,7 @@
   "dependencies": {
     "@tensorflow/tfjs-node": "^1.7.2",
     "async": "^3.1.0",
+    "axios": "^0.19.2",
     "bcrypt": "^3.0.6",
     "body-parser": "^1.18.2",
     "canvas": "^2.6.1",
