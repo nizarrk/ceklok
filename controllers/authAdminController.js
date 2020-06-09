@@ -9,6 +9,7 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const moment = require('moment');
 const verifyController = require('./verifyController');
+const axios = require('axios');
 
 exports.checkExistingEmailCompany = (APP, req, callback) => {
   APP.models.mysql.company
@@ -275,6 +276,8 @@ exports.register = (APP, req, callback) => {
               });
             })
             .catch(err => {
+              console.log(err);
+
               if (err.original && err.original.code === 'ER_DUP_ENTRY') {
                 let params = 'Error! Duplicate Entry'; //This is only example, Object can also be used
                 return callback({
@@ -308,6 +311,86 @@ exports.register = (APP, req, callback) => {
             });
         },
 
+        function registerAdminToSupportPal(data, callback) {
+          let fullname = req.body.admin.name.split(' ');
+          let firstname = fullname[0];
+          let lastname = fullname[fullname.length - 1];
+
+          axios({
+            method: 'POST',
+            auth: {
+              username: process.env.SUPP_TOKEN,
+              password: ''
+            },
+            url: `${process.env.SUPP_HOST}/api/user/user`,
+            data: {
+              brand_id: process.env.SUPP_BRAND_ID,
+              firstname: firstname,
+              lastname: lastname,
+              email: req.body.admin.email,
+              password: data.pass,
+              organisation: 'CEKLOK'
+            }
+          })
+            .then(res => {
+              callback(null, {
+                pass: data.pass,
+                company: data.company,
+                support: res.data.data
+              });
+            })
+            .catch(err => {
+              if (
+                err.response.data.status == 'error' &&
+                err.response.data.message == 'The email has already been taken.'
+              ) {
+                callback(null, {
+                  pass: data.pass,
+                  company: data.company
+                });
+              } else {
+                callback({
+                  code: 'ERR',
+                  message: err.response.data.message,
+                  data: err
+                });
+              }
+            });
+        },
+
+        function getSupportPalId(data, callback) {
+          axios({
+            method: 'GET',
+            auth: {
+              username: process.env.SUPP_TOKEN,
+              password: ''
+            },
+            url: `${process.env.SUPP_HOST}/api/user/user?email=${req.body.admin.email}&brand_id=${process.env.SUPP_BRAND_ID}`
+          })
+            .then(res => {
+              if (res.data.data.length == 0) {
+                callback({
+                  code: 'NOT_FOUND',
+                  message: 'Email tidak ditemukan!'
+                });
+              } else {
+                callback(null, {
+                  pass: data.pass,
+                  company: data.company,
+                  support: res.data.data[0]
+                });
+              }
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR',
+                message: err.response.data.message,
+                data: err
+              });
+            });
+        },
+
         function registerAdmin(data, callback) {
           let email = APP.validation.email(req.body.admin.email);
           let username = APP.validation.username(req.body.admin.username);
@@ -316,6 +399,7 @@ exports.register = (APP, req, callback) => {
             admin
               .create(
                 {
+                  support_pal_id: data.support.id,
                   company_id: data.company.id,
                   name: req.body.admin.name,
                   gender: req.body.admin.gender,
@@ -867,6 +951,7 @@ exports.login = (APP, req, callback) => {
             ],
             attributes: [
               'id',
+              'support_pal_id',
               'company_id',
               'company_code',
               'name',
@@ -940,6 +1025,7 @@ exports.login = (APP, req, callback) => {
                 .then(() => {
                   callback(null, {
                     id: rows[0].id,
+                    support_pal_id: rows[0].support_pal_id,
                     company_id: rows[0].company_id,
                     company_code: rows[0].company_code,
                     company_name: rows[0].company.name,

@@ -8,6 +8,7 @@ const moment = require('moment');
 const trycatch = require('trycatch');
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios');
 
 const generateEmployeeCode = async (APP, req, index) => {
   let tgl = new Date().getDate().toString();
@@ -263,6 +264,86 @@ exports.register = (APP, req, callback) => {
         }
       },
 
+      function registerToSupportPal(data, callback) {
+        let fullname = req.body.name.split(' ');
+        let firstname = fullname[0];
+        let lastname = fullname[fullname.length - 1];
+
+        axios({
+          method: 'POST',
+          auth: {
+            username: process.env.SUPP_TOKEN,
+            password: ''
+          },
+          url: `${process.env.SUPP_HOST}/api/user/user`,
+          data: {
+            brand_id: process.env.SUPP_BRAND_ID,
+            firstname: firstname,
+            lastname: lastname,
+            email: req.body.email,
+            password: data.pass,
+            organisation: 'CEKLOK'
+          }
+        })
+          .then(res => {
+            callback(null, {
+              pass: data.pass,
+              kode: data.kode,
+              support: res.data.data
+            });
+          })
+          .catch(err => {
+            if (
+              err.response.data.status == 'error' &&
+              err.response.data.message == 'The email has already been taken.'
+            ) {
+              callback(null, {
+                pass: data.pass,
+                kode: data.kode
+              });
+            } else {
+              callback({
+                code: 'ERR',
+                message: err.response.data.message,
+                data: err
+              });
+            }
+          });
+      },
+
+      function getSupportPalId(data, callback) {
+        axios({
+          method: 'GET',
+          auth: {
+            username: process.env.SUPP_TOKEN,
+            password: ''
+          },
+          url: `${process.env.SUPP_HOST}/api/user/user?email=${req.body.email}&brand_id=${process.env.SUPP_BRAND_ID}`
+        })
+          .then(res => {
+            if (res.data.data.length == 0) {
+              callback({
+                code: 'NOT_FOUND',
+                message: 'Email tidak ditemukan!'
+              });
+            } else {
+              callback(null, {
+                pass: data.pass,
+                kode: data.kode,
+                support: res.data.data[0]
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              message: err.response.data.message,
+              data: err
+            });
+          });
+      },
+
       function registerUser(data, callback) {
         let email = APP.validation.email(req.body.email);
         let username = APP.validation.username(req.body.username);
@@ -270,6 +351,7 @@ exports.register = (APP, req, callback) => {
         if (email && username) {
           APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
             .build({
+              support_pal_id: data.support.id,
               employee_code: data.kode,
               company_code: req.body.company,
               nik: req.body.nik,
@@ -342,6 +424,11 @@ exports.register = (APP, req, callback) => {
 };
 
 exports.login = (APP, req, callback) => {
+  // Cookies that have not been signed
+  console.log('Cookies: ', req.cookies);
+
+  // Cookies that have been signed
+  console.log('Signed Cookies: ', req.signedCookies);
   let { employee, employee_face } = APP.models.company[
     process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()
   ].mysql;
@@ -402,6 +489,7 @@ exports.login = (APP, req, callback) => {
             ],
             attributes: [
               'id',
+              'support_pal_id',
               'company_code',
               'name',
               'password',
@@ -475,6 +563,7 @@ exports.login = (APP, req, callback) => {
                 .then(() => {
                   callback(null, {
                     id: rows[0].id,
+                    support_pal_id: rows[0].support_pal_id,
                     company_code: rows[0].company_code,
                     name: rows[0].name,
                     photo: rows[0].photo,
@@ -892,7 +981,8 @@ exports.checkOTP = (APP, req, callback) => {
         if (cond1 && cond2 && data.otp == otp) {
           callback(null, {
             code: 'FOUND',
-            data: data
+            message: 'OTP ditemukan!'
+            // data: data
           });
         } else {
           data
@@ -1053,26 +1143,24 @@ exports.resetPassword = (APP, req, callback) => {
                 code: 'NOT_FOUND',
                 data: null
               });
+            } else {
+              res
+                .update({
+                  password: result,
+                  updated_at: new Date()
+                })
+                .then(res => {
+                  callback(null, res);
+                })
+                .catch(err => {
+                  console.log('Error update updatePassword', err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    message: 'Error update updatePassword',
+                    data: err
+                  });
+                });
             }
-            res
-              .update({
-                password: result,
-                updated_at: new Date()
-              })
-              .then(res => {
-                callback(null, {
-                  code: 'UPDATE_SUCCESS',
-                  data: res
-                });
-              })
-              .catch(err => {
-                console.log('Error update updatePassword', err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  message: 'Error update updatePassword',
-                  data: err
-                });
-              });
           })
           .catch(err => {
             console.log('Error findOne updatePassword', err);
@@ -1081,6 +1169,34 @@ exports.resetPassword = (APP, req, callback) => {
               message: 'Error findOne updatePassword',
               data: err
             });
+          });
+      },
+
+      function updateOTPStatus(data, callback) {
+        APP.models.mongo.otp
+          .findOne({
+            email: email,
+            otp: otp,
+            endpoint: '/auth/forgotpassword'
+          })
+          .then(res => {
+            res
+              .update({
+                expired: true
+              })
+              .then(() => {
+                callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: data
+                });
+              })
+              .catch(err => {
+                console.log(err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  data: err
+                });
+              });
           });
       }
     ],

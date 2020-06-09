@@ -11,6 +11,9 @@ module.exports = function(sequelize, Sequelize) {
         allowNull: false,
         unique: true
       },
+      support_pal_id: {
+        type: Sequelize.STRING(100)
+      },
       priviledge_id: {
         type: Sequelize.STRING(100)
       },
