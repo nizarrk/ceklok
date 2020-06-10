@@ -173,6 +173,7 @@ exports.generateDailyPresence = (APP, req, callback) => {
 
       function checkYesterdayPresence(result, callback) {
         let yesterday = moment().subtract(1, 'days');
+        console.log(yesterday);
 
         presence.belongsTo(schedule, {
           targetKey: 'id',
@@ -258,6 +259,8 @@ exports.generateDailyPresence = (APP, req, callback) => {
                     leaveDay.length == 0 &&
                     (data.presence_setting_id == 1 || (data.check_in == '00:00:00' && data.check_out == '00:00:00'))
                   ) {
+                    console.log('masuk cek izin');
+
                     // check izin dan cuti
                     APP.db.sequelize
                       .query(
@@ -298,19 +301,41 @@ exports.generateDailyPresence = (APP, req, callback) => {
                           // Data Absent Cuti Found
                           return found[0].map(x => {
                             if (x.type == 0) {
+                              let params = {};
+                              if (x.time_total > data.total_over) {
+                                params = {
+                                  presence_setting_id:
+                                    data.presence_setting_id == 1
+                                      ? result.status[0].id // 'H'
+                                      : result.status[5].id, //'I'
+                                  total_minus: APP.time.timeDuration([x.time_total, data.total_minus]),
+                                  total_over: '00:00:00'
+                                };
+                              } else if (x.time_total < data.total_over) {
+                                params = {
+                                  presence_setting_id:
+                                    data.presence_setting_id == 1
+                                      ? result.status[0].id // 'H'
+                                      : result.status[5].id, //'I'
+                                  total_minus: '00:00:00',
+                                  total_over: APP.time.timeDuration([x.time_total, data.total_over])
+                                };
+                              } else {
+                                params = {
+                                  presence_setting_id:
+                                    data.presence_setting_id == 1
+                                      ? result.status[0].id // 'H'
+                                      : result.status[5].id, //'I'
+                                  total_minus: x.time_total
+                                };
+                              }
+
                               presence
-                                .update(
-                                  {
-                                    presence_setting_id:
-                                      data.presence_setting_id == 1 ? result.status[0].id : result.status[5].id, //'H' 'I'
-                                    total_minus: APP.time.timeDuration([x.time_total, found[0][0].time_total])
-                                  },
-                                  {
-                                    where: {
-                                      id: data.id
-                                    }
+                                .update(params, {
+                                  where: {
+                                    id: data.id
                                   }
-                                )
+                                })
                                 .then(updated => {
                                   console.log('hasile I', updated);
                                 });
