@@ -1253,7 +1253,7 @@ exports.delete = function(APP, req, callback) {
             } else {
               if (req.user.level == 3) {
                 if (res.user_id == req.user.id) {
-                  callback(null, res.dataValues);
+                  callback(null, res);
                 } else {
                   callback({
                     code: 'INVALID_REQUEST',
@@ -1261,7 +1261,7 @@ exports.delete = function(APP, req, callback) {
                   });
                 }
               } else {
-                callback(null, res.dataValues);
+                callback(null, res);
               }
             }
           })
