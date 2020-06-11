@@ -197,6 +197,25 @@ exports.createUserAdmin = (APP, req, callback) => {
         module.exports.checkExistingCredentialsAdmin(APP, req, callback);
       },
 
+      function checkUserType(result, callback) {
+        APP.models.company[req.user.db].mysql.user_type
+          .findOne({
+            where: {
+              id: req.body.user_type_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'User Type tidak ditemukan!'
+              });
+            } else {
+              callback(null, true);
+            }
+          });
+      },
+
       function encryptPassword(result, callback) {
         let randomPass = Math.random()
           .toString(36)
@@ -310,6 +329,7 @@ exports.createUserAdmin = (APP, req, callback) => {
           APP.models.mysql.admin
             .build({
               support_pal_id: data.support.id,
+              user_type_id: req.body.user_type_id,
               company_id: req.user.company,
               company_code: req.user.code,
               name: req.body.name,
@@ -418,6 +438,25 @@ exports.createUserAdminCeklok = (APP, req, callback) => {
         module.exports.checkExistingCredentialsAdminCeklok(APP, req, callback);
       },
 
+      function checkUserType(result, callback) {
+        APP.models.mysql.user_type
+          .findOne({
+            where: {
+              id: req.body.user_type_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'User Type tidak ditemukan!'
+              });
+            } else {
+              callback(null, true);
+            }
+          });
+      },
+
       function encryptPassword(result, callback) {
         let randomPass = Math.random()
           .toString(36)
@@ -455,6 +494,7 @@ exports.createUserAdminCeklok = (APP, req, callback) => {
           APP.models.mysql.admin_app
             .build({
               name: req.body.name,
+              user_type_id: req.body.user_type_id,
               email: req.body.email,
               user_name: req.body.username,
               password: data.encryptedPass,
