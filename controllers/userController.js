@@ -701,21 +701,26 @@ exports.getDetailsUser = (APP, req, callback) => {
 };
 
 exports.editUserAdminCompany = (APP, req, callback) => {
-  let { id, name, gender, pob, dob, address, telp, email, username, user_type_id } = req.body;
+  let { id, name, gender, pob, dob, address, status, telp, email, username, user_type_id } = req.body;
   let { admin } = APP.models.mysql;
   let { user_type } = APP.models.company[req.user.db].mysql;
   async.waterfall(
     [
       function checkBody(callback) {
-        if (id && name && gender && pob && dob && address && telp && email && username && user_type_id) {
-          if (gender == '1' || gender == '2' || gender == '3') {
-            callback(null, true);
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              message: 'Kesalahan pada parameter gender!'
-            });
-          }
+        if (id && name && gender && address && telp && email && username && status && user_type_id) {
+          // if (gender !== '1' || gender !== '2' || gender !== '3')
+          // return callback({
+          //   code: 'INVALID_REQUEST',
+          //   message: 'Kesalahan pada parameter gender!'
+          // });
+
+          // if (status !== '0' || status !== '1' || status !== '2')
+          // return callback({
+          //   code: 'INVALID_REQUEST',
+          //   message: 'Kesalahan pada parameter status!'
+          // });
+
+          callback(null, true);
         } else {
           callback({
             code: 'INVALID_REQUEST',
@@ -750,8 +755,8 @@ exports.editUserAdminCompany = (APP, req, callback) => {
               user_type_id: user_type_id,
               name: name,
               gender: gender,
-              pob: pob,
-              dob: dob,
+              // pob: pob,
+              // dob: dob,
               address: address,
               // kelurahan: kel,
               // kecamatan: kec,
@@ -761,7 +766,10 @@ exports.editUserAdminCompany = (APP, req, callback) => {
               // msisdn: 'default',
               tlp: telp,
               email: email,
-              user_name: username
+              user_name: username,
+              status: status,
+              action_by: req.user.id,
+              updated_at: new Date()
             },
             {
               where: {
@@ -793,20 +801,25 @@ exports.editUserAdminCompany = (APP, req, callback) => {
 };
 
 exports.editUserAdminCeklok = (APP, req, callback) => {
-  let { id, name, gender, pob, dob, address, telp, email, username, user_type_id } = req.body;
+  let { id, name, gender, address, telp, email, username, status, user_type_id } = req.body;
   let { admin_app, user_type } = APP.models.mysql;
   async.waterfall(
     [
       function checkBody(callback) {
-        if (id && name && gender && pob && dob && address && telp && email && username && user_type_id) {
-          if (gender == '1' || gender == '2' || gender == '3') {
-            callback(null, true);
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              message: 'Kesalahan pada parameter gender!'
-            });
-          }
+        if (id && name && gender && address && telp && email && username && status && user_type_id) {
+          // if (gender !== '1' || gender !== '2' || gender !== '3')
+          // return callback({
+          //   code: 'INVALID_REQUEST',
+          //   message: 'Kesalahan pada parameter gender!'
+          // });
+
+          // if (status !== '0' || status !== '1' || status !== '2')
+          // return callback({
+          //   code: 'INVALID_REQUEST',
+          //   message: 'Kesalahan pada parameter status!'
+          // });
+
+          callback(null, true);
         } else {
           callback({
             code: 'INVALID_REQUEST',
@@ -841,8 +854,8 @@ exports.editUserAdminCeklok = (APP, req, callback) => {
               user_type_id: user_type_id,
               name: name,
               gender: gender,
-              pob: pob,
-              dob: dob,
+              // pob: pob,
+              // dob: dob,
               address: address,
               // kelurahan: kel,
               // kecamatan: kec,
@@ -852,7 +865,10 @@ exports.editUserAdminCeklok = (APP, req, callback) => {
               // msisdn: 'default',
               tlp: telp,
               email: email,
-              user_name: username
+              user_name: username,
+              status: status,
+              action_by: req.user.id,
+              updated_at: new Date()
             },
             {
               where: {
