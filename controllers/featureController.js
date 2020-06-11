@@ -113,7 +113,7 @@ exports.displayFeatureCompany = function(APP, req, callback) {
                         c.name AS subfeature_name, c.description AS subfeature_description, 
                         d.name AS type_name, d.description AS type_description
                     FROM 
-                        ceklok_VST1912231.feature_active as a
+                        ${req.user.db}.feature_active as a
                     JOIN 
                         ceklok.feature AS b 
                     ON 
