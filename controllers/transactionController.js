@@ -238,12 +238,29 @@ exports.transactionDetail = (APP, req, callback) => {
                 message: 'Data tidak ditemukan'
               });
             } else {
-              callback(null, {
-                code: 'FOUND',
-                id: '?',
-                message: 'Data ditemukan',
-                data: rows
-              });
+              if (req.user.level == 2) {
+                console.log(rows.company_id);
+                console.log(req.user.company);
+
+                if (rows.company_id == req.user.company) {
+                  callback(null, {
+                    code: 'FOUND',
+                    message: 'Data Ditemukan!',
+                    data: rows
+                  });
+                } else {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Invalid Access!'
+                  });
+                }
+              } else {
+                callback(null, {
+                  code: 'FOUND',
+                  message: 'Data Ditemukan!',
+                  data: rows
+                });
+              }
             }
           })
           .catch(err => {
