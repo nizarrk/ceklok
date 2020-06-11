@@ -276,8 +276,8 @@ exports.update = function(APP, req, callback) {
               {
                 where: {
                   id: id
-                },
-                transaction: t
+                }
+                // transaction: t
               }
             )
             .then(result => {
