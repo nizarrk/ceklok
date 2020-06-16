@@ -11,7 +11,7 @@
     "controller": "csrfController",
     "function": "getById",
     "level": 0,
-    "csrf": true,
+    "csrf": false,
     "auth": false
   },
   "/test/connection": {
@@ -19,7 +19,7 @@
     "controller": "exampleController",
     "function": "test",
     "level": 0,
-    "csrf": true,
+    "csrf": false,
     "auth": false
   },
   "/test/tes": {
@@ -1043,6 +1043,13 @@
     "level": 5,
     "auth": true
   },
+  "/user/type/delete": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "delete",
+    "level": 5,
+    "auth": true
+  },
   "/user/type/updatefeature": {
     "method": "post",
     "controller": "userTypeController",
@@ -1559,6 +1566,27 @@
     "controller": "operationalSupportSystemController",
     "function": "resendEmail",
     "level": 1,
+    "auth": true
+  },
+  "/services/add": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/services/update": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/services/delete": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "delete",
+    "level": 2,
     "auth": true
   }
 }
