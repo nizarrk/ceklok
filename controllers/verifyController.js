@@ -8,6 +8,7 @@ const mkdirp = require('mkdirp');
 const trycatch = require('trycatch');
 const key = require('../config/jwt-key.json');
 const jwt = require('jsonwebtoken');
+const moment = require('moment');
 
 exports.freemiumVerify = (APP, result, req, callback) => {
   let {
@@ -331,6 +332,7 @@ exports.freemiumVerify = (APP, result, req, callback) => {
             APP.models.company[data.dbName].mysql.presence_setting
               .bulkCreate(arr)
               .then(() => {
+                data.presence_setting = arr;
                 callback(null, data);
               })
               .catch(err => {
@@ -342,6 +344,39 @@ exports.freemiumVerify = (APP, result, req, callback) => {
               });
           });
         });
+      },
+
+      function setDefaultValuePresencePeriod(data, callback) {
+        console.log(data);
+
+        // let monthName = moment().format('MMMM'),
+        //     value = data[9].value,
+        //     year = moment().format('YYYY'),
+        //     date = value.split(','),
+        //     dateStart = `${moment().subtract(1, 'month').format('YYYY-MM')}-${date[0]}`,
+        //     dateEnd = `${moment().format('YYYY-MM')}-${date[1]}`;
+
+        // presence_period
+        //   .create({
+        //     name: monthName,
+        //     description: 'Initial Generate',
+        //     period: year,
+        //     date_start: dateStart,
+        //     date_end: dateEnd
+        //   })
+        //   .then(res => {
+        //     data.presence.setting = data;
+        //     data.presence.period = res;
+
+        //     callback(null, data);
+        //   })
+        //   .catch(err => {
+        //     console.log(err);
+        //     callback({
+        //       code: 'ERR_DATABASE',
+        //       data: err
+        //     })
+        //   })
       },
 
       function setDefaultValueBenefit(data, callback) {
@@ -1338,6 +1373,7 @@ exports.verifyCompany = (APP, req, callback) => {
               APP.models.company[data.dbName].mysql.presence_setting
                 .bulkCreate(arr)
                 .then(() => {
+                  data.presence_setting = arr;
                   callback(null, data);
                 })
                 .catch(err => {
@@ -1349,6 +1385,40 @@ exports.verifyCompany = (APP, req, callback) => {
                 });
             });
           });
+        },
+
+        function setDefaultValuePresencePeriod(data, callback) {
+          console.log(data.presence_setting);
+
+          let monthName = moment().format('MMMM'),
+            value = data.presence_setting[9].value,
+            year = moment().format('YYYY'),
+            date = value.split(','),
+            dateStart = `${moment()
+              .subtract(1, 'month')
+              .format('YYYY-MM')}-${date[0]}`,
+            dateEnd = `${moment().format('YYYY-MM')}-${date[1]}`;
+
+          APP.models.company[data.dbName].mysql.presence_period
+            .create({
+              name: monthName,
+              description: 'Initial Generate',
+              period: year,
+              date_start: dateStart,
+              date_end: dateEnd
+            })
+            .then(res => {
+              data.presence_period = res;
+
+              callback(null, data);
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR_DATABASE',
+                data: err
+              });
+            });
         },
 
         function setDefaultValueBenefit(data, callback) {
