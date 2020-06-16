@@ -22,7 +22,7 @@ const randomString = require('crypto-random-string');
 const presence = require('./controllers/presenceController');
 const cors = require('cors');
 const schedule = require('node-schedule');
-const csurf = require('csurf');
+const csurf = require('csurf-expire');
 const cookieParser = require('cookie-parser');
 
 // Your Database configurations.
@@ -372,6 +372,7 @@ function resOutput(APP, req, res, params, status) {
           console.error('====================== RESPONSE ==========================');
           console.error(response + '\n');
           console.error('==========================================================');
+          // console.log(res.cookie());
         } else {
           console.log('\n==========================================================');
           console.log('STATUS       : OK');
@@ -384,6 +385,7 @@ function resOutput(APP, req, res, params, status) {
           console.log('====================== RESPONSE ==========================');
           console.log(response + '\n');
           console.log('==========================================================');
+          // console.log(res.cookie());
         }
 
         callback(null, message);
@@ -631,24 +633,31 @@ async.series(
       });
 
       //<----- CSRF CONFIG ----->
-      app.use(endpoint, csurf({ cookie: true }));
+      app.use(
+        endpoint,
+        csurf({
+          cookie: {
+            maxAge: 7200 // 2 hours
+          }
+        })
+      );
 
-      app.use(endpoint, (req, res, next) => {
-        res.cookie('XSRF-TOKEN', req.csrfToken());
-        res.locals.csrftoken = req.csrfToken();
-        next();
-      });
+      // app.use(endpoint, (req, res, next) => {
+      //   res.cookie('XSRF-TOKEN', req.csrfToken());
+      //   res.locals.csrftoken = req.csrfToken();
+      //   next();
+      // });
 
       app.use(endpoint, (err, req, res, next) => {
         if (err.code != 'EBADCSRFTOKEN') return next(err);
-        if (!routes[endpoint].csrf) {
+        if (routes[endpoint].csrf !== false) {
           // handle CSRF token errors here
-          res.status(401).send({
+          res.status(403).send({
             code: '01',
-            status: 401,
+            status: 403,
             from: '',
             info: {},
-            message: 'CSRF INVALID',
+            message: err.message,
             error: true
           });
         } else {

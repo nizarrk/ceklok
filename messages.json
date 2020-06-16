@@ -203,6 +203,17 @@
     "data": {}
   },
 
+  "FORBIDDEN": {
+    "error": true,
+    "code": "FORBIDDEN",
+    "name": "FORBIDDEN",
+    "status": 403,
+    "from": "",
+    "info": {},
+    "message": "Forbidden Access!",
+    "data": {}
+  },
+
   "DEVICE_DISSCONNECTED": {
     "error": true,
     "code": "DEVICE_DISSCONNECTED",

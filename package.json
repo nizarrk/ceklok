@@ -40,6 +40,7 @@
     "cors": "^2.8.5",
     "crypto-random-string": "^3.0.0",
     "csurf": "^1.11.0",
+    "csurf-expire": "^2.0.0",
     "csvjson": "^5.1.0",
     "env2": "^2.2.2",
     "express": "^4.16.3",
