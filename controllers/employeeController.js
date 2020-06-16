@@ -61,43 +61,44 @@ const generateEmployeeCode = async (APP, req, index) => {
 const checkEmployeeEntry = (APP, req, callback) => {
   async.waterfall(
     [
-      // function checkUsernameEmployee(callback) {
-      //   APP.models.company[req.user.db].mysql.employee
-      //     .findAll({
-      //       where: {
-      //         company_code: req.body.company,
-      //         user_name: req.body.username
-      //       }
-      //     })
-      //     .then(res => {
-      //       if (res && res.length > 0) {
-      //         callback({
-      //           code: 'DUPLICATE',
-      //           message: 'Error! Duplicate Username!',
-      //           info: {
-      //             dataCount: res.length,
-      //             parameter: 'username'
-      //           }
-      //         });
-      //       }
-      //       callback(null, {
-      //         code: 'NOT_FOUND',
-      //         info: {
-      //           parameter: 'username'
-      //         }
-      //       });
-      //     })
-      //     .catch(err => {
-      //       console.log('iki error username', err);
+      function checkUsernameEmployee(callback) {
+        if (!req.body.username) return callback(null, true);
 
-      //       callback({
-      //         code: 'ERR_DATABASE',
-      //         data: err
-      //       });
-      //     });
-      // },
+        APP.models.company[req.user.db].mysql.employee
+          .findAll({
+            where: {
+              user_name: req.body.username
+            }
+          })
+          .then(res => {
+            if (res && res.length > 0) {
+              return callback({
+                code: 'DUPLICATE',
+                message: 'Error! Duplicate Username!',
+                info: {
+                  dataCount: res.length,
+                  parameter: 'username'
+                }
+              });
+            }
+            callback(null, {
+              code: 'NOT_FOUND',
+              info: {
+                parameter: 'username'
+              }
+            });
+          })
+          .catch(err => {
+            console.log('iki error username', err);
 
-      function checkEmailEmployee(callback) {
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function checkEmailEmployee(data, callback) {
         APP.models.company[req.user.db].mysql.employee
           .findAll({
             where: {
@@ -106,7 +107,7 @@ const checkEmployeeEntry = (APP, req, callback) => {
           })
           .then(res => {
             if (res && res.length > 0) {
-              callback({
+              return callback({
                 code: 'DUPLICATE',
                 message: 'Error! Duplicate Email!',
                 info: {
@@ -141,7 +142,7 @@ const checkEmployeeEntry = (APP, req, callback) => {
           })
           .then(res => {
             if (res && res.length > 0) {
-              callback({
+              return callback({
                 code: 'DUPLICATE',
                 message: 'Error! Duplicate telp!',
                 info: {
@@ -611,6 +612,8 @@ exports.addEmployee = (APP, req, callback) => {
       },
 
       function getSupportPalId(data, callback) {
+        if (data.support) return callback(null, data);
+
         axios({
           method: 'GET',
           auth: {
@@ -658,17 +661,24 @@ exports.addEmployee = (APP, req, callback) => {
                 message: 'Status contract tidak ditemukan'
               });
             }
-            callback(null, { data, status: res.dataValues });
+
+            data.status = res.dataValues;
+            callback(null, data);
           });
       },
 
       function registerUser(data, callback) {
-        let email = APP.validation.email(req.body.email);
-        let username = APP.validation.username(
-          data.data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase()
-        );
+        let username = data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase();
+        let totalCuti =
+          data.status.type === 1 && data.status.leave_setting === 1
+            ? data.status.leave_permission - (data.status.leave_permission - (12 - (new Date().getMonth() + 1)))
+            : 0;
 
-        if (email && username) {
+        // validate input
+        let validateEmail = APP.validation.email(req.body.email);
+        let validateUsername = APP.validation.username(username);
+
+        if (validateEmail && validateUsername) {
           APP.models.company[req.user.db].mysql.employee
             .build({
               // priviledge_id: req.body.priviledge,
@@ -679,11 +689,8 @@ exports.addEmployee = (APP, req, callback) => {
               benefit_id: req.body.benefit,
               status_contract_id: req.body.contract,
               schedule_id: req.body.schedule,
-              total_cuti:
-                data.status.type === 1 && data.status.leave_setting === 1
-                  ? data.status.leave_permission - (data.status.leave_permission - (12 - (new Date().getMonth() + 1)))
-                  : 0,
-              employee_code: data.data.kode,
+              total_cuti: totalCuti,
+              employee_code: data.kode,
               company_code: req.user.code,
               nik: req.body.nik,
               name: req.body.name,
@@ -699,9 +706,8 @@ exports.addEmployee = (APP, req, callback) => {
               msisdn: 'default',
               tlp: req.body.telp,
               email: req.body.email,
-              user_name:
-                data.data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase(),
-              password: data.data.encryptedPass,
+              user_name: username,
+              password: data.encryptedPass,
               status: 1,
               fultime_at: data.status.type === 1 ? new Date() : null
             })
@@ -713,7 +719,7 @@ exports.addEmployee = (APP, req, callback) => {
                 to: req.body.email,
                 data: {
                   username: result.user_name,
-                  pass: data.data.pass
+                  pass: data.pass
                 },
                 file: 'create_employee.html'
               });
@@ -745,8 +751,8 @@ exports.addEmployee = (APP, req, callback) => {
               });
             });
         } else {
-          if (email !== true) return callback(email);
-          if (username !== true) return callback(username);
+          if (validateEmail !== true) return callback(validateEmail);
+          if (validateUsername !== true) return callback(validateUsername);
         }
       },
 
