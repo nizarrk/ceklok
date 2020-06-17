@@ -924,6 +924,140 @@ exports.importEmployeeData = (APP, req, callback) => {
         });
       },
 
+      function registerToSupportPal(data, callback) {
+        let arr = [];
+
+        Promise.all(
+          data.map((x, i) => {
+            let fullname = x.name.split(' ');
+            let firstname = fullname[0];
+            let lastname = fullname[fullname.length - 1];
+
+            return axios({
+              method: 'POST',
+              auth: {
+                username: process.env.SUPP_TOKEN,
+                password: ''
+              },
+              url: `${process.env.SUPP_HOST}/api/user/user`,
+              data: {
+                brand_id: process.env.SUPP_BRAND_ID,
+                firstname: firstname,
+                lastname: lastname,
+                email: x.email,
+                password: x.password,
+                organisation: 'CEKLOK'
+              }
+            })
+              .then(res => {
+                arr.push(res.data.data);
+                return true;
+                // callback(null, {
+                //   data: data,
+                //   support: res.data.data
+                // });
+              })
+              .catch(err => {
+                if (
+                  err.response.data.status == 'error' &&
+                  err.response.data.message == 'The email has already been taken.'
+                ) {
+                  return true;
+                } else {
+                  callback({
+                    code: 'ERR',
+                    message: err.response.data.message,
+                    data: err
+                  });
+                }
+              });
+          })
+        )
+          .then(() => {
+            callback(null, {
+              data: data,
+              support: arr
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
+      },
+
+      function getSupportPalId(data, callback) {
+        if (data.support.length > 0) return callback(null, data);
+
+        Promise.all(
+          data.data.map((x, i) => {
+            return axios({
+              method: 'GET',
+              auth: {
+                username: process.env.SUPP_TOKEN,
+                password: ''
+              },
+              url: `${process.env.SUPP_HOST}/api/user/user?email=${x.email}&brand_id=${process.env.SUPP_BRAND_ID}`
+            })
+              .then(res => {
+                if (res.data.data.length == 0) {
+                  callback({
+                    code: 'NOT_FOUND',
+                    message: 'Email tidak ditemukan!'
+                  });
+                } else {
+                  return res.data.data[0];
+                }
+              })
+              .catch(err => {
+                console.log(err);
+                callback({
+                  code: 'ERR',
+                  message: err.response.data.message,
+                  data: err
+                });
+              });
+          })
+        )
+          .then(arr => {
+            callback(null, {
+              data: data.data,
+              support: arr
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
+      },
+
+      function buildWithSupportPal(data, callback) {
+        console.log(data);
+        Promise.all(
+          data.data.map((x, i) => {
+            let obj = x;
+            obj.support_pal_id = data.support[i].id;
+
+            return obj;
+          })
+        )
+          .then(arr => {
+            callback(null, arr);
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
+      },
+
       function checkEmailEmployee(result, callback) {
         Promise.all(
           result.map((data, index) => {
@@ -1020,23 +1154,7 @@ exports.importEmployeeData = (APP, req, callback) => {
         APP.models.company[req.user.db].mysql.employee
           .bulkCreate(result)
           .then(res => {
-            // result.map(data => {
-            //   // send to email
-            //   APP.mailer.sendMail({
-            //     subject: 'Account Created',
-            //     to: data.email,
-            //     data: {
-            //       username: data.user_name,
-            //       pass: data.plainPassword
-            //     },
-            //     file: 'create_employee.html'
-            //   });
-            // });
-
-            callback(null, {
-              code: 'INSERT_SUCCESS',
-              data: res
-            });
+            callback(null, res);
           })
           .catch(err => {
             console.log('error insert', err);
@@ -1046,6 +1164,33 @@ exports.importEmployeeData = (APP, req, callback) => {
               data: err
             });
           });
+      },
+
+      function sendToMail(result, callback) {
+        try {
+          result.map(data => {
+            // send to email
+            APP.mailer.sendMail({
+              subject: 'Account Created',
+              to: data.email,
+              data: {
+                username: data.user_name,
+                pass: data.plainPassword
+              },
+              file: 'create_employee.html'
+            });
+          });
+
+          callback(null, {
+            code: 'INSERT_SUCCESS',
+            data: result
+          });
+        } catch (err) {
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
       }
     ],
     (err, result) => {
