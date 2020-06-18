@@ -1154,6 +1154,7 @@ exports.importEmployeeData = (APP, req, callback) => {
         APP.models.company[req.user.db].mysql.employee
           .bulkCreate(result)
           .then(res => {
+            res.plainPassword = result.plainPassword;
             callback(null, res);
           })
           .catch(err => {
