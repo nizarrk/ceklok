@@ -973,8 +973,11 @@ exports.checkOTP = (APP, req, callback) => {
       },
 
       function updateOTP(data, callback) {
-        let cond1 = new Date().getTime() <= new Date(data.expired_time).getTime();
-        let cond2 = data.date.getTime() === req.currentDate.getTime() && data.failed < 3;
+        let cond1 = new Date().getTime() <= new Date(data.expired_time).getTime(); // if date now < date expired
+        let cond2 = data.date.getTime() === req.currentDate.getTime() && data.failed < 3; // same date & failed < 3
+        console.log(data.date);
+        console.log(req.currentDate);
+
         console.log(cond1);
         console.log(cond2);
 
@@ -988,7 +991,7 @@ exports.checkOTP = (APP, req, callback) => {
           data
             .update({
               failed: data.failed == 3 ? 3 : data.failed + 1,
-              expired: !cond1 ? true : !cond2 ? true : false
+              expired: !cond1 ? true : !cond2 ? true : data.failed + 1 == 3 ? true : false
             })
             .then(() => {
               callback({
