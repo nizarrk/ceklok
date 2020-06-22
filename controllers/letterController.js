@@ -190,14 +190,14 @@ exports.insert = (APP, req, callback) => {
 };
 
 exports.update = (APP, req, callback) => {
-  let { letter } = APP.models.company[req.user.db].mysql;
-  let { id, name, desc, status } = req.body;
+  let { letter, department } = APP.models.company[req.user.db].mysql;
+  let { id, code, name, desc, status, department_id } = req.body;
   console.log(req.body);
 
   async.waterfall(
     [
       function checkParams(callback) {
-        if (id && name && desc && status) {
+        if (id && code && name && desc && department_id && status) {
           callback(null, true);
         } else {
           callback({
@@ -208,10 +208,40 @@ exports.update = (APP, req, callback) => {
         }
       },
 
+      function checkDepartment(data, callback) {
+        department
+          .findOne({
+            where: {
+              id: department_id
+            }
+          })
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'Department tidak ditemukan!'
+              });
+            } else {
+              callback(null, true);
+            }
+          })
+          .catch(err => {
+            console.log('Error checkDepartment', err);
+            callback({
+              code: 'ERR_DATABASE',
+              id: 'EKQ98',
+              message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+              data: err
+            });
+          });
+      },
+
       function updateLetterCode(result, callback) {
         letter
           .findOne({
-            where: id
+            where: {
+              id: id
+            }
           })
           .then(res => {
             if (res == null) {
@@ -223,13 +253,15 @@ exports.update = (APP, req, callback) => {
             } else {
               res
                 .update({
+                  department_id: department_id,
+                  code: code,
                   name: name,
                   description: desc,
                   status: status
                 })
                 .then(updated => {
                   callback(null, {
-                    code: 'UPDATE_SUCESS',
+                    code: 'UPDATE_SUCCESS',
                     id: 'EKP00',
                     message: 'Data Kode Surat berhasil diupdate'
                   });
