@@ -848,6 +848,59 @@ exports.dashboardAdminCeklok = (APP, req, callback) => {
           });
       },
 
+      function checkDBAvaibility(data, callback) {
+        let arr = [];
+
+        Promise.all(
+          data.company.map((x, i) => {
+            return APP.db.sequelize.query(`SHOW DATABASES LIKE '${process.env.MYSQL_NAME}_${x.code}'`).then(res => {
+              if (res[0].length !== 0) arr.push(res[0][0][`Database (${process.env.MYSQL_NAME}_${x.code})`]);
+
+              return;
+            });
+          })
+        )
+          .then(() => {
+            callback(null, {
+              total_company: arr.length,
+              original: data,
+              company: arr
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          });
+      },
+
+      function filterData(data, callback) {
+        let arr = [];
+
+        Promise.all(
+          data.original.company.map((x, i) => {
+            return data.company.filter(y => {
+              let replaced = y.replace(`${process.env.MYSQL_NAME}_`, ''); // replace 'ceklok_'
+
+              if (replaced == x.code) {
+                arr.push({
+                  id: x.id,
+                  code: x.code,
+                  name: x.name
+                });
+              }
+            });
+          })
+        ).then(() => {
+          callback(null, {
+            total_company: arr.length,
+            company: arr
+          });
+        });
+      },
+
       function getTotalEmployee(result, callback) {
         let num = 0;
 
