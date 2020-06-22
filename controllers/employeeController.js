@@ -958,6 +958,8 @@ exports.importEmployeeData = (APP, req, callback) => {
                 // });
               })
               .catch(err => {
+                console.log(err);
+
                 if (
                   err.response.data.status == 'error' &&
                   err.response.data.message == 'The email has already been taken.'
@@ -1037,7 +1039,6 @@ exports.importEmployeeData = (APP, req, callback) => {
       },
 
       function buildWithSupportPal(data, callback) {
-        console.log(data);
         Promise.all(
           data.data.map((x, i) => {
             let obj = x;
@@ -1153,13 +1154,11 @@ exports.importEmployeeData = (APP, req, callback) => {
       function insertData(result, callback) {
         APP.models.company[req.user.db].mysql.employee
           .bulkCreate(result)
-          .then(res => {
-            res.dataValues.plainPassword = result.plainPassword;
-            callback(null, res);
+          .then(() => {
+            callback(null, result);
           })
           .catch(err => {
             console.log('error insert', err);
-
             callback({
               code: 'ERR_DATABASE',
               data: err
