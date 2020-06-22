@@ -254,7 +254,7 @@ exports.update = (APP, req, callback) => {
               res
                 .update({
                   department_id: department_id,
-                  code: code,
+                  letter_code: code,
                   name: name,
                   description: desc,
                   status: status
