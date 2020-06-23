@@ -651,6 +651,8 @@ async.series(
       app.use(endpoint, (err, req, res, next) => {
         if (err.code != 'EBADCSRFTOKEN') return next(err);
         if (routes[endpoint].csrf !== false) {
+          if (req.headers['platform'] == 'Mobile') return next();
+
           // handle CSRF token errors here
           res.status(403).send({
             code: '01',
