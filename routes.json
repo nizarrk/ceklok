@@ -1596,6 +1596,13 @@
     "level": 2,
     "auth": true
   },
+  "/services/request/get": {
+    "method": "post",
+    "controller": "servicesRequestController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
   "/services/request/insert": {
     "method": "post",
     "controller": "servicesRequestController",
@@ -1642,6 +1649,34 @@
     "method": "post",
     "controller": "reimbursementTypeController",
     "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/request/get": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/reimbursement/request/insert": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/reimbursement/request/updatestatus": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/request/finish": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "finishingRequest",
     "level": 2,
     "auth": true
   }
