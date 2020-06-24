@@ -3,6 +3,7 @@
 const async = require('async');
 const trycatch = require('trycatch');
 const path = require('path');
+const bcrypt = require('bcrypt');
 
 exports.get = (APP, req, callback) => {
   let query = '';
@@ -88,47 +89,46 @@ exports.get = (APP, req, callback) => {
 };
 
 exports.getById = (APP, req, callback) => {
-  let { letter_ref, letter, department } = APP.models.company[req.user.db].mysql;
-  let { admin } = APP.models.mysql;
-
-  letter_ref.belongsTo(letter, {
-    targetKey: 'id',
-    foreignKey: 'letter_id'
-  });
-
-  letter.belongsTo(department, {
-    targetKey: 'id',
-    foreignKey: 'department_id'
-  });
-
-  letter_ref.belongsTo(admin, {
-    targetKey: 'id',
-    foreignKey: 'approved_by'
-  });
-
-  letter_ref
-    .findOne({
-      include: [
-        {
-          model: letter,
-          attributes: ['id', 'name', 'description', 'letter_code'],
-          required: false,
-          include: [
-            {
-              model: department,
-              attributes: ['id', 'name', 'description']
-            }
-          ]
-        },
-        {
-          model: admin,
-          attributes: ['id', 'name']
-        }
-      ],
-      where: { id: req.body.id }
-    })
+  APP.db.sequelize
+    .query(
+      `SELECT 
+          ref.*, 
+          letter.letter_code 'letter_code',
+          letter.name 'letter_name', 
+          letter.description 'letter_description', 
+          dep.id 'department_id', 
+          dep.name 'department_name', 
+          dep.description 'department_description',
+          adm1.name 'creator_name',
+          adm2.name 'approver_name',
+          adm3.name 'updater_name'
+        FROM
+          ${req.user.db}.letter_ref ref
+        INNER JOIN
+        ${req.user.db}.letter
+        ON
+          ref.letter_id = letter.id
+        INNER JOIN
+        ${req.user.db}.department dep
+        ON
+          letter.department_id = dep.id
+        LEFT JOIN
+          ${process.env.MYSQL_NAME}.admin adm1
+        ON
+          ref.created_by = adm1.id
+        LEFT JOIN
+          ${process.env.MYSQL_NAME}.admin adm2
+        ON
+          ref.approved_by = adm2.id
+        LEFT JOIN
+          ${process.env.MYSQL_NAME}.admin adm3
+        ON
+          ref.updated_by = adm3.id
+        WHERE
+          ref.id = ${req.body.id}`
+    )
     .then(res => {
-      if (res.length == 0) {
+      if (res[0].length == 0) {
         callback({
           code: 'NOT_FOUND',
           message: 'Nomor surat tidak ditemukan!'
@@ -136,7 +136,7 @@ exports.getById = (APP, req, callback) => {
       } else {
         callback(null, {
           code: 'FOUND',
-          data: res
+          data: res[0][0]
         });
       }
     })
@@ -181,7 +181,7 @@ exports.insert = (APP, req, callback) => {
                 message: 'Kode surat tidak ditemukan'
               });
             } else {
-              callback(null, true);
+              callback(null, res.dataValues);
             }
           });
       },
@@ -190,7 +190,10 @@ exports.insert = (APP, req, callback) => {
         let kode = APP.generateCode(letter_ref, 'RN');
         Promise.resolve(kode)
           .then(x => {
-            callback(null, x);
+            callback(null, {
+              letter: data,
+              code: x
+            });
           })
           .catch(err => {
             console.log(err);
@@ -223,7 +226,8 @@ exports.insert = (APP, req, callback) => {
                 let docPath = `./public/uploads/company_${req.user.code}/letter/`;
 
                 callback(null, {
-                  code: data,
+                  code: data.code,
+                  letter: data.letter,
                   doc: docPath + fileName + path.extname(req.files.upload.name)
                 });
               }
@@ -285,11 +289,13 @@ exports.insert = (APP, req, callback) => {
 };
 
 exports.updateStatus = (APP, req, callback) => {
-  let { id, status } = req.body;
+  let { letter_ref, letter } = APP.models.company[req.user.db].mysql;
+  let { admin } = APP.models.mysql;
+  let { id, status, notes, pass } = req.body;
   async.waterfall(
     [
       function checkParams(callback) {
-        if (id && status) {
+        if (id && status && pass) {
           callback(null, true);
         } else {
           callback({
@@ -299,73 +305,116 @@ exports.updateStatus = (APP, req, callback) => {
         }
       },
 
-      function updateStatus(data, callback) {
-        if (req.user.level === 2) {
-          let { letter_ref, letter } = APP.models.company[req.user.db].mysql;
-
-          letter_ref.belongsTo(letter, {
-            targetKey: 'id',
-            foreignKey: 'letter_id'
-          });
-
-          letter_ref
-            .findOne(
-              {
-                include: [
-                  {
-                    model: letter,
-                    attributes: ['id', 'name', 'description', 'letter_code']
-                  }
-                ]
-              },
-              {
-                where: {
-                  id: id
-                }
-              }
-            )
-            .then(res => {
-              if (res == null) {
-                callback({
-                  code: 'NOT_FOUND',
-                  message: 'Nomor surat tidak ditemukan!'
-                });
-              } else {
-                res
-                  .update({
-                    status: status,
-                    reference: status == 1 ? res.letter.letter_code + res.code.replace('RN', '') : '',
-                    approved_by: req.user.id,
-                    approved_at: new Date()
-                  })
-                  .then(updated => {
-                    callback(null, {
-                      code: 'UPDATE_SUCCESS',
-                      data: updated
-                    });
-                  })
-                  .catch(err => {
-                    console.log('Error update', err);
-                    callback({
-                      code: 'ERR_DATABASE',
-                      data: err
-                    });
-                  });
-              }
-            })
-            .catch(err => {
-              console.log('Error findOne', err);
+      function verifyCredentials(data, callback) {
+        admin
+          .findOne({
+            where: {
+              id: req.user.id
+            }
+          })
+          .then(res => {
+            if (bcrypt.compareSync(pass, res.password)) {
+              callback(null, true);
+            } else {
               callback({
-                code: 'ERR_DATABASE',
-                data: err
+                code: 'INVALID_REQUEST',
+                message: 'Invalid Password!'
               });
+            }
+          })
+          .catch(err => {
+            console.log('Error function verifyCredentials', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error function verifyCredentials',
+              data: err
             });
-        } else {
-          return callback({
-            code: 'INVALID_REQUEST',
-            message: 'Invalid user level'
           });
-        }
+      },
+
+      function createReferenceNumber(data, callback) {
+        let ref;
+
+        letter_ref.belongsTo(letter, {
+          targetKey: 'id',
+          foreignKey: 'letter_id'
+        });
+
+        letter_ref
+          .findAll({
+            include: [
+              {
+                model: letter,
+                attributes: ['id', 'name', 'description', 'letter_code']
+              }
+            ],
+            limit: 2,
+            order: [['id', 'DESC']]
+          })
+          .then(res => {
+            let letter_code =
+              res[0].letter.letter_code.charAt(res[0].letter.letter_code.length - 1) == '/'
+                ? res[0].letter.letter_code
+                : res[0].letter.letter_code + '/';
+            let pad = `${letter_code}000`;
+
+            if (res[1].reference == null) {
+              console.log('oi');
+
+              let str = '' + 1;
+              ref = pad.substring(0, pad.length - str.length) + str;
+
+              callback(null, ref);
+            } else {
+              console.log('oi2');
+
+              let lastID = res[1].reference;
+              let replace = lastID.replace(letter_code, '');
+
+              let str = parseInt(replace) + 1;
+              ref = pad.substring(0, pad.length - str.toString().length) + str;
+
+              callback(null, ref);
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      },
+
+      function updateStatus(data, callback) {
+        letter_ref
+          .update(
+            {
+              status: status,
+              reference: status == 1 ? data : null,
+              notes: notes,
+              approved_by: req.user.id,
+              approved_at: new Date()
+            },
+            {
+              where: {
+                id: id
+              }
+            }
+          )
+          .then(updated => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: updated
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       }
     ],
     (err, result) => {

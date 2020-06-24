@@ -17,14 +17,20 @@ module.exports = function(sequelize, Sequelize) {
       code: {
         type: Sequelize.STRING(45)
       },
+      reference: {
+        type: Sequelize.STRING(255)
+      },
       upload: {
         type: Sequelize.STRING(255)
       },
       name: {
-        type: Sequelize.STRING(45)
+        type: Sequelize.STRING(255)
       },
       description: {
-        type: Sequelize.STRING(45)
+        type: Sequelize.STRING(255)
+      },
+      notes: {
+        type: Sequelize.STRING
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
