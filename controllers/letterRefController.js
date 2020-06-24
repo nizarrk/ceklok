@@ -74,7 +74,7 @@ exports.get = (APP, req, callback) => {
       } else {
         callback(null, {
           code: 'FOUND',
-          data: res
+          data: res[0]
         });
       }
     })
