@@ -1260,6 +1260,13 @@
     "level": 2,
     "auth": true
   },
+  "/letter/ref/getbyid": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
   "/letter/ref/add": {
     "method": "post",
     "controller": "letterRefController",

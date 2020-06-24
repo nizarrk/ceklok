@@ -5,106 +5,146 @@ const trycatch = require('trycatch');
 const path = require('path');
 
 exports.get = (APP, req, callback) => {
-  let { letter_ref, letter } =
-    req.user.level === 2
-      ? APP.models.company[req.user.db].mysql
-      : callback({
-          code: 'NOT_FOUND',
-          message: 'Invalid user level'
-        });
+  let { letter_ref, letter, department } = APP.models.company[req.user.db].mysql;
+  let { admin } = APP.models.mysql;
+  let query = {};
+
+  if (req.body.status)
+    query = {
+      status: req.body.status
+    };
+
+  if (req.body.datestart && req.body.dateend)
+    query = {
+      created_at: { $between: [req.body.datestart, req.body.dateend] }
+    };
+
+  if (req.body.datestart && req.body.dateend && req.body.status)
+    query = {
+      status: req.body.status,
+      created_at: { $between: [req.body.datestart, req.body.dateend] }
+    };
 
   letter_ref.belongsTo(letter, {
     targetKey: 'id',
     foreignKey: 'letter_id'
   });
 
-  async.waterfall(
-    [
-      function getAll(callback) {
-        letter_ref
-          .findAll({
-            include: [
-              {
-                model: letter,
-                attributes: ['id', 'name', 'description', 'letter_code'],
-                required: false
-              }
-            ]
-          })
-          .then(res => {
-            if (res.length == 0) {
-              callback({
-                code: 'NOT_FOUND',
-                message: 'Nomor surat tidak ditemukan!'
-              });
-            } else {
-              callback(null, res);
+  letter.belongsTo(department, {
+    targetKey: 'id',
+    foreignKey: 'department_id'
+  });
+
+  letter_ref.belongsTo(admin, {
+    targetKey: 'id',
+    foreignKey: 'approved_by'
+  });
+
+  console.log(query);
+
+  letter_ref
+    .findAll({
+      include: [
+        {
+          model: letter,
+          attributes: ['id', 'name', 'description', 'letter_code'],
+          required: false,
+          include: [
+            {
+              model: department,
+              attributes: ['id', 'name', 'description']
             }
-          });
-      },
-
-      function getApprovedRequest(data, callback) {
-        APP.db.sequelize
-          .query(
-            `SELECT 
-            a.id, a.code, a.name, a.description, a.reference, a.created_at, a.action_by, a.approved_at, 
-            a.approved_by, b.id AS 'letter_id', b.code AS 'code_leter', b.letter_code, b.name AS 'letter_name', b.description AS
-            'letter_description', c.id AS 'admin_id', c.name AS 'admin_name' 
-          FROM 
-            ${req.user.db}.letter_ref AS a
-          JOIN 
-            ${req.user.db}.letter
-          AS 
-            b
-          ON 
-            a.letter_id = b.id
-          JOIN 
-            ceklok.admin
-          AS 
-            c
-          ON 
-            a.approved_by = c.id`
-          )
-          .then(res => {
-            callback(null, {
-              all: data,
-              approved: res[0]
-            });
-          });
-      },
-
-      function getPendingRequest(data, callback) {
-        letter_ref
-          .findAll({
-            include: [
-              {
-                model: letter,
-                attributes: ['id', 'name', 'description', 'letter_code']
-              }
-            ],
-
-            where: {
-              status: 0
-            }
-          })
-          .then(res => {
-            callback(null, {
-              code: 'FOUND',
-              data: {
-                all: data.all,
-                approved: data.approved,
-                pending: res
-              }
-            });
-          });
+          ]
+        },
+        {
+          model: admin,
+          attributes: ['id', 'name']
+        }
+      ],
+      where: query
+    })
+    .then(res => {
+      if (res.length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Nomor surat tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
       }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
 
-      callback(null, result);
-    }
-  );
+exports.getById = (APP, req, callback) => {
+  let { letter_ref, letter, department } = APP.models.company[req.user.db].mysql;
+  let { admin } = APP.models.mysql;
+
+  letter_ref.belongsTo(letter, {
+    targetKey: 'id',
+    foreignKey: 'letter_id'
+  });
+
+  letter.belongsTo(department, {
+    targetKey: 'id',
+    foreignKey: 'department_id'
+  });
+
+  letter_ref.belongsTo(admin, {
+    targetKey: 'id',
+    foreignKey: 'approved_by'
+  });
+
+  letter_ref
+    .findOne({
+      include: [
+        {
+          model: letter,
+          attributes: ['id', 'name', 'description', 'letter_code'],
+          required: false,
+          include: [
+            {
+              model: department,
+              attributes: ['id', 'name', 'description']
+            }
+          ]
+        },
+        {
+          model: admin,
+          attributes: ['id', 'name']
+        }
+      ],
+      where: { id: req.body.id }
+    })
+    .then(res => {
+      if (res.length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Nomor surat tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
 };
 
 exports.insert = (APP, req, callback) => {
@@ -165,17 +205,26 @@ exports.insert = (APP, req, callback) => {
           () => {
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
-                code: 'ERR',
+                code: 'INVALID_REQUEST',
                 message: 'No files were uploaded.'
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/letter/`;
+            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/letter/`;
 
-            callback(null, {
-              code: data,
-              doc: docPath + fileName + path.extname(req.files.upload.name)
+                callback(null, {
+                  code: data,
+                  doc: docPath + fileName + path.extname(req.files.upload.name)
+                });
+              }
             });
           },
           err => {
@@ -197,7 +246,7 @@ exports.insert = (APP, req, callback) => {
             name: name,
             description: desc,
             upload: data.doc.slice(8),
-            action_by: req.user.id
+            created_by: req.user.id
           })
           .then(res => {
             if (req.files.upload) {
