@@ -32,6 +32,7 @@ exports.get = (APP, req, callback) => {
     .query(
       `SELECT 
           ref.*, 
+          letter.letter_code 'letter_code',
           letter.name 'letter_name', 
           letter.description 'letter_description', 
           dep.id 'department_id', 
