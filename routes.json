@@ -1288,6 +1288,13 @@
     "level": 2,
     "auth": true
   },
+  "/template/getbyid": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
   "/template/insert": {
     "method": "post",
     "controller": "bankTemplateController",

@@ -73,6 +73,60 @@ exports.get = (APP, req, callback) => {
   }
 };
 
+exports.getById = (APP, req, callback) => {
+  APP.db.sequelize
+    .query(
+      `SELECT 
+      a.id, a.code, a.name, a.description, a.grade_id, a.user_type_id, 
+      a.upload, a.status, a.created_at, a.updated_at, a.action_by, 
+      b.name AS 'admin_name', c.name AS 'user_type_name', d.name AS 'grade_name'
+    FROM 
+      ${req.user.db}.bank_template 
+    AS 
+      a
+    LEFT OUTER JOIN 
+      ceklok.admin 
+    AS 
+      b 
+    ON 
+      a.action_by = b.id
+    LEFT OUTER JOIN 
+      ${req.user.db}.user_type 
+    AS 
+      c 
+    ON 
+      a.user_type_id = c.id
+    LEFT OUTER JOIN 
+      ${req.user.db}.grade 
+    AS 
+      d 
+    ON 
+      a.grade_id = d.id
+    WHERE
+      a.id = ${req.body.id}`
+    )
+    .then(res => {
+      if (res[0].length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Bank template tidak ditemukan'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res[0][0]
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
 exports.insert = (APP, req, callback) => {
   let { bank_template, grade, user_type } = APP.models.company[req.user.db].mysql;
   let { name, desc, grade_id, user_type_id } = req.body;
