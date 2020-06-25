@@ -30,18 +30,30 @@ exports.timeDuration = time => {
     let total = 0;
 
     time.map(x => {
+      console.log(x);
+
       total += moment.duration(x);
     });
 
     let dur = moment.duration(total);
 
-    let result = dur.format('HH:mm:ss') == '00' ? '00:00:00' : dur.format('HH:mm:ss');
+    let result =
+      dur.format('HH:mm:ss') == '00'
+        ? '00:00:00'
+        : dur.hours() == 0
+        ? '00:' + dur.format('mm:ss')
+        : dur.format('HH:mm:ss');
 
     return result;
   } else {
     let dur = moment.duration(time);
 
-    let result = dur.format('HH:mm:ss') == '00' ? '00:00:00' : dur.format('HH:mm:ss');
+    let result =
+      dur.format('HH:mm:ss') == '00'
+        ? '00:00:00'
+        : dur.hours() == 0
+        ? '00:' + dur.format('mm:ss')
+        : dur.format('HH:mm:ss');
 
     return result;
   }
