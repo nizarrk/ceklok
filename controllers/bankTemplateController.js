@@ -14,63 +14,62 @@ exports.get = (APP, req, callback) => {
 
   console.log(where);
 
-  if (req.user.level === 2 || req.user.level === 3) {
-    APP.db.sequelize
-      .query(
-        `SELECT 
-          a.id, a.code, a.name, a.description, a.grade_id, a.user_type_id, 
-          a.upload, a.status, a.created_at, a.updated_at, a.action_by, 
-          b.name AS 'admin_name', c.name AS 'user_type_name', d.name AS 'grade_name'
-        FROM 
-          ${req.user.db}.bank_template 
-        AS 
-          a
-        LEFT OUTER JOIN 
-          ceklok.admin 
-        AS 
-          b 
-        ON 
-          a.action_by = b.id
-        LEFT OUTER JOIN 
-          ${req.user.db}.user_type 
-        AS 
-          c 
-        ON 
-          a.user_type_id = c.id
-        LEFT OUTER JOIN 
-          ${req.user.db}.grade 
-        AS 
-          d 
-        ON 
-          a.grade_id = d.id
-        ${where}`
-      )
-      .then(res => {
-        if (res[0].length == 0) {
-          callback({
-            code: 'NOT_FOUND',
-            message: 'Bank template tidak ditemukan'
-          });
-        } else {
-          callback(null, {
-            code: 'FOUND',
-            data: res[0]
-          });
-        }
-      })
-      .catch(err => {
-        console.log(err);
+  APP.db.sequelize
+    .query(
+      `SELECT 
+      a.id, a.code, a.name, a.description, a.grade_id, a.user_type_id, 
+      a.upload, a.download_count, a.status, a.created_at, a.updated_at, a.created_by, a.updated_by, 
+      b.name AS 'creator_name', b2.name AS 'updater_name', c.name AS 'user_type_name', d.name AS 'grade_name'
+    FROM 
+      ${req.user.db}.bank_template 
+    AS 
+      a
+    LEFT OUTER JOIN 
+      ${process.env.MYSQL_NAME}.admin 
+    AS 
+      b 
+    ON 
+      a.created_by = b.id
+    LEFT OUTER JOIN 
+      ${process.env.MYSQL_NAME}.admin 
+    AS 
+      b2
+    ON 
+      a.updated_by = b2.id
+    LEFT OUTER JOIN 
+      ${req.user.db}.user_type 
+    AS 
+      c 
+    ON 
+      a.user_type_id = c.id
+    LEFT OUTER JOIN 
+      ${req.user.db}.grade 
+    AS 
+      d 
+    ON 
+      a.grade_id = d.id
+    ${where}`
+    )
+    .then(res => {
+      if (res[0].length == 0) {
         callback({
-          code: 'ERR_DATABASE',
-          data: err
+          code: 'NOT_FOUND',
+          message: 'Bank template tidak ditemukan'
         });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res[0]
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
       });
-  } else {
-    callback({
-      code: 'INVALID_REQUEST',
-      message: 'Invalid user level'
     });
-  }
 };
 
 exports.getById = (APP, req, callback) => {
@@ -78,18 +77,24 @@ exports.getById = (APP, req, callback) => {
     .query(
       `SELECT 
       a.id, a.code, a.name, a.description, a.grade_id, a.user_type_id, 
-      a.upload, a.status, a.created_at, a.updated_at, a.action_by, 
-      b.name AS 'admin_name', c.name AS 'user_type_name', d.name AS 'grade_name'
+      a.upload, a.download_count, a.status, a.created_at, a.updated_at, a.created_by, a.updated_by, 
+      b.name AS 'creator_name', b2.name AS 'updater_name', c.name AS 'user_type_name', d.name AS 'grade_name'
     FROM 
       ${req.user.db}.bank_template 
     AS 
       a
     LEFT OUTER JOIN 
-      ceklok.admin 
+      ${process.env.MYSQL_NAME}.admin 
     AS 
       b 
     ON 
-      a.action_by = b.id
+      a.created_by = b.id
+    LEFT OUTER JOIN 
+      ${process.env.MYSQL_NAME}.admin 
+    AS 
+      b2
+    ON 
+      a.updated_by = b2.id
     LEFT OUTER JOIN 
       ${req.user.db}.user_type 
     AS 
@@ -250,7 +255,8 @@ exports.insert = (APP, req, callback) => {
             name: name,
             description: desc,
             upload: data.doc.slice(8),
-            action_by: req.user.id
+            download_count: 0,
+            created_by: req.user.id
           })
           .then(res => {
             if (req.files.upload) {
@@ -399,7 +405,8 @@ exports.update = (APP, req, callback) => {
               name: name,
               description: desc,
               upload: data.status ? data.doc.slice(8) : data.doc,
-              action_by: req.user.id
+              updated_by: req.user.id,
+              updated_at: new Date()
             },
             {
               where: {
@@ -420,6 +427,64 @@ exports.update = (APP, req, callback) => {
               code: 'UPDATE_SUCCESS',
               message: 'Berhasil melakukan update bank template',
               data: updated
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: '',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
+exports.updateDownloadCount = (APP, req, callback) => {
+  let { bank_template } = APP.models.company[req.user.db].mysql;
+
+  async.waterfall(
+    [
+      function getCurrentData(callback) {
+        bank_template
+          .findOne({
+            attributes: ['id', 'download_count'],
+            where: { id: req.body.id }
+          })
+          .then(res => {
+            callback(null, res.dataValues);
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: '',
+              data: err
+            });
+          });
+      },
+
+      function updateCount(data, callback) {
+        bank_template
+          .update(
+            {
+              download_count: parseInt(data.download_count) + 1
+            },
+            {
+              where: { id: req.body.id }
+            }
+          )
+          .then(res => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: res
             });
           })
           .catch(err => {

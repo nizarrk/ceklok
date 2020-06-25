@@ -29,6 +29,9 @@ module.exports = function(sequelize, Sequelize) {
       upload: {
         type: Sequelize.STRING(255)
       },
+      download_count: {
+        type: Sequelize.INTEGER(11)
+      },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
         allowNull: false,
@@ -44,7 +47,12 @@ module.exports = function(sequelize, Sequelize) {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
       },
-      action_by: {
+      created_by: {
+        type: Sequelize.INTEGER(10),
+        defaultValue: 0,
+        allowNull: false
+      },
+      updated_by: {
         type: Sequelize.INTEGER(10),
         defaultValue: 0,
         allowNull: false
