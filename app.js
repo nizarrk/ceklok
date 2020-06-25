@@ -19,7 +19,7 @@ const moment = require('moment');
 const ip = require('ip');
 const msisdn = require('express-msisdn');
 const randomString = require('crypto-random-string');
-const presence = require('./controllers/presenceController');
+const cronjob = require('./controllers/cronjobController');
 const cors = require('cors');
 const schedule = require('node-schedule');
 const csurf = require('csurf-expire');
@@ -512,96 +512,43 @@ async.series(
       );
     });
 
-    // CRON GENERATE DAILY ABSENCE
+    //<<-- CRON GENERATE DAILY ABSENCE -->>
+
     let rule = new schedule.RecurrenceRule();
     // rule.dayOfWeek = [0, 6];
     rule.hour = [1, 2, 3, 4, 5];
     rule.minute = 5;
+
     schedule.scheduleJob(rule, function() {
-      // console.log(rule.hour);
-      db.sequelize
-        .query('SELECT company_code FROM ceklok.company WHERE status = 1')
-        .then(res => {
-          Promise.all(
-            res[0].map((x, i) => {
-              let arr = rule.minute;
-              console.log(`Looping ke: ${i}`);
-              console.log(`Company: ${x.company_code}`);
+      cronjob.generateDailyAbsence(APP, rule, (err, result) => {
+        if (err)
+          return resOutput(
+            APP,
+            {
+              body: {},
+              originalUrl: '/presence/generatepresence',
+              customDate: new Date()
+            },
+            false,
+            err,
+            'err'
+          );
 
-              return db.sequelize
-                .query(
-                  `
-                SELECT 
-                  value 
-                FROM 
-                  ${process.env.MYSQL_NAME}_${x.company_code}.presence_setting 
-                WHERE
-                  presence_setting_id = 2
-                `
-                )
-                .then(res => {
-                  let result = rule.hour.filter(x => x == res[0][0].value);
-
-                  if (result.length > 0 && new Date().getHours() === result[0]) {
-                    console.log(result);
-                    console.log(`Company: ${x.company_code}`);
-
-                    return presence.generateDailyPresence(
-                      APP,
-                      {
-                        body: {
-                          company: x.company_code
-                        }
-                      },
-                      (err, result) => {
-                        if (err)
-                          return resOutput(
-                            APP,
-                            {
-                              body: {
-                                company: x.company_code
-                              },
-                              originalUrl: '/presence/generatepresence',
-                              customDate: new Date()
-                            },
-                            false,
-                            err,
-                            'err'
-                          );
-
-                        return resOutput(
-                          APP,
-                          {
-                            body: {
-                              company: x.company_code
-                            },
-                            originalUrl: '/presence/generatepresence',
-                            customDate: new Date()
-                          },
-                          false,
-                          result,
-                          'ok'
-                        );
-                      }
-                    );
-                  }
-                })
-                .catch(err => {
-                  console.log('Query Get Value Failed!', err);
-                });
-            })
-          )
-            .then(() => {
-              console.log('CRON Successfully Executed!');
-            })
-            .catch(err => {
-              console.log('CRON Failed!', err);
-            });
-        })
-        .catch(err => {
-          console.log('Query Active Company Failed!', err);
-        });
+        return resOutput(
+          APP,
+          {
+            body: {},
+            originalUrl: '/presence/generatepresence',
+            customDate: new Date()
+          },
+          false,
+          result,
+          'ok'
+        );
+      });
     });
+
+    //!<<-- END CRON GENERATE DAILY ABSENCE -->>
 
     /**
      * This will register all of your routes from `routes.json` file,
@@ -614,19 +561,17 @@ async.series(
     keys.map(endpoint => {
       app.use(endpoint, (req, res, next) => {
         if (req.body) {
-          if (req.headers['content-type'] === 'application/json') {
-            if (req.headers['encrypt'] && req.headers['encrypt'] == 'true' && req.body.data) {
-              console.log('enkrip broooo');
-              let decrypt = require('./functions/rsa').decrypt(req.body.data);
+          if (req.headers['encrypt'] && req.headers['encrypt'] == 'true' && req.body.data) {
+            console.log('enkrip broooo');
+            let decrypt = require('./functions/rsa').decrypt(req.body.data);
 
-              if (typeof decrypt == 'string') {
-                req.body = JSON.parse(decrypt);
-              } else {
-                req.body = decrypt;
-              }
-
-              console.log(req.body);
+            if (typeof decrypt == 'string') {
+              req.body = JSON.parse(decrypt);
+            } else {
+              req.body = decrypt;
             }
+
+            console.log(req.body);
           }
         }
         next();
