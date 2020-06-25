@@ -1309,6 +1309,13 @@
     "level": 2,
     "auth": true
   },
+  "/template/update/downloadcount": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "updateDownloadCount",
+    "level": 0,
+    "auth": true
+  },
   "/broadcast/letter/get": {
     "method": "post",
     "controller": "broadcastLetterController",
