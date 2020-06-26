@@ -119,6 +119,7 @@ exports.broadcastLetter = (APP, req, callback) => {
             let obj = {};
             obj.code = data.code;
             obj.upload = data.doc.slice(8);
+            obj.counter = 0;
             obj.name = name;
             obj.description = desc;
             obj.created_by = req.user.id;
@@ -364,12 +365,13 @@ exports.resendBroadcastLetter = (APP, req, callback) => {
 
 exports.broadcastList = (APP, req, callback) => {
   if (req.user.level === 2 || req.user.level === 3) {
+    let where = '';
     let start = req.body.datestart + ' 00:00:00';
     let end = req.body.dateend + ' 23:59:59';
     console.log(req.body);
 
-    let where =
-      req.body.datestart && req.body.dateend ? `WHERE b.created_at BETWEEN '${start}' AND '${end}'` : 'WHERE 1 + 1';
+    if (req.body.type == 'created_at') where = `WHERE b.created_at BETWEEN '${start}' AND '${end}'`;
+    if (req.body.type == 'updated_at') where = `WHERE b.updated_at BETWEEN '${start}' AND '${end}'`;
 
     APP.db.sequelize
       .query(
