@@ -372,6 +372,11 @@ exports.broadcastList = (APP, req, callback) => {
 
     if (req.body.type == 'created_at') where = `WHERE b.created_at BETWEEN '${start}' AND '${end}'`;
     if (req.body.type == 'updated_at') where = `WHERE b.updated_at BETWEEN '${start}' AND '${end}'`;
+    if (req.user.level === 3) where = `WHERE b.user_id = ${req.user.id}`;
+    if (req.user.level === 3 && req.body.type == 'created_at')
+      where = `WHERE b.user_id = ${req.user.id} AND b.created_at BETWEEN '${start}' AND '${end}'`;
+    if (req.user.level === 3 && req.body.type == 'updated_at')
+      where = `WHERE b.user_id = ${req.user.id} AND b.updated_at BETWEEN '${start}' AND '${end}'`;
 
     APP.db.sequelize
       .query(
