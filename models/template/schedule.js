@@ -38,7 +38,7 @@ module.exports = function(sequelize, Sequelize) {
       break_time: {
         type: Sequelize.TIME
       },
-      weekly_work_time: {
+      total_work_time: {
         type: Sequelize.STRING(45)
       },
       work_day: {
@@ -59,6 +59,9 @@ module.exports = function(sequelize, Sequelize) {
             return hasil;
           }
         }
+      },
+      type: {
+        type: Sequelize.INTEGER(1) // 1 = weekly, 2 = monthly
       },
       status: {
         type: Sequelize.INTEGER(1), //0 = non aktif, 1 = aktif
