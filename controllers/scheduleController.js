@@ -57,13 +57,13 @@ exports.get = function(APP, req, callback) {
  * please check `Sequelize` documentation.
  */
 exports.insert = function(APP, req, callback) {
-  let { name, desc, checkin_start, checkin_end, checkout_start, checkout_end, work, day } = req.body;
+  let { name, desc, checkin_start, checkin_end, checkout_start, checkout_end, work, day, type } = req.body;
   let { schedule } = APP.models.company[req.user.db].mysql;
 
   async.waterfall(
     [
       function checkBody(callback) {
-        if (name && desc && checkin_start && checkin_end && checkout_start && checkout_end && work && day) {
+        if (name && desc && checkin_start && checkin_end && checkout_start && checkout_end && work && day && type) {
           callback(null, true);
         } else {
           callback({
@@ -104,7 +104,7 @@ exports.insert = function(APP, req, callback) {
 
         callback(null, {
           code: result.code,
-          week: APP.time.timeXday(work, numDay.length)
+          total: APP.time.timeXday(work, numDay.length)
         });
       },
 
@@ -120,8 +120,9 @@ exports.insert = function(APP, req, callback) {
             check_out_end: checkout_end,
             work_time: work,
             break_time: req.body.break,
-            weekly_work_time: result.week,
-            work_day: day
+            total_work_time: result.total,
+            work_day: day,
+            type: type
           })
           .save()
           .then(result => {
@@ -216,7 +217,7 @@ exports.update = function(APP, req, callback) {
         });
 
         callback(null, {
-          week: APP.time.timeXday(work, numDay.length)
+          total: APP.time.timeXday(work, numDay.length)
         });
       },
 
@@ -232,7 +233,7 @@ exports.update = function(APP, req, callback) {
               check_out_end: checkout_end,
               work_time: work,
               break_time: req.body.break,
-              weekly_work_time: data.week,
+              total_work_time: data.total,
               work_day: day,
               status: status,
               updated_at: new Date(),
@@ -387,9 +388,4 @@ exports.delete = function(APP, req, callback) {
       callback(null, result);
     }
   );
-  let params = {
-    where: {
-      id: req.body.id
-    }
-  };
 };
