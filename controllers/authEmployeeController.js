@@ -424,14 +424,11 @@ exports.register = (APP, req, callback) => {
 };
 
 exports.login = (APP, req, callback) => {
-  // Cookies that have not been signed
-  console.log('Cookies: ', req.cookies);
-
-  // Cookies that have been signed
-  console.log('Signed Cookies: ', req.signedCookies);
   let { employee, employee_face } = APP.models.company[
     process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()
   ].mysql;
+  let { company } = APP.models.mysql;
+
   async.waterfall(
     [
       function checkBody(callback) {
@@ -479,12 +476,21 @@ exports.login = (APP, req, callback) => {
           foreignKey: 'employee_id'
         });
 
+        employee.belongsTo(company, {
+          targetKey: 'company_code',
+          foreignKey: 'company_code'
+        });
+
         employee
           .findAll({
             include: [
               {
                 model: employee_face,
                 attributes: ['id', 'image']
+              },
+              {
+                model: company,
+                attributes: ['id', 'name']
               }
             ],
             attributes: [
@@ -564,6 +570,7 @@ exports.login = (APP, req, callback) => {
                   callback(null, {
                     id: rows[0].id,
                     support_pal_id: rows[0].support_pal_id,
+                    company: rows[0].company.id,
                     company_code: rows[0].company_code,
                     name: rows[0].name,
                     photo: rows[0].photo,
@@ -641,6 +648,7 @@ exports.login = (APP, req, callback) => {
         let token = jwt.sign(
           {
             id: rows.id,
+            company: rows.company,
             code: rows.company_code,
             db: `${process.env.MYSQL_NAME}_${rows.company_code}`,
             grade: rows.grade_id,
