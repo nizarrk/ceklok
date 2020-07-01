@@ -7,13 +7,32 @@ const moment = require('moment');
 
 exports.messageList = (APP, req, callback) => {
   let { inbox, company, admin_app, admin } = APP.models.mysql;
-  let { datestart, dateend, name, type, company_id } = req.body;
+  let { datestart, dateend, name, type, company_id, broadcast, read, limit, offset } = req.body;
+  let limitoffset = limit && offset ? `LIMIT ${limit} OFFSET ${offset}` : '';
 
   async.waterfall(
     [
       function checkParams(callback) {
         if (req.user.level === 1) {
-          if (datestart && dateend && name && type && company_id) {
+          let params = [
+            {
+              model: 'inbox',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${process.env.MYSQL_NAME}`,
+              status: 'Send',
+              level: 1,
+              params: `ib.created_by = ${req.user.id}`
+            },
+            {
+              model: 'inbox',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${process.env.MYSQL_NAME}`,
+              status: 'Receive',
+              level: 1,
+              params: `ib.recipient_id = ${req.user.id} AND ib.status = 1`
+            }
+          ];
+          if (company_id) {
             company
               .findOne({
                 where: {
@@ -29,51 +48,8 @@ exports.messageList = (APP, req, callback) => {
                     message: 'Company tidak ditemukan'
                   });
                 } else {
-                  let params = [
-                    {
-                      model: 'inbox',
-                      db: `${process.env.MYSQL_NAME}`,
-                      subs: `${process.env.MYSQL_NAME}_${res.company_code}`,
-                      status: 'Send',
-                      level: 1,
-                      params: `
-                        ib.created_by = ${req.user.id} 
-                      AND
-                        CONVERT(ib.created_at, date) 
-                      BETWEEN
-                        '${datestart}' AND '${dateend}'
-                      AND
-                        ib.company_id = '${company_id}'
-                      AND
-                        ib.name LIKE '%${name}%'
-                      AND
-                        ib.message_type = ${type}
-                      `
-                    },
-                    {
-                      model: 'inbox',
-                      db: `${process.env.MYSQL_NAME}`,
-                      subs: `${process.env.MYSQL_NAME}_${res.company_code}`,
-                      status: 'Receive',
-                      level: 1,
-                      params: `
-                        ib.recipient_id = ${req.user.id}
-                      AND
-                        CONVERT(ib.created_at, date) 
-                      BETWEEN
-                        '${datestart}' AND '${dateend}'
-                      AND
-                        ib.company_id = '${company_id}'
-                      AND
-                        ib.name LIKE '%${name}%'
-                      AND
-                        ib.message_type = ${type}
-
-                    `
-                    }
-                  ];
-
-                  callback(null, params);
+                  params[0].params = `${params[0].params} AND ib.company_id = '${company_id}'`;
+                  params[1].params = `${params[1].params} AND ib.company_id = '${company_id}'`;
                 }
               })
               .catch(err => {
@@ -86,110 +62,46 @@ exports.messageList = (APP, req, callback) => {
                   data: err
                 });
               });
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              id: 'LNQ96',
-              message: 'Kesalahan pada parameter'
-            });
           }
-        } else if (req.user.level === 2) {
-          if (datestart && dateend && name && type) {
-            let params = [
-              {
-                model: 'inbox',
-                db: `${req.user.db}`,
-                subs: `${req.user.db}`,
-                status: 'Send',
-                level: 2,
-                params: `
-                  ib.created_by = ${req.user.id} 
-                AND
-                  CONVERT(ib.created_at, date) 
-                BETWEEN
-                  '${datestart}' AND '${dateend}'
-                AND
-                  ib.company_id = '${req.user.company}'
-                AND
-                  ib.name LIKE '%${name}%'
-                AND
-                  ib.message_type = ${type}
-                `
-              },
-              {
-                model: 'inbox',
-                db: `${req.user.db}`,
-                subs: `${req.user.db}`,
-                status: 'Receive',
-                level: 2,
-                params: `
-                  ib.recipient_id = ${req.user.id}
-                AND
-                  CONVERT(ib.created_at, date) 
-                BETWEEN
-                  '${datestart}' AND '${dateend}'
-                AND
-                  ib.company_id = '${req.user.company}'
-                AND
-                  ib.name LIKE '%${name}%'
-                AND
-                  ib.message_type = ${type}
-                AND
-                  ib.status = 1
-                `
-              },
-              {
-                model: 'inbox',
-                db: `${process.env.MYSQL_NAME}`,
-                subs: `${req.user.db}`,
-                status: 'Receive',
-                level: 2,
-                params: `
-                  ib.recipient_id = ${req.user.id}
-                AND
-                  CONVERT(ib.created_at, date) 
-                BETWEEN
-                  '${datestart}' AND '${dateend}'
-                AND
-                  ib.company_id = '${req.user.company}'
-                AND
-                  ib.name LIKE '%${name}%'
-                AND
-                  ib.message_type = ${type}
-                AND
-                  ib.status = 1
-              `
-              }
-            ];
 
-            callback(null, params);
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              id: 'LNQ96',
-              message: 'Kesalahan pada parameter'
-            });
+          if (datestart && dateend) {
+            params[0].params = `${params[0].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[1].params = `${params[1].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
           }
-        } else if (req.user.level === 3) {
+
+          if (name) {
+            params[0].params = `${params[0].params} AND ib.name LIKE '%${name}%'`;
+            params[1].params = `${params[1].params} AND ib.name LIKE '%${name}%'`;
+          }
+
+          if (type && (type == 1 || type == 2 || type == 3 || type == 4)) {
+            params[0].params = `${params[0].params} AND ib.message_type = ${type}`;
+            params[1].params = `${params[1].params} AND ib.message_type = ${type}`;
+          }
+
+          if (broadcast && (broadcast == 0 || broadcast == 1)) {
+            params[0].params = `${params[0].params} AND ib.broadcast_type = ${broadcast}`;
+            params[1].params = `${params[1].params} AND ib.broadcast_type = ${broadcast}`;
+          }
+
+          if (read && (read == 0 || read == 1)) {
+            params[0].params = `${params[0].params} AND ib.status_read = ${read}`;
+            params[1].params = `${params[1].params} AND ib.status_read = ${read}`;
+          }
+
+          callback(null, params);
+        } else if (req.user.level === 2) {
           let params = [
             {
               model: 'inbox',
               db: `${req.user.db}`,
               subs: `${req.user.db}`,
               status: 'Send',
-              level: 3,
+              level: 2,
               params: `
                 ib.created_by = ${req.user.id} 
               AND
-                CONVERT(ib.created_at, date) 
-              BETWEEN
-                '${datestart}' AND '${dateend}'
-              AND
                 ib.company_id = '${req.user.company}'
-              AND
-                ib.name LIKE '%${name}%'
-              AND
-                ib.message_type = ${type}
               `
             },
             {
@@ -197,19 +109,11 @@ exports.messageList = (APP, req, callback) => {
               db: `${req.user.db}`,
               subs: `${req.user.db}`,
               status: 'Receive',
-              level: 3,
+              level: 2,
               params: `
                 ib.recipient_id = ${req.user.id}
               AND
-                CONVERT(ib.created_at, date) 
-              BETWEEN
-                '${datestart}' AND '${dateend}'
-              AND
                 ib.company_id = '${req.user.company}'
-              AND
-                ib.name LIKE '%${name}%'
-              AND
-                ib.message_type = ${type}
               AND
                 ib.status = 1
               `
@@ -219,31 +123,120 @@ exports.messageList = (APP, req, callback) => {
               db: `${process.env.MYSQL_NAME}`,
               subs: `${req.user.db}`,
               status: 'Receive',
-              level: 3,
+              level: 1,
               params: `
                 ib.recipient_id = ${req.user.id}
               AND
-                CONVERT(ib.created_at, date) 
-              BETWEEN
-                '${datestart}' AND '${dateend}'
-              AND
                 ib.company_id = '${req.user.company}'
-              AND
-                ib.name LIKE '%${name}%'
-              AND
-                ib.message_type = ${type}
               AND
                 ib.status = 1
             `
             }
           ];
 
+          if (datestart && dateend) {
+            params[0].params = `${params[0].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[1].params = `${params[1].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[2].params = `${params[2].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+          }
+
+          if (name) {
+            params[0].params = `${params[0].params} AND ib.name LIKE '%${name}%'`;
+            params[1].params = `${params[1].params} AND ib.name LIKE '%${name}%'`;
+            params[2].params = `${params[2].params} AND ib.name LIKE '%${name}%'`;
+          }
+
+          if (type && (type == 1 || type == 2 || type == 3 || type == 4)) {
+            params[0].params = `${params[0].params} AND ib.message_type = ${type}`;
+            params[1].params = `${params[1].params} AND ib.message_type = ${type}`;
+            params[2].params = `${params[2].params} AND ib.message_type = ${type}`;
+          }
+
+          if (broadcast && (broadcast == 0 || broadcast == 1)) {
+            params[0].params = `${params[0].params} AND ib.broadcast_type = ${broadcast}`;
+            params[1].params = `${params[1].params} AND ib.broadcast_type = ${broadcast}`;
+            params[2].params = `${params[2].params} AND ib.broadcast_type = ${broadcast}`;
+          }
+
+          if (read && (read == 0 || read == 1)) {
+            params[0].params = `${params[0].params} AND ib.status_read = ${read}`;
+            params[1].params = `${params[1].params} AND ib.status_read = ${read}`;
+            params[2].params = `${params[2].params} AND ib.status_read = ${read}`;
+          }
+
+          callback(null, params);
+        } else if (req.user.level === 3) {
+          let params = [
+            {
+              model: 'inbox',
+              db: `${req.user.db}`,
+              subs: `${req.user.db}`,
+              status: 'Send',
+              level: 2,
+              params: `ib.created_by = ${req.user.id}`
+            },
+            {
+              model: 'inbox',
+              db: `${req.user.db}`,
+              subs: `${req.user.db}`,
+              status: 'Receive',
+              level: 2,
+              params: `
+                ib.recipient_id = ${req.user.id}
+              AND
+                ib.status = 1
+              `
+            },
+            {
+              model: 'inbox',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${req.user.db}`,
+              status: 'Receive',
+              level: 1,
+              params: `
+                ib.recipient_id = ${req.user.id}
+              AND
+                ib.status = 1
+            `
+            }
+          ];
+
+          if (datestart && dateend) {
+            params[0].params = `${params[0].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[1].params = `${params[1].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[2].params = `${params[2].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+          }
+
+          if (name) {
+            params[0].params = `${params[0].params} AND ib.name LIKE '%${name}%'`;
+            params[1].params = `${params[1].params} AND ib.name LIKE '%${name}%'`;
+            params[2].params = `${params[2].params} AND ib.name LIKE '%${name}%'`;
+          }
+
+          if (type && (type == 1 || type == 2 || type == 3 || type == 4)) {
+            params[0].params = `${params[0].params} AND ib.message_type = ${type}`;
+            params[1].params = `${params[1].params} AND ib.message_type = ${type}`;
+            params[2].params = `${params[2].params} AND ib.message_type = ${type}`;
+          }
+
+          if (broadcast && (broadcast == 0 || broadcast == 1)) {
+            params[0].params = `${params[0].params} AND ib.broadcast_type = ${broadcast}`;
+            params[1].params = `${params[1].params} AND ib.broadcast_type = ${broadcast}`;
+            params[2].params = `${params[2].params} AND ib.broadcast_type = ${broadcast}`;
+          }
+
+          if (read && (read == 0 || read == 1)) {
+            params[0].params = `${params[0].params} AND ib.status_read = ${read}`;
+            params[1].params = `${params[1].params} AND ib.status_read = ${read}`;
+            params[2].params = `${params[2].params} AND ib.status_read = ${read}`;
+          }
+
           callback(null, params);
         } else {
           callback({
             code: 'INVALID_REQUEST',
             id: 'LNQ96',
-            message: 'Kesalahan pada parameter ( user level )'
+            message: 'Invalid User Level!'
           });
         }
       },
@@ -259,7 +252,9 @@ exports.messageList = (APP, req, callback) => {
                 `
                 SELECT
                   ib.id,
+                  ib.broadcast_type,
                   ib.message_type,
+                  ib.status_read,
                 CASE
                   WHEN ib.message_type = 1 THEN 'System'
                   WHEN ib.message_type = 2 THEN 'Module'
@@ -331,7 +326,7 @@ exports.messageList = (APP, req, callback) => {
                   WHEN ib.status_read = 1 AND ib.created_by = ${req.user.id} THEN 'Read'
                 END
                 AS
-                  read_status,
+                  status_read_name,
                   '${x.status}' AS message_status,
                   ${x.level} AS level_status
                 FROM
@@ -366,6 +361,9 @@ exports.messageList = (APP, req, callback) => {
                   ib.company_id = comp.id
                 WHERE
                   ${x.params}
+                ORDER BY 
+                  ib.id DESC
+                ${limitoffset}
                 `
               )
               .then(res => {
