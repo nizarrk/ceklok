@@ -17,87 +17,47 @@ const faceapi = require('face-api.js');
 const fetch = require('node-fetch');
 const canvas = require('canvas');
 const { Canvas, Image, ImageData } = canvas;
+const axios = require('axios');
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
 exports.test = function(APP, req, callback) {
-  let { absent_cuti, absent_type, cuti_type, employee } = APP.models.company.ceklok_VST203231.mysql;
-  let query;
-  if (req.body.type == 0) {
-    query = absent_type;
-  } else if (req.body.type == 1) {
-    query = cuti_type;
-  }
-
-  absent_cuti.belongsTo(query, {
-    targetKey: 'id',
-    foreignKey: 'absent_cuti_type_id'
-  });
-
-  absent_cuti.belongsTo(employee, {
-    targetKey: 'id',
-    foreignKey: 'user_id'
-  });
-
-  absent_cuti
-    .findOne({
-      include: [
-        {
-          model: query
-        },
-        {
-          model: employee,
-          attributes: ['id', 'nik', 'name', 'company_code', 'employee_code']
-        }
-      ],
-      where: {
-        id: 27
-      }
-    })
-    .then(res => {
-      callback(null, {
-        code: 'OK',
-        data: res
-      });
-    })
-    .catch(err => {
-      console.log(err);
+  let json = {
+    anjay: 'anjay'
+  };
+  let str = JSON.stringify(json);
+  fs.writeFile(`./public/uploads/${req.body.name}.json`, str, 'utf-8', (err, result) => {
+    if (err) {
       callback({
-        code: 'ERR_DATABASE',
+        code: 'ERR',
         data: err
       });
-    });
-  // APP.fileCheck(req.files.upload.data, 'csv').then(res => {
-  //   if (res == null) {
-  //     callback({
-  //       code: 'INVALID_REQUEST',
-  //       message: 'File yang diunggah tidak sesuai!'
-  //     });
-  //   } else {
-  //     console.log(res);
-  //   }
-  // });
-  // let tes = rsa.encrypt({
-  //   username: 'nrk123',
-  //   pass: 'h3jfsi1l',
-  //   platform: 'Web'
-  // });
+    } else {
+      console.log(result);
+      callback(null, {
+        code: 'OK',
+        message: 'berhasil coi'
+      });
+    }
+  });
+  // console.log(moment.utc(moment('09:50:56', 'HH:mm:ss').diff(moment('08:00:00', 'HH:mm:ss'))).format('HH:mm:ss'));
+  // let timeCompare = moment.duration(
+  //   APP.time.timeSubstract(
+  //     APP.time.timeDuration('05:00:00'),
+  //     APP.time.timeDuration('08:00:00')
+  //   )
+  // );
 
-  // console.log(tes);
+  // console.log(timeCompare);
 
-  // APP.models.company.ceklok_VST1912231.mysql.presence_monthly
-  //   .findAll({
-  //     where: {
-  //       user_id: 13
-  //     },
-  //     limit: 1,
-  //     order: [['id', 'DESC']]
-  //   })
-  //   .then(res => {
-  //     callback(null, {
-  //       code: 'OK',
-  //       data: res
-  //     });
-  //   });
+  // callback(null, {
+  //   code: 'OK',
+  //   data: APP.rsa.decrypt(req.body.data)
+  // })
+
+  // var now  = moment("05/09/2013 15:00:00", "DD/MM/YYYY HH:mm:ss");
+  // var then = moment("03/09/2013 15:00:00", "DD/MM/YYYY HH:mm:ss");
+
+  // console.log(moment.duration(now.diff(then)).format("hh:mm:ss"));
 };
 
 exports.testing = async (APP, req, callback) => {
@@ -105,7 +65,7 @@ exports.testing = async (APP, req, callback) => {
     [
       function uploadNewImage(callback) {
         try {
-          let arr = [req.body.upload1, req.body.upload2, req.body.upload2];
+          let arr = [req.body.upload1, req.body.upload2, req.body.upload3];
           let dir = `./public/uploads/company_${req.user.code}/employee/facerecog/${req.body.label}/`;
 
           if (!fs.existsSync(dir)) {
@@ -212,8 +172,8 @@ exports.testing = async (APP, req, callback) => {
             }
             Promise.all(
               arr.map(x => {
-                let json = JSON.stringify(x);
-                fs.writeFile(`${dir}${x.label}.json`, json, 'utf8', (err, result) => {
+                let str = JSON.stringify(x);
+                fs.writeFile(`./public/uploads/anjay_${x.label}.json`, str, 'utf-8', (err, result) => {
                   if (err) {
                     callback({
                       code: 'ERR',
