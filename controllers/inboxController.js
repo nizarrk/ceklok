@@ -121,7 +121,7 @@ exports.messageList = (APP, req, callback) => {
                 db: `${req.user.db}`,
                 subs: `${req.user.db}`,
                 status: 'Receive',
-                level: 1,
+                level: 2,
                 params: `
                   ib.recipient_id = ${req.user.id}
                 AND
@@ -143,7 +143,7 @@ exports.messageList = (APP, req, callback) => {
                 db: `${process.env.MYSQL_NAME}`,
                 subs: `${req.user.db}`,
                 status: 'Receive',
-                level: 1,
+                level: 2,
                 params: `
                   ib.recipient_id = ${req.user.id}
                 AND
@@ -177,7 +177,7 @@ exports.messageList = (APP, req, callback) => {
               db: `${req.user.db}`,
               subs: `${req.user.db}`,
               status: 'Send',
-              level: 2,
+              level: 3,
               params: `
                 ib.created_by = ${req.user.id} 
               AND
@@ -197,7 +197,7 @@ exports.messageList = (APP, req, callback) => {
               db: `${req.user.db}`,
               subs: `${req.user.db}`,
               status: 'Receive',
-              level: 1,
+              level: 3,
               params: `
                 ib.recipient_id = ${req.user.id}
               AND
@@ -219,7 +219,7 @@ exports.messageList = (APP, req, callback) => {
               db: `${process.env.MYSQL_NAME}`,
               subs: `${req.user.db}`,
               status: 'Receive',
-              level: 1,
+              level: 3,
               params: `
                 ib.recipient_id = ${req.user.id}
               AND
@@ -957,7 +957,7 @@ exports.deleteMessage = (APP, req, callback) => {
           if (req.user.level === 1) {
             inbox = APP.models.mysql.inbox;
             callback(null, inbox);
-          } else if (req.user.level === 2) {
+          } else if (req.user.level === 2 || req.user.level === 3) {
             inbox = APP.models.company[req.user.db].mysql.inbox;
             callback(null, inbox);
           } else {
@@ -974,6 +974,24 @@ exports.deleteMessage = (APP, req, callback) => {
             message: 'Kesalahan pada parameter'
           });
         }
+      },
+
+      function checkSelectedInbox(inbox, callback) {
+        inbox
+          .findOne({
+            where: {
+              id: id
+            }
+          })
+          .then(res => {
+            if (res == null || res.recipient_id !== req.user.id)
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Message tidak ditemukan!'
+              });
+
+            callback(null, inbox);
+          });
       },
 
       function deleteInbox(inbox, callback) {
