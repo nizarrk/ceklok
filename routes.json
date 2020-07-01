@@ -806,6 +806,34 @@
     "level": 2,
     "auth": true
   },
+  "/schedule/request/change": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/schedule/request/get": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/request/updatestatus": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/request/switch": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
   "/branch/insert": {
     "method": "post",
     "controller": "branchLocationController",
@@ -1425,7 +1453,7 @@
     "method": "post",
     "controller": "inboxController",
     "function": "deleteMessage",
-    "level": 5,
+    "level": 0,
     "auth": true
   },
   "/notification/get/company": {
