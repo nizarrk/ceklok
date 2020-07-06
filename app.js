@@ -24,6 +24,7 @@ const cors = require('cors');
 const schedule = require('node-schedule');
 const csurf = require('csurf-expire');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
 
 // Your Database configurations.
 const db = require('./db.js');
@@ -62,6 +63,27 @@ app.use(
 app.use(msisdn());
 
 app.use(cookieParser());
+
+app.use((req, res, next) => {
+  res.header('X-Frame-Options', 'Deny');
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-XSS-Protection', '1; mode=block');
+  res.header('Content-Security-Policy', "default-src 'self'");
+
+  next();
+});
+
+app.use(
+  session({
+    cookieName: 'ceklokSession',
+    secret: 'hcisceklok',
+    resave: false,
+    saveUninitialized: true,
+    httpOnly: true, // dont let browser javascript access cookie ever
+    secure: true, // only use cookie over https
+    ephemeral: true // delete this cookie while browser close
+  })
+);
 
 /**
  * ExpressJS basic middlewares.

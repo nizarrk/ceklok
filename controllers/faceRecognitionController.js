@@ -7,6 +7,7 @@ const faceapi = require('face-api.js');
 // Import a fetch implementation for Node.js
 const fetch = require('node-fetch');
 const canvas = require('canvas');
+const { throws } = require('assert');
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
@@ -25,12 +26,25 @@ exports.uploadAndTraining = function(APP, req, callback) {
 
           Promise.all(
             arr.map((x, i) => {
-              let base64Image = x.split(';base64,').pop();
+              // base64 encoded data doesn't contain commas
+              let base64ContentArray = x.split(',');
 
-              fs.writeFile(dir + `${i + 1}.jpg`, base64Image, { encoding: 'base64' }, function(err) {
-                console.log('File created');
-              });
-              return dir + `${i + 1}.jpg`;
+              // base64 content cannot contain whitespaces but nevertheless skip if there are!
+              let mimeType = base64ContentArray[0].match(/[^:\s*]\w+\/[\w-+\d.]+(?=[;| ])/)[0];
+
+              // base64 encoded data - pure
+              let base64Data = APP.validation.xss(base64ContentArray[1]);
+
+              console.log('mimeType: ', mimeType);
+
+              if (mimeType == 'image/jpeg' || mimeType == 'image/png') {
+                fs.writeFile(dir + `${i + 1}.jpg`, base64Data, { encoding: 'base64' }, function(err) {
+                  console.log('File created');
+                });
+                return dir + `${i + 1}.jpg`;
+              } else {
+                throw new Error('INVALID_REQUEST');
+              }
             })
           ).then(arr => {
             callback(null, {
@@ -39,7 +53,23 @@ exports.uploadAndTraining = function(APP, req, callback) {
             });
           });
         } catch (err) {
-          console.log(err);
+          switch (err.message) {
+            case 'INVALID_REQUEST':
+              callback({
+                code: err.message,
+                message: 'Invalid mimeType!'
+              });
+
+              break;
+
+            default:
+              callback({
+                code: 'ERR',
+                message: err.message
+              });
+
+              break;
+          }
         }
       },
 
