@@ -63,7 +63,7 @@ exports.uploadAndTraining = function(APP, req, callback) {
       },
 
       function saveImage(data, callback) {
-        if (data.faces) {
+        if (data.faces.length > 0) {
           //update
 
           Promise.all(
@@ -78,8 +78,8 @@ exports.uploadAndTraining = function(APP, req, callback) {
                     where: { id: data.faces[i].id }
                   }
                 )
-                .then(updated => {
-                  console.log('updated: ', updated);
+                .then(() => {
+                  console.log('updated: ', data.faces[i].id);
                 });
             })
           )
