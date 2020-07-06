@@ -1,6 +1,7 @@
 'use strict';
 
 //const validateJS = require('validate.js');
+const xss = require('xss');
 
 exports.email = str => {
   return str == '' ||
@@ -60,6 +61,12 @@ exports.checkCSV = str => {
   const slicedStr = str.slice(1);
 
   return slicedStr;
+};
+
+exports.xss = str => {
+  let filter = xss(str);
+
+  return filter;
 };
 
 // exports.array = (arr) => {
