@@ -43,38 +43,91 @@ exports.uploadAndTraining = function(APP, req, callback) {
         }
       },
 
-      function saveImage(data, callback) {
-        Promise.all(
-          data.path.map(x => {
-            let obj = {
-              employee_id: req.user.id,
-              image: x.slice(8)
-            };
-
-            return obj;
+      function checkEmployeeFaces(data, callback) {
+        employee_face
+          .findAll({
+            where: { employee_id: req.user.id },
+            limit: 3
           })
-        )
-          .then(arr => {
-            employee_face
-              .bulkCreate(arr)
-              .then(() => {
-                callback(null, data.dir);
-              })
-              .catch(err => {
-                console.log(err);
-                callback({
-                  code: 'ERR_DATABASE',
-                  data: err
-                });
-              });
+          .then(res => {
+            data.faces = res;
+            callback(null, data);
           })
           .catch(err => {
             console.log(err);
             callback({
-              code: 'ERR',
+              code: 'ERR_DATABASE',
               data: err
             });
           });
+      },
+
+      function saveImage(data, callback) {
+        if (data.faces) {
+          //update
+
+          Promise.all(
+            data.path.map((x, i) => {
+              return employee_face
+                .update(
+                  {
+                    image: x.slice(8),
+                    updated_at: new Date()
+                  },
+                  {
+                    where: { id: data.faces[i].id }
+                  }
+                )
+                .then(updated => {
+                  console.log('updated: ', updated);
+                });
+            })
+          )
+            .then(() => {
+              callback(null, data);
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR',
+                data: err
+              });
+            });
+        } else {
+          // insert
+
+          Promise.all(
+            data.path.map(x => {
+              let obj = {
+                employee_id: req.user.id,
+                image: x.slice(8)
+              };
+
+              return obj;
+            })
+          )
+            .then(arr => {
+              employee_face
+                .bulkCreate(arr)
+                .then(() => {
+                  callback(null, data);
+                })
+                .catch(err => {
+                  console.log(err);
+                  callback({
+                    code: 'ERR_DATABASE',
+                    data: err
+                  });
+                });
+            })
+            .catch(err => {
+              console.log(err);
+              callback({
+                code: 'ERR',
+                data: err
+              });
+            });
+        }
       },
 
       function loadModelData(data, callback) {
@@ -105,7 +158,7 @@ exports.uploadAndTraining = function(APP, req, callback) {
         // let labels = [];
         let descriptions = {};
         let labels = [req.body.label];
-        return Promise.all(
+        Promise.all(
           labels.map(async label => {
             descriptions[label] = [];
             // console.log(label);
@@ -130,7 +183,7 @@ exports.uploadAndTraining = function(APP, req, callback) {
             for (let i = 1; i <= 1; i++) {
               console.log('masuk for iterasi ke:', i);
 
-              let img = await canvas.loadImage(`${data}${i}.jpg`);
+              let img = await canvas.loadImage(`${data.dir}${i}.jpg`);
               console.log(img);
 
               // let imgFile = await faceapi.fetchImage(`https://pejalancoding.site/faceRecognition/labeled_images/${label}/${i}.jpg`);
@@ -153,7 +206,7 @@ exports.uploadAndTraining = function(APP, req, callback) {
         )
           .then(arr => {
             console.log(arr);
-            let dir = `${data}result/`;
+            let dir = `${data.dir}result/`;
 
             if (!fs.existsSync(dir)) {
               mkdirp.sync(dir);
@@ -172,10 +225,10 @@ exports.uploadAndTraining = function(APP, req, callback) {
                   }
                 });
               })
-            ).then(result => {
+            ).then(() => {
               callback(null, {
                 code: 'OK',
-                data: result
+                data: data.path
               });
             });
           })
