@@ -437,6 +437,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                     'time_end',
                     'time_total'
                   ],
+                  limit: 5,
                   include: [
                     {
                       model: absent_type
@@ -464,6 +465,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                     'total_over',
                     'presence_setting_id'
                   ],
+                  limit: 5,
                   include: [
                     {
                       model: presence_setting,
