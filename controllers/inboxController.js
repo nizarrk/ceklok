@@ -467,49 +467,45 @@ exports.messageDetail = (APP, req, callback) => {
   async.waterfall(
     [
       function checkParams(callback) {
-        if (id && level && company_id) {
-          company
-            .findOne({
-              where: {
-                id: company_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                callback({
-                  code: 'NOT_FOUND',
-                  id: 'DMQ97',
-                  message: 'Data Tidak ditemukan'
-                });
-              } else {
-                if (level == 1) {
+        if (level == 1) {
+          if (company_id) {
+            company
+              .findOne({
+                where: { id: company_id }
+              })
+              .then(res => {
+                if (res == null) {
+                  callback({
+                    code: 'NOT_FOUND',
+                    id: 'DMQ97',
+                    message: 'Company Tidak ditemukan'
+                  });
+                } else {
                   callback(null, {
                     query: APP.models.mysql.inbox,
                     model: 'inbox',
                     db: `${process.env.MYSQL_NAME}`,
                     subs: `${process.env.MYSQL_NAME}_${res.company_code}`
                   });
-                } else if (level == 2) {
-                  callback(null, {
-                    query: APP.models.company[`${process.env.MYSQL_NAME}_${res.company_code}`].mysql.inbox,
-                    model: 'inbox',
-                    db: `${process.env.MYSQL_NAME}_${res.company_code}`,
-                    subs: `${process.env.MYSQL_NAME}_${res.company_code}`
-                  });
-                } else {
-                  callback({
-                    code: 'INVALID_REQUEST',
-                    id: 'DNQ96',
-                    message: 'Kesalahan pada parameter level'
-                  });
                 }
-              }
+              });
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter company_id!'
             });
+          }
+        } else if (level == 2) {
+          callback(null, {
+            query: APP.models.company[req.user.db].mysql.inbox,
+            model: 'inbox',
+            db: req.user.db,
+            subs: req.user.db
+          });
         } else {
           callback({
             code: 'INVALID_REQUEST',
-            id: 'DNQ96',
-            message: 'Kesalahan pada parameter'
+            message: 'Kesalahan pada parameter level!'
           });
         }
       },
@@ -522,7 +518,8 @@ exports.messageDetail = (APP, req, callback) => {
             },
             {
               where: {
-                id: id
+                id: id,
+                recipient_id: req.user.id
               }
             }
           )
@@ -547,7 +544,9 @@ exports.messageDetail = (APP, req, callback) => {
             `
           SELECT
             ib.id,
+            ib.broadcast_type,
             ib.message_type,
+            ib.status_read,
           CASE
             WHEN ib.message_type = 1 THEN 'System'
             WHEN ib.message_type = 2 THEN 'Module'
@@ -659,6 +658,8 @@ exports.messageDetail = (APP, req, callback) => {
             ib.company_id = comp.id
           WHERE
             ib.id = ${id}
+          AND
+            (ib.recipient_id = ${req.user.id} OR ib.created_by = ${req.user.id})
           `
           )
           .then(res => {
@@ -673,7 +674,7 @@ exports.messageDetail = (APP, req, callback) => {
                 code: 'FOUND',
                 id: 'DN00',
                 message: 'Data ditemukan',
-                data: res[0]
+                data: res[0][0]
               });
             }
           })
