@@ -473,7 +473,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                 }
               ],
               where: {
-                id: req.body.id
+                id: req.user.level == 3 ? req.user.id : req.body.id
               }
             })
             .then(res => {

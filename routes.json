@@ -117,7 +117,7 @@
     "method": "post",
     "controller": "employeeController",
     "function": "viewEmployeeInfo",
-    "level": 2,
+    "level": 4,
     "auth": true
   },
   "/employee/add": {
@@ -832,6 +832,13 @@
     "controller": "scheduleSwitchController",
     "function": "insert",
     "level": 3,
+    "auth": true
+  },
+  "/schedule/request/switch/get": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "get",
+    "level": 4,
     "auth": true
   },
   "/branch/insert": {
