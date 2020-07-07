@@ -377,6 +377,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
 
           employee
             .findOne({
+              attributes: { exclude: ['password', 'old_password'] },
               include: [
                 {
                   model: grade,
@@ -438,6 +439,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                     'time_total'
                   ],
                   limit: 5,
+                  order: [['id', 'DESC']],
                   include: [
                     {
                       model: absent_type
@@ -466,6 +468,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                     'presence_setting_id'
                   ],
                   limit: 5,
+                  order: [['id', 'DESC']],
                   include: [
                     {
                       model: presence_setting,
