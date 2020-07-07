@@ -241,12 +241,69 @@ exports.messageList = (APP, req, callback) => {
         }
       },
 
-      function getInboxData(data, callback) {
-        console.log(req.user.id);
+      function countInboxData(data, callback) {
+        let total = 0;
 
-        let arr = [];
         Promise.all(
           data.map((x, i) => {
+            return APP.db.sequelize
+              .query(
+                `
+                SELECT 
+                  COUNT(ib.id) 'total'
+                FROM
+                  ${x.db}.${x.model} ib
+                LEFT OUTER JOIN
+                  ceklok.admin_app app 
+                ON
+                  ib.recipient_id = app.id
+                LEFT OUTER JOIN
+                  ceklok.admin adm 
+                ON
+                  ib.recipient_id = adm.id
+                LEFT OUTER JOIN
+                  ${x.subs}.employee emp 
+                ON
+                  ib.recipient_id = emp.id
+                LEFT OUTER JOIN
+                  ceklok.admin_app app1 
+                ON
+                  ib.created_by = app1.id
+                LEFT OUTER JOIN
+                  ceklok.admin adm1
+                ON
+                  ib.created_by = adm1.id
+                LEFT OUTER JOIN
+                  ${x.subs}.employee emp1 
+                ON
+                  ib.recipient_id = emp1.id
+                LEFT OUTER JOIN
+                  ceklok.company comp
+                ON
+                  ib.company_id = comp.id
+                WHERE
+                  ${x.params}
+                `
+              )
+              .then(res => {
+                console.log(res[0][0].total);
+
+                total += res[0][0].total;
+              });
+          })
+        ).then(() => {
+          callback(null, {
+            params: data,
+            total: total
+          });
+        });
+      },
+
+      function getInboxData(data, callback) {
+        let arr = [];
+
+        Promise.all(
+          data.params.map((x, i) => {
             return APP.db.sequelize
               .query(
                 `
@@ -384,7 +441,12 @@ exports.messageList = (APP, req, callback) => {
               code: 'FOUND',
               id: 'LNP00',
               message: 'Message ditemukan',
-              data: arr
+              data: {
+                total: data.total,
+                limit: limit,
+                offset: offset,
+                rows: arr
+              }
             });
           }
         });
