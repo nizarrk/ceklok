@@ -140,13 +140,32 @@ exports.recipientList = (APP, req, callback) => {
 
 exports.notificationList = (APP, req, callback) => {
   let { company } = APP.models.mysql;
-  let { datestart, dateend, name, type, company_id } = req.body;
+  let { datestart, dateend, name, type, company_id, broadcast, read, subtype, limit, offset } = req.body;
+  let limitoffset = limit && offset ? `LIMIT ${limit} OFFSET ${offset}` : '';
 
   async.waterfall(
     [
       function checkParams(callback) {
         if (req.user.level === 1) {
-          if (datestart && dateend && name && type && company_id) {
+          let params = [
+            {
+              model: 'notification',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${process.env.MYSQL_NAME}`,
+              status: 'Send',
+              level: 1,
+              params: `ib.created_by = ${req.user.id}`
+            },
+            {
+              model: 'notification',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${process.env.MYSQL_NAME}`,
+              status: 'Receive',
+              level: 1,
+              params: `ib.recipient_id = ${req.user.id} AND ib.status = 1`
+            }
+          ];
+          if (company_id) {
             company
               .findOne({
                 where: {
@@ -162,51 +181,8 @@ exports.notificationList = (APP, req, callback) => {
                     message: 'Company tidak ditemukan'
                   });
                 } else {
-                  let params = [
-                    {
-                      model: 'notification',
-                      db: `${process.env.MYSQL_NAME}`,
-                      subs: `${process.env.MYSQL_NAME}_${res.company_code}`,
-                      status: 'Send',
-                      level: 1,
-                      params: `
-                        ib.created_by = ${req.user.id} 
-                      AND
-                        CONVERT(ib.created_at, date) 
-                      BETWEEN
-                        '${datestart}' AND '${dateend}'
-                      AND
-                        ib.company_id = '${company_id}'
-                      AND
-                        ib.name LIKE '%${name}%'
-                      AND
-                        ib.notification_sub_type = ${type}
-                      `
-                    },
-                    {
-                      model: 'notification',
-                      db: `${process.env.MYSQL_NAME}`,
-                      subs: `${process.env.MYSQL_NAME}_${res.company_code}`,
-                      status: 'Receive',
-                      level: 1,
-                      params: `
-                        ib.recipient_id = ${req.user.id}
-                      AND
-                        CONVERT(ib.created_at, date) 
-                      BETWEEN
-                        '${datestart}' AND '${dateend}'
-                      AND
-                        ib.company_id = '${company_id}'
-                      AND
-                        ib.name LIKE '%${name}%'
-                      AND
-                        ib.notification_sub_type = ${type}
-
-                    `
-                    }
-                  ];
-
-                  callback(null, params);
+                  params[0].params = `${params[0].params} AND ib.company_id = '${company_id}'`;
+                  params[1].params = `${params[1].params} AND ib.company_id = '${company_id}'`;
                 }
               })
               .catch(err => {
@@ -219,91 +195,40 @@ exports.notificationList = (APP, req, callback) => {
                   data: err
                 });
               });
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              id: 'LNQ96',
-              message: 'Kesalahan pada parameter'
-            });
           }
-        } else if (req.user.level === 2) {
-          if (datestart && dateend && name && type) {
-            let params = [
-              {
-                model: 'notification',
-                db: `${req.user.db}`,
-                subs: `${req.user.db}`,
-                status: 'Send',
-                level: 2,
-                params: `
-                  ib.created_by = ${req.user.id} 
-                AND
-                  CONVERT(ib.created_at, date) 
-                BETWEEN
-                  '${datestart}' AND '${dateend}'
-                AND
-                  ib.company_id = '${req.user.company}'
-                AND
-                  ib.name LIKE '%${name}%'
-                AND
-                  ib.notification_sub_type = ${type}
-                `
-              },
-              {
-                model: 'notification',
-                db: `${req.user.db}`,
-                subs: `${req.user.db}`,
-                status: 'Receive',
-                level: 1,
-                params: `
-                  ib.recipient_id = ${req.user.id}
-                AND
-                  CONVERT(ib.created_at, date) 
-                BETWEEN
-                  '${datestart}' AND '${dateend}'
-                AND
-                  ib.company_id = '${req.user.company}'
-                AND
-                  ib.name LIKE '%${name}%'
-                AND
-                  ib.notification_sub_type = ${type}
-                AND
-                  ib.status = 1
-                `
-              },
-              {
-                model: 'notification',
-                db: `${process.env.MYSQL_NAME}`,
-                subs: `${req.user.db}`,
-                status: 'Receive',
-                level: 1,
-                params: `
-                  ib.recipient_id = ${req.user.id}
-                AND
-                  CONVERT(ib.created_at, date) 
-                BETWEEN
-                  '${datestart}' AND '${dateend}'
-                AND
-                  ib.company_id = '${req.user.company}'
-                AND
-                  ib.name LIKE '%${name}%'
-                AND
-                  ib.notification_sub_type = ${type}
-                AND
-                  ib.status = 1
-              `
-              }
-            ];
 
-            callback(null, params);
-          } else {
-            callback({
-              code: 'INVALID_REQUEST',
-              id: 'LNQ96',
-              message: 'Kesalahan pada parameter'
-            });
+          if (datestart && dateend) {
+            params[0].params = `${params[0].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[1].params = `${params[1].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
           }
-        } else if (req.user.level === 3) {
+
+          if (name) {
+            params[0].params = `${params[0].params} AND ib.name LIKE '%${name}%'`;
+            params[1].params = `${params[1].params} AND ib.name LIKE '%${name}%'`;
+          }
+
+          if (type && (type == 1 || type == 2)) {
+            params[0].params = `${params[0].params} AND ib.notification_type = ${type}`;
+            params[1].params = `${params[1].params} AND ib.notification_type = ${type}`;
+          }
+
+          if (subtype && (subtype == 1 || subtype == 2 || subtype == 3 || subtype == 4)) {
+            params[0].params = `${params[0].params} AND ib.notification_sub_type = ${subtype}`;
+            params[1].params = `${params[1].params} AND ib.notification_sub_type = ${subtype}`;
+          }
+
+          if (broadcast && (broadcast == 0 || broadcast == 1)) {
+            params[0].params = `${params[0].params} AND ib.broadcast_type = ${broadcast}`;
+            params[1].params = `${params[1].params} AND ib.broadcast_type = ${broadcast}`;
+          }
+
+          if (read && (read == 0 || read == 1)) {
+            params[0].params = `${params[0].params} AND ib.status_read = ${read}`;
+            params[1].params = `${params[1].params} AND ib.status_read = ${read}`;
+          }
+
+          callback(null, params);
+        } else if (req.user.level === 2) {
           let params = [
             {
               model: 'notification',
@@ -314,15 +239,7 @@ exports.notificationList = (APP, req, callback) => {
               params: `
                 ib.created_by = ${req.user.id} 
               AND
-                CONVERT(ib.created_at, date) 
-              BETWEEN
-                '${datestart}' AND '${dateend}'
-              AND
                 ib.company_id = '${req.user.company}'
-              AND
-                ib.name LIKE '%${name}%'
-              AND
-                ib.notification_sub_type = ${type}
               `
             },
             {
@@ -330,19 +247,11 @@ exports.notificationList = (APP, req, callback) => {
               db: `${req.user.db}`,
               subs: `${req.user.db}`,
               status: 'Receive',
-              level: 1,
+              level: 2,
               params: `
                 ib.recipient_id = ${req.user.id}
               AND
-                CONVERT(ib.created_at, date) 
-              BETWEEN
-                '${datestart}' AND '${dateend}'
-              AND
                 ib.company_id = '${req.user.company}'
-              AND
-                ib.name LIKE '%${name}%'
-              AND
-                ib.notification_sub_type = ${type}
               AND
                 ib.status = 1
               `
@@ -356,42 +265,202 @@ exports.notificationList = (APP, req, callback) => {
               params: `
                 ib.recipient_id = ${req.user.id}
               AND
-                CONVERT(ib.created_at, date) 
-              BETWEEN
-                '${datestart}' AND '${dateend}'
-              AND
                 ib.company_id = '${req.user.company}'
-              AND
-                ib.name LIKE '%${name}%'
-              AND
-                ib.notification_sub_type = ${type}
               AND
                 ib.status = 1
             `
             }
           ];
 
+          if (datestart && dateend) {
+            params[0].params = `${params[0].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[1].params = `${params[1].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[2].params = `${params[2].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+          }
+
+          if (name) {
+            params[0].params = `${params[0].params} AND ib.name LIKE '%${name}%'`;
+            params[1].params = `${params[1].params} AND ib.name LIKE '%${name}%'`;
+            params[2].params = `${params[2].params} AND ib.name LIKE '%${name}%'`;
+          }
+
+          if (type && (type == 1 || type == 2)) {
+            params[0].params = `${params[0].params} AND ib.notification_type = ${type}`;
+            params[1].params = `${params[1].params} AND ib.notification_type = ${type}`;
+            params[2].params = `${params[2].params} AND ib.notification_type = ${type}`;
+          }
+
+          if (subtype && (subtype == 1 || subtype == 2 || subtype == 3 || subtype == 4)) {
+            params[0].params = `${params[0].params} AND ib.notification_sub_type = ${subtype}`;
+            params[1].params = `${params[1].params} AND ib.notification_sub_type = ${subtype}`;
+            params[2].params = `${params[2].params} AND ib.notification_sub_type = ${subtype}`;
+          }
+
+          if (broadcast && (broadcast == 0 || broadcast == 1)) {
+            params[0].params = `${params[0].params} AND ib.broadcast_type = ${broadcast}`;
+            params[1].params = `${params[1].params} AND ib.broadcast_type = ${broadcast}`;
+            params[2].params = `${params[2].params} AND ib.broadcast_type = ${broadcast}`;
+          }
+
+          if (read && (read == 0 || read == 1)) {
+            params[0].params = `${params[0].params} AND ib.status_read = ${read}`;
+            params[1].params = `${params[1].params} AND ib.status_read = ${read}`;
+            params[2].params = `${params[2].params} AND ib.status_read = ${read}`;
+          }
+
+          callback(null, params);
+        } else if (req.user.level === 3) {
+          let params = [
+            {
+              model: 'notification',
+              db: `${req.user.db}`,
+              subs: `${req.user.db}`,
+              status: 'Send',
+              level: 2,
+              params: `ib.created_by = ${req.user.id}`
+            },
+            {
+              model: 'notification',
+              db: `${req.user.db}`,
+              subs: `${req.user.db}`,
+              status: 'Receive',
+              level: 2,
+              params: `
+                ib.recipient_id = ${req.user.id}
+              AND
+                ib.status = 1
+              `
+            },
+            {
+              model: 'notification',
+              db: `${process.env.MYSQL_NAME}`,
+              subs: `${req.user.db}`,
+              status: 'Receive',
+              level: 1,
+              params: `
+                ib.recipient_id = ${req.user.id}
+              AND
+                ib.status = 1
+            `
+            }
+          ];
+
+          if (datestart && dateend) {
+            params[0].params = `${params[0].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[1].params = `${params[1].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+            params[2].params = `${params[2].params} AND CONVERT(ib.created_at, date) BETWEEN '${datestart}' AND '${dateend}'`;
+          }
+
+          if (name) {
+            params[0].params = `${params[0].params} AND ib.name LIKE '%${name}%'`;
+            params[1].params = `${params[1].params} AND ib.name LIKE '%${name}%'`;
+            params[2].params = `${params[2].params} AND ib.name LIKE '%${name}%'`;
+          }
+
+          if (type && (type == 1 || type == 2)) {
+            params[0].params = `${params[0].params} AND ib.notification_type = ${type}`;
+            params[1].params = `${params[1].params} AND ib.notification_type = ${type}`;
+            params[2].params = `${params[2].params} AND ib.notification_type = ${type}`;
+          }
+
+          if (subtype && (subtype == 1 || subtype == 2 || subtype == 3 || subtype == 4)) {
+            params[0].params = `${params[0].params} AND ib.notification_sub_type = ${subtype}`;
+            params[1].params = `${params[1].params} AND ib.notification_sub_type = ${subtype}`;
+            params[2].params = `${params[2].params} AND ib.notification_sub_type = ${subtype}`;
+          }
+
+          if (broadcast && (broadcast == 0 || broadcast == 1)) {
+            params[0].params = `${params[0].params} AND ib.broadcast_type = ${broadcast}`;
+            params[1].params = `${params[1].params} AND ib.broadcast_type = ${broadcast}`;
+            params[2].params = `${params[2].params} AND ib.broadcast_type = ${broadcast}`;
+          }
+
+          if (read && (read == 0 || read == 1)) {
+            params[0].params = `${params[0].params} AND ib.status_read = ${read}`;
+            params[1].params = `${params[1].params} AND ib.status_read = ${read}`;
+            params[2].params = `${params[2].params} AND ib.status_read = ${read}`;
+          }
+
           callback(null, params);
         } else {
           callback({
             code: 'INVALID_REQUEST',
             id: 'LNQ96',
-            message: 'Kesalahan pada parameter ( user level )'
+            message: 'Invalid User Level!'
           });
         }
       },
 
-      function getNotificationData(data, callback) {
-        console.log(req.user.id);
+      function countInboxData(data, callback) {
+        let total = 0;
 
-        let arr = [];
         Promise.all(
           data.map((x, i) => {
             return APP.db.sequelize
               .query(
                 `
                 SELECT
+                  COUNT(ib.id) 'total'
+                FROM
+                  ${x.db}.${x.model} ib
+                LEFT OUTER JOIN
+                  ceklok.admin_app app 
+                ON
+                  ib.recipient_id = app.id
+                LEFT OUTER JOIN
+                  ceklok.admin adm 
+                ON
+                  ib.recipient_id = adm.id
+                LEFT OUTER JOIN
+                  ${x.subs}.employee emp 
+                ON
+                  ib.recipient_id = emp.id
+                LEFT OUTER JOIN
+                  ceklok.admin_app app1 
+                ON
+                  ib.created_by = app1.id
+                LEFT OUTER JOIN
+                  ceklok.admin adm1
+                ON
+                  ib.created_by = adm1.id
+                LEFT OUTER JOIN
+                  ${x.subs}.employee emp1 
+                ON
+                  ib.recipient_id = emp1.id
+                LEFT OUTER JOIN
+                  ceklok.company comp
+                ON
+                  ib.company_id = comp.id
+                WHERE
+                  ${x.params}
+                `
+              )
+              .then(res => {
+                console.log(res[0][0].total);
+
+                total += res[0][0].total;
+              });
+          })
+        ).then(() => {
+          callback(null, {
+            params: data,
+            total: total
+          });
+        });
+      },
+
+      function getNotificationData(data, callback) {
+        let arr = [];
+        Promise.all(
+          data.params.map((x, i) => {
+            return APP.db.sequelize
+              .query(
+                `
+                SELECT
                   ib.id,
+                  ib.notification_type,
+                  ib.broadcast_type,
+                  ib.status_read,
                   ib.notification_sub_type,
                 CASE
                   WHEN ib.notification_sub_type = 1 THEN 'System'
@@ -499,6 +568,9 @@ exports.notificationList = (APP, req, callback) => {
                   ib.company_id = comp.id
                 WHERE
                   ${x.params}
+                ORDER BY 
+                  ib.id DESC
+                ${limitoffset}
                 `
               )
               .then(res => {
@@ -519,7 +591,12 @@ exports.notificationList = (APP, req, callback) => {
               code: 'FOUND',
               id: 'LNP00',
               message: 'Message ditemukan',
-              data: arr
+              data: {
+                total: data.total,
+                limit: limit,
+                offset: offset,
+                rows: arr
+              }
             });
           }
         });
@@ -540,49 +617,45 @@ exports.notificationDetail = (APP, req, callback) => {
   async.waterfall(
     [
       function checkParams(callback) {
-        if (id && level && company_id) {
-          company
-            .findOne({
-              where: {
-                id: company_id
-              }
-            })
-            .then(res => {
-              if (res == null) {
-                callback({
-                  code: 'NOT_FOUND',
-                  id: 'DMQ97',
-                  message: 'Data Tidak ditemukan'
-                });
-              } else {
-                if (level == 1) {
+        if (level == 1) {
+          if (company_id) {
+            company
+              .findOne({
+                where: { id: company_id }
+              })
+              .then(res => {
+                if (res == null) {
+                  callback({
+                    code: 'NOT_FOUND',
+                    id: 'DMQ97',
+                    message: 'Company Tidak ditemukan'
+                  });
+                } else {
                   callback(null, {
                     query: APP.models.mysql.notification,
                     model: 'notification',
                     db: `${process.env.MYSQL_NAME}`,
                     subs: `${process.env.MYSQL_NAME}_${res.company_code}`
                   });
-                } else if (level == 2 || level == 3) {
-                  callback(null, {
-                    query: APP.models.company[`${process.env.MYSQL_NAME}_${res.company_code}`].mysql.notification,
-                    model: 'notification',
-                    db: `${process.env.MYSQL_NAME}_${res.company_code}`,
-                    subs: `${process.env.MYSQL_NAME}_${res.company_code}`
-                  });
-                } else {
-                  callback({
-                    code: 'INVALID_REQUEST',
-                    id: 'DNQ96',
-                    message: 'Kesalahan pada parameter level'
-                  });
                 }
-              }
+              });
+          } else {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter company_id!'
             });
+          }
+        } else if (level == 2) {
+          callback(null, {
+            query: APP.models.company[req.user.db].mysql.notification,
+            model: 'notification',
+            db: req.user.db,
+            subs: req.user.db
+          });
         } else {
           callback({
             code: 'INVALID_REQUEST',
-            id: 'DNQ96',
-            message: 'Kesalahan pada parameter'
+            message: 'Kesalahan pada parameter level!'
           });
         }
       },
@@ -596,7 +669,6 @@ exports.notificationDetail = (APP, req, callback) => {
             {
               where: {
                 id: id,
-                recipient_level: level,
                 recipient_id: req.user.id
               }
             }
@@ -622,6 +694,9 @@ exports.notificationDetail = (APP, req, callback) => {
             `
           SELECT
             ib.id,
+            ib.notification_type,
+            ib.broadcast_type,
+            ib.status_read,
             ib.notification_sub_type,
           CASE
             WHEN ib.notification_sub_type = 1 THEN 'System'
