@@ -1411,7 +1411,7 @@
     "method": "post",
     "controller": "overtimeController",
     "function": "viewDetailOvertimeData",
-    "level": 2,
+    "level": 4,
     "auth": true
   },
   "/overtime/setting/add": {
