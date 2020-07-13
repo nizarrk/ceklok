@@ -600,6 +600,7 @@ exports.viewDetailOvertimeData = (APP, req, callback) => {
         employee.employee_code AS 'employee_code',
         employee.nik AS 'employee_nik',
         employee.name AS 'employee_name',
+        employee.photo AS 'employee_photo',
         requester.id AS 'requester_id',
         requester.employee_code AS 'requester_code',
         requester.nik AS 'requester_nik',
