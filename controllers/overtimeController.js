@@ -540,6 +540,11 @@ exports.viewOvertimeData = (APP, req, callback) => {
 
     overtime
       .findAll({
+        attributes: {
+          include: [
+            [APP.db.sequelize.literal(`CASE WHEN overtime.created_by = ${req.user.id} THEN 1 ELSE 2 END`), 'requester']
+          ]
+        },
         include: [
           {
             model: department,
