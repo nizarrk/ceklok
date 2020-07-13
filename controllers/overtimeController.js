@@ -604,8 +604,10 @@ exports.viewDetailOvertimeData = (APP, req, callback) => {
         requester.employee_code AS 'requester_code',
         requester.nik AS 'requester_nik',
         requester.name AS 'requester_name',
+        requester.photo AS 'requester_photo',
         approver.id AS 'approver_id',
-        approver.name AS 'approver_name'
+        approver.name AS 'approver_name',
+        approver.photo AS 'approver_photo'
       FROM 
         ${req.user.db}.overtime AS overtime 
       LEFT OUTER JOIN 
