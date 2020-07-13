@@ -580,97 +580,79 @@ exports.viewOvertimeData = (APP, req, callback) => {
 };
 
 exports.viewDetailOvertimeData = (APP, req, callback) => {
-  if (req.user.level === 2) {
-    if (!req.body.id) {
-      callback({
-        code: 'INVALID_REQUEST',
-        id: 'DOQ96',
-        message: 'Kesalahan pada parameter'
-      });
-    } else {
-      let { overtime, employee, department } = APP.models.company[req.user.db].mysql;
-      let { admin } = APP.models.mysql;
-
-      overtime.belongsTo(department, {
-        targetKey: 'id',
-        foreignKey: 'department_id'
-      });
-
-      overtime.belongsTo(employee, {
-        targetKey: 'id',
-        foreignKey: 'user_id'
-      });
-
-      overtime.belongsTo(employee, {
-        targetKey: 'id',
-        foreignKey: 'created_by',
-        as: 'requester'
-      });
-
-      overtime.belongsTo(admin, {
-        targetKey: 'id',
-        foreignKey: 'approved_by',
-        as: 'approver'
-      });
-
-      overtime
-        .findAll({
-          include: [
-            {
-              model: department,
-              attributes: ['id', 'code', 'name', 'description']
-            },
-            {
-              model: employee,
-              attributes: ['id', 'employee_code', 'nik', 'name']
-            },
-            {
-              model: employee,
-              attributes: ['id', 'employee_code', 'nik', 'name'],
-              as: 'requester'
-            },
-            {
-              model: admin,
-              attributes: ['id', 'name'],
-              as: 'approver'
-            }
-          ],
-          where: {
-            id: req.body.id
-          }
-        })
-        .then(res => {
-          if (res == null) {
-            callback({
-              code: 'NOT_FOUND',
-              id: 'DOQ97',
-              message: 'Data Tidak ditemukan'
-            });
-          } else {
-            callback(null, {
-              code: 'FOUND',
-              id: 'DOP00',
-              message: 'Detail lembur ditemukan',
-              data: res
-            });
-          }
-        })
-        .catch(err => {
-          console.log(err);
-          callback({
-            code: 'ERR_DATABASE',
-            id: 'DOQ98',
-            message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-            data: err
-          });
-        });
-    }
-  } else {
+  if (!req.body.id) {
     callback({
       code: 'INVALID_REQUEST',
-      id: '?',
-      message: 'Invalid user level'
+      id: 'DOQ96',
+      message: 'Kesalahan pada parameter'
     });
+  } else {
+    APP.db.sequelize
+      .query(
+        `
+      SELECT 
+        overtime.*,
+        department.id AS 'department_id',
+        department.code AS 'department_code',
+        department.name AS 'department_name',
+        department.description AS 'department_desc',
+        employee.id AS 'employee_id',
+        employee.employee_code AS 'employee_code',
+        employee.nik AS 'employee_nik',
+        employee.name AS 'employee_name',
+        requester.id AS 'requester_id',
+        requester.employee_code AS 'requester_code',
+        requester.nik AS 'requester_nik',
+        requester.name AS 'requester_name',
+        approver.id AS 'approver_id',
+        approver.name AS 'approver_name'
+      FROM 
+        ${req.user.db}.overtime AS overtime 
+      LEFT OUTER JOIN 
+        ${req.user.db}.department AS department 
+      ON 
+        overtime.department_id = department.id 
+      LEFT OUTER JOIN 
+        ${req.user.db}.employee AS employee 
+      ON 
+        overtime.user_id = employee.id 
+      LEFT OUTER JOIN 
+        ${req.user.db}.employee AS requester 
+      ON 
+        overtime.created_by = requester.id 
+      LEFT OUTER JOIN 
+        ${process.env.MYSQL_NAME}.admin AS approver 
+      ON 
+        overtime.approved_by = approver.id 
+      WHERE 
+        overtime.id = ${req.body.id};
+      `
+      )
+      .then(res => {
+        if (res[0].length == 0) {
+          callback({
+            code: 'NOT_FOUND',
+            id: 'DOQ97',
+            message: 'Data Tidak ditemukan'
+          });
+        } else {
+          callback(null, {
+            code: 'FOUND',
+            id: 'DOP00',
+            message: 'Detail lembur ditemukan',
+            data: res[0][0]
+          });
+        }
+      })
+      .catch(err => {
+        console.log(err);
+        callback({
+          code: 'ERR_DATABASE',
+          id: 'DOQ98',
+          message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+          data: err
+        });
+      });
   }
 };
 
