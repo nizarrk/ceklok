@@ -518,7 +518,14 @@ exports.viewOvertimeData = (APP, req, callback) => {
     }
 
     if (req.user.level === 3) {
-      where.user_id = req.user.id;
+      where.$or = [
+        {
+          user_id: req.user.id
+        },
+        {
+          created_by: req.user.id
+        }
+      ];
     }
 
     overtime.belongsTo(department, {
@@ -580,83 +587,91 @@ exports.viewOvertimeData = (APP, req, callback) => {
 };
 
 exports.viewDetailOvertimeData = (APP, req, callback) => {
-  if (!req.body.id) {
-    callback({
-      code: 'INVALID_REQUEST',
-      id: 'DOQ96',
-      message: 'Kesalahan pada parameter'
-    });
-  } else {
-    APP.db.sequelize
-      .query(
-        `
-      SELECT 
-        overtime.*,
-        department.id AS 'department_id',
-        department.code AS 'department_code',
-        department.name AS 'department_name',
-        department.description AS 'department_desc',
-        employee.id AS 'employee_id',
-        employee.employee_code AS 'employee_code',
-        employee.nik AS 'employee_nik',
-        employee.name AS 'employee_name',
-        employee.photo AS 'employee_photo',
-        requester.id AS 'requester_id',
-        requester.employee_code AS 'requester_code',
-        requester.nik AS 'requester_nik',
-        requester.name AS 'requester_name',
-        requester.photo AS 'requester_photo',
-        approver.id AS 'approver_id',
-        approver.name AS 'approver_name',
-        approver.photo AS 'approver_photo'
-      FROM 
-        ${req.user.db}.overtime AS overtime 
-      LEFT OUTER JOIN 
-        ${req.user.db}.department AS department 
-      ON 
-        overtime.department_id = department.id 
-      LEFT OUTER JOIN 
-        ${req.user.db}.employee AS employee 
-      ON 
-        overtime.user_id = employee.id 
-      LEFT OUTER JOIN 
-        ${req.user.db}.employee AS requester 
-      ON 
-        overtime.created_by = requester.id 
-      LEFT OUTER JOIN 
-        ${process.env.MYSQL_NAME}.admin AS approver 
-      ON 
-        overtime.approved_by = approver.id 
-      WHERE 
-        overtime.id = ${req.body.id};
-      `
-      )
-      .then(res => {
-        if (res[0].length == 0) {
-          callback({
-            code: 'NOT_FOUND',
-            id: 'DOQ97',
-            message: 'Data Tidak ditemukan'
-          });
-        } else {
-          callback(null, {
-            code: 'FOUND',
-            id: 'DOP00',
-            message: 'Detail lembur ditemukan',
-            data: res[0][0]
-          });
-        }
-      })
-      .catch(err => {
-        console.log(err);
-        callback({
-          code: 'ERR_DATABASE',
-          id: 'DOQ98',
-          message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
-          data: err
-        });
+  let where = '';
+  if (req.user.level == 2) {
+    if (!req.body.id) {
+      callback({
+        code: 'INVALID_REQUEST',
+        id: 'DOQ96',
+        message: 'Kesalahan pada parameter'
       });
+    }
+
+    where = `WHERE overtime.id = ${req.body.id}`;
   }
+
+  if (req.user.level == 3) {
+    where = `WHERE (employee.id = ${req.user.id} OR requester.id = ${req.user.id}) AND overtime.id = ${req.body.id}`;
+  }
+
+  APP.db.sequelize
+    .query(
+      `
+  SELECT 
+    overtime.*,
+    department.id AS 'department_id',
+    department.code AS 'department_code',
+    department.name AS 'department_name',
+    department.description AS 'department_desc',
+    employee.id AS 'employee_id',
+    employee.employee_code AS 'employee_code',
+    employee.nik AS 'employee_nik',
+    employee.name AS 'employee_name',
+    employee.photo AS 'employee_photo',
+    requester.id AS 'requester_id',
+    requester.employee_code AS 'requester_code',
+    requester.nik AS 'requester_nik',
+    requester.name AS 'requester_name',
+    requester.photo AS 'requester_photo',
+    approver.id AS 'approver_id',
+    approver.name AS 'approver_name',
+    approver.photo AS 'approver_photo'
+  FROM 
+    ${req.user.db}.overtime AS overtime 
+  LEFT OUTER JOIN 
+    ${req.user.db}.department AS department 
+  ON 
+    overtime.department_id = department.id 
+  LEFT OUTER JOIN 
+    ${req.user.db}.employee AS employee 
+  ON 
+    overtime.user_id = employee.id 
+  LEFT OUTER JOIN 
+    ${req.user.db}.employee AS requester 
+  ON 
+    overtime.created_by = requester.id 
+  LEFT OUTER JOIN 
+    ${process.env.MYSQL_NAME}.admin AS approver 
+  ON 
+    overtime.approved_by = approver.id 
+  ${where}
+  `
+    )
+    .then(res => {
+      if (res[0].length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          id: 'DOQ97',
+          message: 'Data Tidak ditemukan'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          id: 'DOP00',
+          message: 'Detail lembur ditemukan',
+          data: res[0][0]
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        id: 'DOQ98',
+        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+        data: err
+      });
+    });
 };
 
 exports.overtimeSettings = (APP, req, callback) => {
