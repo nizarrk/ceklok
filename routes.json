@@ -110,7 +110,7 @@
     "method": "post",
     "controller": "employeeController",
     "function": "listEmployee",
-    "level": 2,
+    "level": 4,
     "auth": true
   },
   "/employee/viewinfo": {

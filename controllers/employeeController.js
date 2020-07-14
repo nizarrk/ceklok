@@ -177,18 +177,28 @@ const checkEmployeeEntry = (APP, req, callback) => {
 };
 
 exports.listEmployee = (APP, req, callback) => {
-  let { employee, grade } = APP.models.company[req.user.db].mysql;
+  let { employee, grade, department } = APP.models.company[req.user.db].mysql;
 
   employee.belongsTo(grade, {
     targetKey: 'id',
     foreignKey: 'grade_id'
   });
 
+  employee.belongsTo(department, {
+    targetKey: 'id',
+    foreignKey: 'department_id'
+  });
+
   employee
     .findAll({
+      attributes: req.user.level == 3 ? ['id', 'name'] : { exclude: ['password', 'old_password'] },
       include: [
         {
           model: grade,
+          attributes: ['id', 'name', 'description']
+        },
+        {
+          model: department,
           attributes: ['id', 'name', 'description']
         }
       ]
