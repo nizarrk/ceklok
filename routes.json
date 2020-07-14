@@ -1414,6 +1414,13 @@
     "level": 4,
     "auth": true
   },
+  "/overtime/setting/get": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "getOvertimeSetting",
+    "level": 5,
+    "auth": true
+  },
   "/overtime/setting/add": {
     "method": "post",
     "controller": "overtimeController",

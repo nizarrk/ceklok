@@ -679,6 +679,29 @@ exports.viewDetailOvertimeData = (APP, req, callback) => {
     });
 };
 
+exports.getOvertimeSetting = (APP, req, callback) => {
+  let { overtime_setting_master } = APP.models.mysql;
+
+  overtime_setting_master
+    .findAll({
+      where: { status: 1 }
+    })
+    .then(res => {
+      if (res.length == 0) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Data tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          message: 'Data ditemukan!',
+          data: res
+        });
+      }
+    });
+};
+
 exports.overtimeSettings = (APP, req, callback) => {
   if (req.user.level === 1) {
     let { overtime_setting_master } = APP.models.mysql;
@@ -777,29 +800,81 @@ exports.overtimeSettingsCompany = (APP, req, callback) => {
             });
         },
 
-        function addSettings(data, callback) {
+        function checkCurrentData(data, callback) {
           overtime_setting
-            .create({
-              overtime_setting_id: type,
-              value: value
+            .count({
+              where: { overtime_setting_id: type }
             })
             .then(res => {
-              callback(null, {
-                code: 'INSERT_SUCCESS',
-                id: 'SOP00',
-                message: 'Setting Overtime berhasil diubah',
-                data: res
-              });
+              console.log(res);
+              callback(null, res);
             })
             .catch(err => {
-              console.log('Error addSetting', err);
+              console.log(err);
               callback({
                 code: 'ERR_DATABASE',
-                id: 'SOQ98',
-                message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
                 data: err
               });
             });
+        },
+
+        function addSettings(data, callback) {
+          // insert
+          if (data == 0) {
+            overtime_setting
+              .create({
+                overtime_setting_id: type,
+                value: value
+              })
+              .then(res => {
+                callback(null, {
+                  code: 'INSERT_SUCCESS',
+                  id: 'SOP00',
+                  message: 'Setting Overtime berhasil diubah',
+                  data: res
+                });
+              })
+              .catch(err => {
+                console.log('Error addSetting', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  id: 'SOQ98',
+                  message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                  data: err
+                });
+              });
+          } else {
+            // update
+
+            overtime_setting
+              .update(
+                {
+                  value: value
+                },
+                {
+                  where: {
+                    overtime_setting_id: type
+                  }
+                }
+              )
+              .then(res => {
+                callback(null, {
+                  code: 'UPDATE_SUCCESS',
+                  id: 'SOP00',
+                  message: 'Setting Overtime berhasil diubah',
+                  data: res
+                });
+              })
+              .catch(err => {
+                console.log('Error addSetting', err);
+                callback({
+                  code: 'ERR_DATABASE',
+                  id: 'SOQ98',
+                  message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
+                  data: err
+                });
+              });
+          }
         }
       ],
       (err, result) => {
