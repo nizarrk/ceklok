@@ -14,7 +14,10 @@ COPY package.json .
 # COPY package-lock.json .
 RUN npm install --production
 
-RUN unset http_proxy && unset https_proxy
+#RUN unset http_proxy && unset https_proxy
+
+ENV http_proxy ""
+ENV https_proxy ""
 
 COPY . .
 
