@@ -69,12 +69,6 @@ exports.insert = (APP, req, callback) => {
   async.waterfall(
     [
       function checkBody(callback) {
-        if (!name)
-          return callback({
-            code: 'INVALID_REQUEST',
-            message: 'Kesalahan pada parameter name!'
-          });
-
         if (!desc)
           return callback({
             code: 'INVALID_REQUEST',
@@ -225,7 +219,7 @@ exports.insert = (APP, req, callback) => {
 };
 
 exports.updateStatus = (APP, req, callback) => {
-  let { schedule_request, employee } = APP.models.company[req.user.db].mysql;
+  let { schedule_request, schedule, employee } = APP.models.company[req.user.db].mysql;
   let { status, notes, id } = req.body;
 
   async.waterfall(
@@ -253,8 +247,19 @@ exports.updateStatus = (APP, req, callback) => {
       },
 
       function getCurrentData(data, callback) {
+        schedule_request.belongsTo(schedule, {
+          targetKey: 'id',
+          foreignKey: 'schedule_id'
+        });
+
         schedule_request
           .findOne({
+            include: [
+              {
+                model: schedule,
+                attributes: ['id', 'name', 'description']
+              }
+            ],
             where: {
               id: id,
               status: 0
@@ -416,14 +421,14 @@ exports.updateStatus = (APP, req, callback) => {
 
       function sendMail(data, callback) {
         try {
-          // APP.mailer.sendMail({
-          //   subject: 'Services Approval',
-          //   to: data.email,
-          //   data: {
-          //     data: data.details
-          //   },
-          //   file: 'services_approval.html'
-          // });
+          APP.mailer.sendMail({
+            subject: 'Change Shift Approval',
+            to: data.email,
+            data: {
+              data: data.details
+            },
+            file: 'change_shift_approval.html'
+          });
 
           callback(null, {
             code: 'UPDATE_SUCCESS',
