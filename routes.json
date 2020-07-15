@@ -841,6 +841,13 @@
     "level": 4,
     "auth": true
   },
+  "/schedule/request/switch/updatestatus": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "updateStatus",
+    "level": 4,
+    "auth": true
+  },
   "/branch/insert": {
     "method": "post",
     "controller": "branchLocationController",
