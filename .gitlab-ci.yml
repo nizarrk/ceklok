@@ -38,6 +38,9 @@ release:
     - release
 
 production:
+  before_script:
+    - export http_proxy=http://192.168.13.6:3128
+    - export https_proxy=http://192.168.13.6:3128
   stage: production
   script:
     - docker-compose -f docker-compose.prod.yml up -d --force-recreate --build prod-ceklok-coreplatform
