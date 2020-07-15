@@ -775,7 +775,7 @@
     "method": "post",
     "controller": "scheduleController",
     "function": "get",
-    "level": 2,
+    "level": 4,
     "auth": true
   },
   "/schedule/getbyid": {
