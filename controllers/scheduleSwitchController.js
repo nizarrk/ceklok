@@ -51,12 +51,6 @@ exports.insert = (APP, req, callback) => {
   async.waterfall(
     [
       function checkBody(callback) {
-        if (!name)
-          return callback({
-            code: 'INVALID_REQUEST',
-            message: 'Kesalahan pada parameter name!'
-          });
-
         if (!desc)
           return callback({
             code: 'INVALID_REQUEST',
