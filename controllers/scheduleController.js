@@ -50,6 +50,77 @@ exports.get = function(APP, req, callback) {
     });
 };
 
+exports.getEmployeeSchedule = (APP, req, callback) => {
+  let { employee, schedule } = APP.models.company[req.user.db].mysql;
+  let { nik, id } = req.body;
+  let params;
+
+  console.log(req.body);
+
+  if (!id && !nik) {
+    return callback({
+      code: 'INVALID_REQUEST',
+      message: 'Kesalahan pada parameter id atau nik!'
+    });
+  }
+
+  if (id) {
+    params = {
+      id: id
+    };
+  }
+
+  if (nik) {
+    params = {
+      nik: nik
+    };
+  }
+
+  if (id && nik) {
+    params = {
+      id: id,
+      nik: nik
+    };
+  }
+
+  employee.belongsTo(schedule, {
+    targetKey: 'id',
+    foreignKey: 'schedule_id'
+  });
+
+  employee
+    .findOne({
+      attributes: ['id', 'schedule_id', 'nik', 'name', 'photo'],
+      include: [
+        {
+          model: schedule,
+          attributes: ['id', 'name', 'description', 'work_time', 'total_work_time', 'work_day', 'type']
+        }
+      ],
+      where: params
+    })
+    .then(res => {
+      if (res == null) {
+        callback({
+          code: 'NOT_FOUND',
+          message: 'Employee tidak ditemukan!'
+        });
+      } else {
+        callback(null, {
+          code: 'FOUND',
+          data: res
+        });
+      }
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
 /**
  * The model name `example` based on the related file in `/models` directory.
  *

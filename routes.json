@@ -778,6 +778,13 @@
     "level": 4,
     "auth": true
   },
+  "/schedule/employee/get": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "getEmployeeSchedule",
+    "level": 4,
+    "auth": true
+  },
   "/schedule/getbyid": {
     "method": "post",
     "controller": "scheduleController",
