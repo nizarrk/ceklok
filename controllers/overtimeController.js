@@ -680,14 +680,27 @@ exports.viewDetailOvertimeData = (APP, req, callback) => {
 };
 
 exports.getOvertimeSetting = (APP, req, callback) => {
-  let { overtime_setting_master } = APP.models.mysql;
+  let attr = req.user.level == 2 ? ", setting.id 'setting_id', setting.value" : '';
+  let join =
+    req.user.level == 2
+      ? `LEFT JOIN ${req.user.db}.overtime_setting setting ON setting.overtime_setting_id = master.id`
+      : '';
 
-  overtime_setting_master
-    .findAll({
-      where: { status: 1 }
-    })
+  APP.db.sequelize
+    .query(
+      `
+      SELECT 
+        master.*
+        ${attr}
+      FROM 
+        ${process.env.MYSQL_NAME}.overtime_setting_master master
+      ${join}
+      WHERE
+        master.status = 1
+      `
+    )
     .then(res => {
-      if (res.length == 0) {
+      if (res[0].length == 0) {
         callback({
           code: 'NOT_FOUND',
           message: 'Data tidak ditemukan!'
@@ -696,7 +709,7 @@ exports.getOvertimeSetting = (APP, req, callback) => {
         callback(null, {
           code: 'FOUND',
           message: 'Data ditemukan!',
-          data: res
+          data: res[0]
         });
       }
     });

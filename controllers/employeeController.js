@@ -242,6 +242,7 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
       absent_type,
       cuti_type,
       presence,
+      schedule,
       presence_setting,
       branch,
       device
@@ -353,6 +354,11 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
             foreignKey: 'status_contract_id'
           });
 
+          employee.belongsTo(schedule, {
+            targetKey: 'id',
+            foreignKey: 'schedule_id'
+          });
+
           employee.hasMany(violation, {
             sourceKey: 'id',
             foreignKey: 'employee_id'
@@ -429,6 +435,10 @@ exports.viewEmployeeInfo = (APP, req, callback) => {
                 },
                 {
                   model: status_contract,
+                  attributes: ['id', 'code', 'name', 'description']
+                },
+                {
+                  model: schedule,
                   attributes: ['id', 'code', 'name', 'description']
                 },
                 {

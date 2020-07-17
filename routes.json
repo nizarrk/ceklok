@@ -775,7 +775,14 @@
     "method": "post",
     "controller": "scheduleController",
     "function": "get",
-    "level": 2,
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/employee/get": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "getEmployeeSchedule",
+    "level": 4,
     "auth": true
   },
   "/schedule/getbyid": {
@@ -838,6 +845,13 @@
     "method": "post",
     "controller": "scheduleSwitchController",
     "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/request/switch/updatestatus": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "updateStatus",
     "level": 4,
     "auth": true
   },
