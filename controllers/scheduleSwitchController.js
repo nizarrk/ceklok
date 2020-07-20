@@ -4,9 +4,11 @@ const async = require('async');
 
 exports.get = (APP, req, callback) => {
   let where = '1+1'; // default
+
   if (req.user.level == 3) {
     where = `sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id}`;
   }
+
   let query = `
         SELECT 
             sw.*, 
@@ -33,6 +35,57 @@ exports.get = (APP, req, callback) => {
       callback(null, {
         code: res[0].length == 0 ? 'NOT_FOUND' : 'FOUND',
         data: res[0]
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR',
+        data: err
+      });
+    });
+};
+
+exports.getById = (APP, req, callback) => {
+  if (!req.body.id) {
+    return callback({
+      code: 'INVALID_REQUEST',
+      message: 'Kesalahan pada parameter id!'
+    });
+  }
+
+  let where = `sw.id = ${req.body.id}`; // default
+
+  if (req.user.level == 3) {
+    where = `sw.id = ${req.body.id} AND (sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id})`;
+  }
+
+  let query = `
+        SELECT 
+            sw.*, 
+            emp1.name 'employee_name',
+            emp1.photo 'employee_photo',
+            emp2.name 'employee_target_name',
+            emp2.photo 'employee_target_photo'
+        FROM 
+            ${req.user.db}.schedule_switch sw
+        INNER JOIN
+            ${req.user.db}.employee emp1
+        ON
+            emp1.id = sw.user_id
+        LEFT JOIN
+            ${req.user.db}.employee emp2
+        ON
+            emp2.id = sw.target_user_id
+        WHERE
+            ${where}`;
+
+  APP.db.sequelize
+    .query(query)
+    .then(res => {
+      callback(null, {
+        code: res[0].length == 0 ? 'NOT_FOUND' : 'FOUND',
+        data: res[0][0]
       });
     })
     .catch(err => {

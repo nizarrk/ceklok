@@ -841,13 +841,6 @@
     "level": 2,
     "auth": true
   },
-  "/schedule/request/switch": {
-    "method": "post",
-    "controller": "scheduleSwitchController",
-    "function": "insert",
-    "level": 3,
-    "auth": true
-  },
   "/schedule/request/switch/get": {
     "method": "post",
     "controller": "scheduleSwitchController",
@@ -860,6 +853,13 @@
     "controller": "scheduleSwitchController",
     "function": "getById",
     "level": 4,
+    "auth": true
+  },
+  "/schedule/request/switch": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "insert",
+    "level": 3,
     "auth": true
   },
   "/schedule/request/switch/updatestatus": {
