@@ -827,6 +827,13 @@
     "level": 2,
     "auth": true
   },
+  "/schedule/request/getbyid": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
   "/schedule/request/updatestatus": {
     "method": "post",
     "controller": "scheduleRequestController",
@@ -845,6 +852,13 @@
     "method": "post",
     "controller": "scheduleSwitchController",
     "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/request/switch/getbyid": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "getById",
     "level": 4,
     "auth": true
   },

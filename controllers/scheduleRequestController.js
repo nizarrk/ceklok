@@ -49,7 +49,77 @@ exports.get = (APP, req, callback) => {
 
       callback(null, {
         code: 'FOUND',
-        message: 'Data tidak ditemukan!',
+        message: 'Data ditemukan!',
+        data: res
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
+exports.getById = (APP, req, callback) => {
+  if (!req.body.id) {
+    return callback({
+      code: 'INVALID_REQUEST',
+      message: 'Kesalahan pada parameter id!'
+    });
+  }
+
+  let { schedule, schedule_request, employee } = APP.models.company[req.user.db].mysql;
+
+  schedule_request.belongsTo(schedule, {
+    targetKey: 'id',
+    foreignKey: 'schedule_id'
+  });
+
+  schedule_request.belongsTo(employee, {
+    targetKey: 'id',
+    foreignKey: 'user_id'
+  });
+
+  employee.belongsTo(schedule, {
+    targetKey: 'id',
+    foreignKey: 'schedule_id'
+  });
+
+  schedule_request
+    .findOne({
+      include: [
+        {
+          model: schedule,
+          attributes: ['id', 'name', 'description', 'type', 'work_time', 'work_day', 'total_work_time']
+        },
+        {
+          model: employee,
+          attributes: ['id', 'nik', 'name', 'photo'],
+          include: [
+            {
+              model: schedule,
+              attributes: ['id', 'name', 'description', 'type', 'work_time', 'work_day', 'total_work_time']
+            }
+          ]
+        }
+      ],
+      where: {
+        id: req.body.id
+      }
+    })
+    .then(res => {
+      if (res == null) {
+        return callback({
+          code: 'NOT_FOUND',
+          message: 'Data tidak ditemukan!'
+        });
+      }
+
+      callback(null, {
+        code: 'FOUND',
+        message: 'Data ditemukan!',
         data: res
       });
     })
