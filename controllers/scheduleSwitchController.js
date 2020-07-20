@@ -13,8 +13,10 @@ exports.get = (APP, req, callback) => {
         SELECT 
             sw.*, 
             emp1.name 'employee_name',
+            emp1.nik 'employee_nik',
             emp1.photo 'employee_photo',
             emp2.name 'employee_target_name',
+            emp2.nik 'employee_target_nik',
             emp2.photo 'employee_target_photo'
         FROM 
             ${req.user.db}.schedule_switch sw
@@ -64,8 +66,10 @@ exports.getById = (APP, req, callback) => {
         SELECT 
             sw.*, 
             emp1.name 'employee_name',
+            emp1.nik 'employee_nik',
             emp1.photo 'employee_photo',
             emp2.name 'employee_target_name',
+            emp2.nik 'employee_target_nik',
             emp2.photo 'employee_target_photo'
         FROM 
             ${req.user.db}.schedule_switch sw
