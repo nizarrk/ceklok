@@ -218,7 +218,7 @@ exports.insert = (APP, req, callback) => {
 
 exports.updateStatus = (APP, req, callback) => {
   let { schedule_switch, employee } = APP.models.company[req.user.db].mysql;
-  let { status, target_status, target_date, notes, id } = req.body;
+  let { status, target_status, target_date, notes, target_notes, id } = req.body;
 
   async.waterfall(
     [
@@ -242,6 +242,12 @@ exports.updateStatus = (APP, req, callback) => {
             return callback({
               code: 'INVALID_REQUEST',
               message: 'Kesalahan pada parameter target_status!'
+            });
+
+          if (!target_notes)
+            return callback({
+              code: 'INVALID_REQUEST',
+              message: 'Kesalahan pada parameter notes!'
             });
 
           if (!target_date)
@@ -282,13 +288,12 @@ exports.updateStatus = (APP, req, callback) => {
                     code: 'INVALID_REQUEST',
                     message: 'Invalid user!'
                   });
-              }
 
-              if (res.target_user_status !== 1) {
-                return callback({
-                  code: 'INVALID_REQUEST',
-                  message: 'Belum mendapat persetujuan employee yang dituju!'
-                });
+                if (res.target_user_status !== 1)
+                  return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Belum mendapat persetujuan employee yang dituju!'
+                  });
               }
 
               callback(null, res.dataValues);
@@ -341,6 +346,7 @@ exports.updateStatus = (APP, req, callback) => {
             {
               status: status,
               notes: notes,
+              target_notes: target_notes,
               target_user_status: target_status,
               target_user_date: target_date,
               approved_by: req.user.level == 2 ? req.user.id : null,
