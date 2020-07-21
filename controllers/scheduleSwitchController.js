@@ -247,7 +247,7 @@ exports.updateStatus = (APP, req, callback) => {
           if (!target_notes)
             return callback({
               code: 'INVALID_REQUEST',
-              message: 'Kesalahan pada parameter notes!'
+              message: 'Kesalahan pada parameter target_notes!'
             });
 
           if (!target_date)
@@ -288,7 +288,9 @@ exports.updateStatus = (APP, req, callback) => {
                     code: 'INVALID_REQUEST',
                     message: 'Invalid user!'
                   });
+              }
 
+              if (req.user.level == 2) {
                 if (res.target_user_status !== 1)
                   return callback({
                     code: 'INVALID_REQUEST',
