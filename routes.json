@@ -939,6 +939,13 @@
     "level": 4,
     "auth": true
   },
+  "/presence/detail": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "getDetailCheckInOut",
+    "level": 4,
+    "auth": true
+  },
   "/presence/checkstatus": {
     "method": "post",
     "controller": "presenceController",
@@ -1768,6 +1775,34 @@
     "method": "post",
     "controller": "reimbursementController",
     "function": "finishingRequest",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/payment/get": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/payroll/payment/insert": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/payment/update": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/payment/delete": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "delete",
     "level": 2,
     "auth": true
   }
