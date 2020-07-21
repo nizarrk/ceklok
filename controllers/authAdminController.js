@@ -27,9 +27,7 @@ exports.checkExistingEmailCompany = (APP, req, callback) => {
         });
       }
       return callback(null, {
-        code: 'NOT_FOUND',
-        id: 'ARQ97',
-        message: 'Data Email Company tidak ditemukan'
+        code: 'OK'
       });
     })
     .catch(err => {
@@ -61,9 +59,7 @@ exports.checkExistingTelpCompany = (APP, req, callback) => {
         });
       }
       return callback(null, {
-        code: 'NOT_FOUND',
-        id: 'ARQ97',
-        message: 'Data Telp Company tidak ditemukan'
+        code: 'OK'
       });
     })
     .catch(err => {
@@ -91,9 +87,7 @@ exports.checkExistingEmailAdmin = (APP, req, callback) => {
         });
       }
       return callback(null, {
-        code: 'NOT_FOUND',
-        id: 'ARQ97',
-        message: 'Data Email Admin Tidak ditemukan'
+        code: 'OK'
       });
     })
     .catch(err => {
@@ -123,9 +117,7 @@ exports.checkExistingTelpAdmin = (APP, req, callback) => {
         });
       }
       return callback(null, {
-        code: 'NOT_FOUND',
-        id: 'ARQ97',
-        message: 'Data Telp Admin Tidak ditemukan'
+        code: 'OK'
       });
     })
     .catch(err => {
@@ -155,9 +147,7 @@ exports.checkExistingUsername = (APP, req, callback) => {
         });
       }
       return callback(null, {
-        code: 'NOT_FOUND',
-        id: 'ARQ97',
-        message: 'Data Username Tidak ditemukan'
+        code: 'OK'
       });
     })
     .catch(err => {

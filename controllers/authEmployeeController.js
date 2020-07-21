@@ -77,11 +77,7 @@ exports.checkExistingTelp = (APP, req, callback) => {
         });
       } else {
         callback(null, {
-          code: 'NOT_FOUND',
-          info: {
-            dataCount: res.length,
-            parameter: 'telp'
-          }
+          code: 'OK'
         });
       }
     })
@@ -110,11 +106,7 @@ exports.checkExistingEmail = (APP, req, callback) => {
         });
       } else {
         callback(null, {
-          code: 'NOT_FOUND',
-          info: {
-            dataCount: res.length,
-            parameter: 'email'
-          }
+          code: 'OK'
         });
       }
     })
@@ -148,11 +140,7 @@ exports.checkExistingUsername = (APP, req, callback) => {
         });
       } else {
         callback(null, {
-          code: 'NOT_FOUND',
-          info: {
-            dataCount: res.length,
-            parameter: 'username'
-          }
+          code: 'OK'
         });
       }
     })
@@ -265,6 +253,8 @@ exports.register = (APP, req, callback) => {
       },
 
       function registerToSupportPal(data, callback) {
+        if (process.env.SUPP !== true) return callback(null, data);
+
         let fullname = req.body.name.split(' ');
         let firstname = fullname[0];
         let lastname = fullname[fullname.length - 1];
@@ -312,6 +302,9 @@ exports.register = (APP, req, callback) => {
       },
 
       function getSupportPalId(data, callback) {
+        if (process.env.SUPP !== true) return callback(null, data);
+        if (data.support.length > 0) return callback(null, data);
+
         axios({
           method: 'GET',
           auth: {
@@ -351,7 +344,7 @@ exports.register = (APP, req, callback) => {
         if (email && username) {
           APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee
             .build({
-              support_pal_id: data.support.id,
+              support_pal_id: process.env.SUPP == true ? data.support.id : null,
               employee_code: data.kode,
               company_code: req.body.company,
               nik: req.body.nik,
@@ -660,8 +653,6 @@ exports.login = (APP, req, callback) => {
             expiresIn: '1d'
           }
         );
-
-        console.log(rows);
 
         APP.models.mongo.token
           .findOne({
