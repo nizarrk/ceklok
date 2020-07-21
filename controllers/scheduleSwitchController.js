@@ -71,7 +71,7 @@ exports.getById = (APP, req, callback) => {
     });
   }
 
-  let where = '1+1'; // default
+  let where = `sw.id = ${req.body.id}`; // default
   let attr = `
       sw.*, 
       emp1.name 'employee_name',
