@@ -912,6 +912,8 @@ exports.checkInOutProcess = (APP, req, callback) => {
               schreq.total_work_time AS 'req_schedule_total_work_time',
               schreq.check_in_start AS 'req_schedule_check_in_start',
               schreq.check_in_end AS 'req_schedule_check_in_end',
+              schreq.check_out_start AS 'req_schedule_check_out_start',
+              schreq.check_out_end AS 'req_schedule_check_out_end',
               target.id AS 'target_id',
               target.name AS 'target_name',
               schtarget.id AS 'target_schedule_id',
@@ -920,7 +922,9 @@ exports.checkInOutProcess = (APP, req, callback) => {
               schtarget.work_time AS 'target_schedule_work_time',
               schtarget.total_work_time AS 'req_schedule_total_work_time',
               schtarget.check_in_start AS 'target_schedule_check_in_start',
-              schtarget.check_in_end AS 'target_schedule_check_in_end'
+              schtarget.check_in_end AS 'target_schedule_check_in_end',
+              schtarget.check_out_start AS 'target_schedule_check_out_start',
+              schtarget.check_out_end AS 'target_schedule_check_out_end'
             FROM 
               ${req.user.db}.schedule_switch switch
             INNER JOIN
@@ -950,8 +954,10 @@ exports.checkInOutProcess = (APP, req, callback) => {
           )
           .then(res => {
             if (res[0].length == 0) {
+              console.log('tidak switch');
               callback(null, result);
             } else {
+              console.log('lagi switch');
               let obj = {};
 
               // sebagai yang request
