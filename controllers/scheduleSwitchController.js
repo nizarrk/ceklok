@@ -95,7 +95,7 @@ exports.getById = (APP, req, callback) => {
             sw.user_id = ${req.user.id} THEN 1 ELSE 2 
         END AS 'requester'
         `;
-    where = `sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id}`;
+    where = `sw.id = ${req.body.id} AND (sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id})`;
   }
 
   let query = `
@@ -371,7 +371,7 @@ exports.updateStatus = (APP, req, callback) => {
               target_notes: target_notes,
               target_user_status: target_status,
               target_user_date: target_date,
-              approved_by: req.user.level == 2 ? req.user.id : null,
+              approved_by: req.user.level == 2 ? req.user.id : 0,
               approved_at: req.user.level == 2 ? new Date() : null
             },
             {
@@ -382,17 +382,6 @@ exports.updateStatus = (APP, req, callback) => {
             }
           )
           .then(updated => {
-            // upload file
-            if (req.files.upload) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR',
-                    data: err
-                  });
-              });
-            }
-
             callback(null, {
               email: data.email,
               details: data.details,
