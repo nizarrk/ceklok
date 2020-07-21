@@ -17,7 +17,12 @@ exports.get = (APP, req, callback) => {
             emp1.photo 'employee_photo',
             emp2.name 'employee_target_name',
             emp2.nik 'employee_target_nik',
-            emp2.photo 'employee_target_photo'
+            emp2.photo 'employee_target_photo',
+        CASE WHEN 
+            sw.user_id = ${req.user.id} THEN 1 ELSE 2 
+        END
+        AS
+          'requester'
         FROM 
             ${req.user.db}.schedule_switch sw
         INNER JOIN
@@ -70,7 +75,12 @@ exports.getById = (APP, req, callback) => {
             emp1.photo 'employee_photo',
             emp2.name 'employee_target_name',
             emp2.nik 'employee_target_nik',
-            emp2.photo 'employee_target_photo'
+            emp2.photo 'employee_target_photo',
+        CASE WHEN 
+            sw.user_id = ${req.user.id} THEN 1 ELSE 2 
+        END
+        AS
+          'requester'
         FROM 
             ${req.user.db}.schedule_switch sw
         INNER JOIN
