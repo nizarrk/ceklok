@@ -26,6 +26,9 @@ module.exports = function(sequelize, Sequelize) {
       description: {
         type: Sequelize.STRING(45)
       },
+      taget_notes: {
+        type: Sequelize.STRING
+      },
       notes: {
         type: Sequelize.STRING
       },
