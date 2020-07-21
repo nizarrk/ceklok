@@ -4,13 +4,18 @@ const async = require('async');
 
 exports.get = (APP, req, callback) => {
   let where = '1+1'; // default
+  let attr = `
+      sw.*, 
+      emp1.name 'employee_name',
+      emp1.nik 'employee_nik',
+      emp1.photo 'employee_photo',
+      emp2.name 'employee_target_name',
+      emp2.nik 'employee_target_nik',
+      emp2.photo 'employee_target_photo'
+      `;
 
   if (req.user.level == 3) {
-    where = `sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id}`;
-  }
-
-  let query = `
-        SELECT 
+    attr = `
             sw.*, 
             emp1.name 'employee_name',
             emp1.nik 'employee_nik',
@@ -20,9 +25,14 @@ exports.get = (APP, req, callback) => {
             emp2.photo 'employee_target_photo',
         CASE WHEN 
             sw.user_id = ${req.user.id} THEN 1 ELSE 2 
-        END
-        AS
-          'requester'
+        END AS 'requester'
+        `;
+    where = `sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id}`;
+  }
+
+  let query = `
+        SELECT 
+          ${attr}
         FROM 
             ${req.user.db}.schedule_switch sw
         INNER JOIN
@@ -61,14 +71,19 @@ exports.getById = (APP, req, callback) => {
     });
   }
 
-  let where = `sw.id = ${req.body.id}`; // default
+  let where = '1+1'; // default
+  let attr = `
+      sw.*, 
+      emp1.name 'employee_name',
+      emp1.nik 'employee_nik',
+      emp1.photo 'employee_photo',
+      emp2.name 'employee_target_name',
+      emp2.nik 'employee_target_nik',
+      emp2.photo 'employee_target_photo'
+      `;
 
   if (req.user.level == 3) {
-    where = `sw.id = ${req.body.id} AND (sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id})`;
-  }
-
-  let query = `
-        SELECT 
+    attr = `
             sw.*, 
             emp1.name 'employee_name',
             emp1.nik 'employee_nik',
@@ -78,9 +93,14 @@ exports.getById = (APP, req, callback) => {
             emp2.photo 'employee_target_photo',
         CASE WHEN 
             sw.user_id = ${req.user.id} THEN 1 ELSE 2 
-        END
-        AS
-          'requester'
+        END AS 'requester'
+        `;
+    where = `sw.user_id = ${req.user.id} OR sw.target_user_id = ${req.user.id}`;
+  }
+
+  let query = `
+        SELECT 
+          ${attr}
         FROM 
             ${req.user.db}.schedule_switch sw
         INNER JOIN
