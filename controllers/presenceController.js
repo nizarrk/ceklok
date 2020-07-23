@@ -899,12 +899,12 @@ exports.checkInOutProcess = (APP, req, callback) => {
     async.waterfall(
         [
             function checkBLEDevice(callback) {
-                if (req.useragent.isMobile) {
+                if (req.useragent.isMobileNative) {
                     device
                         .findOne({
                             where: {
-                                // mac: req.body.mac
-                                mac: 'f9:55:60:6b:8b:59' //sementara pake ini aja
+                                mac: req.body.mac
+                                // mac: 'f9:55:60:6b:8b:59'
                             }
                         })
                         .then(res => {
