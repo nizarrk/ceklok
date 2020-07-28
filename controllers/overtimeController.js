@@ -3,7 +3,6 @@
 const async = require('async');
 const moment = require('moment');
 const path = require('path');
-const axios = require('axios');
 
 exports.overtimeRequest = (APP, req, callback) => {
     let { overtime, grade, department, employee, overtime_setting } = APP.models.company[req.user.db].mysql;
@@ -789,18 +788,13 @@ exports.getOvertimeSetting = (APP, req, callback) => {
             function checkData(data, callback) {
                 Promise.all(
                     data.map(x => {
-                        if (x.data == null && x.data_url !== null) {
-                            return axios({
-                                method: 'post',
-                                url: process.env.APP_HOST + x.data_url,
-                                headers: {
-                                    authorization: req.headers['authorization'],
-                                    'csrf-token': req.headers['csrf-token'],
-                                    Cookie: '_csrf=' + req.cookies._csrf
-                                }
-                            })
+                        if (x.data == null && x.data_model !== null) {
+                            return APP.models.company[req.user.db].mysql[x.data_model]
+                                .findAll({
+                                    attributes: ['id', 'name', 'description']
+                                })
                                 .then(res => {
-                                    x.data = res.data.data;
+                                    x.data = res;
                                 })
                                 .catch(err => {
                                     throw new Error(err.message);

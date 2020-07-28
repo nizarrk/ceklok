@@ -26,7 +26,7 @@ module.exports = function(sequelize, Sequelize) {
             data: {
                 type: Sequelize.STRING
             },
-            data_url: {
+            data_model: {
                 type: Sequelize.STRING
             },
             status: {
