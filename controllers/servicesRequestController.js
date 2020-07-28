@@ -35,10 +35,18 @@ exports.get = (APP, req, callback) => {
 };
 
 exports.getById = (APP, req, callback) => {
-    let { services_request, services } = APP.models.company[req.user.db].mysql;
+    let { services_request, services, employee } = APP.models.company[req.user.db].mysql;
     let params = {};
 
-    params.include = { model: services };
+    params.include = [
+        {
+            model: services
+        },
+        {
+            model: employee,
+            attributes: ['id', 'nik', 'name', 'photo']
+        }
+    ];
 
     if (req.user.level == 2) params.where = { id: req.body.id }; //admin
     if (req.user.level == 3) params.where = { user_id: req.user.id, id: req.body.id }; // employee
@@ -46,6 +54,11 @@ exports.getById = (APP, req, callback) => {
     services_request.belongsTo(services, {
         targetKey: 'id',
         foreignKey: 'services_id'
+    });
+
+    services_request.belongsTo(employee, {
+        targetKey: 'id',
+        foreignKey: 'user_id'
     });
 
     services_request
