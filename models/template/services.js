@@ -21,10 +21,18 @@ module.exports = function(sequelize, Sequelize) {
                 type: Sequelize.STRING(255)
             },
             requirement: {
-                type: Sequelize.STRING(255)
+                type: Sequelize.STRING(255),
+                get: function() {
+                    let data = this.getDataValue('requirement').split('|');
+                    return data;
+                }
             },
             step: {
-                type: Sequelize.STRING(255)
+                type: Sequelize.STRING(255),
+                get: function() {
+                    let data = this.getDataValue('step').split('|');
+                    return data;
+                }
             },
             document: {
                 type: Sequelize.STRING(255)
