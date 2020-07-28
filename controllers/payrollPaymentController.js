@@ -312,21 +312,13 @@ exports.delete = function(APP, req, callback) {
     async.waterfall(
         [
             function checkBody(callback) {
-                if (req.user.level === 2) {
-                    if (req.body.id) {
-                        callback(null, true);
-                    } else {
-                        callback({
-                            code: 'INVALID_REQUEST',
-                            id: '?',
-                            message: 'Kesalahan pada parameter id'
-                        });
-                    }
+                if (req.body.id) {
+                    callback(null, true);
                 } else {
                     callback({
                         code: 'INVALID_REQUEST',
                         id: '?',
-                        message: 'Invalid User level'
+                        message: 'Kesalahan pada parameter id'
                     });
                 }
             },
