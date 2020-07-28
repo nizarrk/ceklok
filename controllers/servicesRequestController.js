@@ -5,11 +5,17 @@ const path = require('path');
 const moment = require('moment');
 
 exports.get = (APP, req, callback) => {
-    let { services_request } = APP.models.company[req.user.db].mysql;
+    let { services_request, services } = APP.models.company[req.user.db].mysql;
     let params = {};
 
-    if (req.user.level == 2) params = {}; //admin
-    if (req.user.level == 3) params = { user_id: req.user.id }; // employee
+    params.include = { model: services, attributes: ['id', 'code', 'name', 'description'] };
+
+    if (req.user.level == 3) params.where = { user_id: req.user.id }; // employee
+
+    services_request.belongsTo(services, {
+        targetKey: 'id',
+        foreignKey: 'services_id'
+    });
 
     services_request
         .findAll(params)
