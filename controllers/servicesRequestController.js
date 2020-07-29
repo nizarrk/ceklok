@@ -5,16 +5,35 @@ const path = require('path');
 const moment = require('moment');
 
 exports.get = (APP, req, callback) => {
-    let { services_request, services } = APP.models.company[req.user.db].mysql;
+    let { services_request, services, employee } = APP.models.company[req.user.db].mysql;
+    let { status, datestart, dateend, name } = req.body;
     let params = {};
 
-    params.include = { model: services, attributes: ['id', 'code', 'name', 'description'] };
+    params.where = {};
+    params.include = [
+        {
+            model: services,
+            attributes: ['id', 'code', 'name', 'description']
+        },
+        {
+            model: employee,
+            attributes: ['id', 'nik', 'name', 'photo']
+        }
+    ];
 
-    if (req.user.level == 3) params.where = { user_id: req.user.id }; // employee
+    if (status) params.where.status = status;
+    if (datestart && dateend) params.where.created_at = { $between: [datestart, dateend] };
+    if (name) params.include[1].where = { name: { $like: `%${name}%` } };
+    if (req.user.level == 3) params.where.user_id = req.user.id; // employee
 
     services_request.belongsTo(services, {
         targetKey: 'id',
         foreignKey: 'services_id'
+    });
+
+    services_request.belongsTo(employee, {
+        targetKey: 'id',
+        foreignKey: 'user_id'
     });
 
     services_request
