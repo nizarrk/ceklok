@@ -23,15 +23,39 @@ module.exports = function(sequelize, Sequelize) {
             requirement: {
                 type: Sequelize.STRING(255),
                 get: function() {
-                    let data = this.getDataValue('requirement').split('|');
-                    return data;
+                    let param = this.getDataValue('requirement') || '0';
+                    let data = param.split('|');
+                    let hasil = [];
+
+                    data.map(x => {
+                        let data = x
+                            .replace('[', '')
+                            .replace("'", '')
+                            .replace("'", '')
+                            .replace(']', '');
+                        hasil.push(data);
+                    });
+
+                    return hasil;
                 }
             },
             step: {
                 type: Sequelize.STRING(255),
                 get: function() {
-                    let data = this.getDataValue('step').split('|');
-                    return data;
+                    let param = this.getDataValue('step') || '0';
+                    let data = param.split('|');
+                    let hasil = [];
+
+                    data.map(x => {
+                        let data = x
+                            .replace('[', '')
+                            .replace("'", '')
+                            .replace("'", '')
+                            .replace(']', '');
+                        hasil.push(data);
+                    });
+
+                    return hasil;
                 }
             },
             document: {

@@ -305,7 +305,7 @@ exports.update = (APP, req, callback) => {
                         }
 
                         callback(null, {
-                            code: 'INSERT_SUCCESS',
+                            code: 'UPDATE_SUCCESS',
                             message: 'Service berhasil diubah!',
                             data: res
                         });
@@ -411,6 +411,7 @@ exports.delete = function(APP, req, callback) {
                         });
                     })
                     .catch(err => {
+                        console.log(err);
                         return callback({
                             code: 'ERR_DATABASE',
                             data: err
