@@ -33,6 +33,7 @@ exports.getById = (APP, req, callback) => {
     services
         .findOne({
             where: {
+                id: req.body.id,
                 status: 1
             }
         })
