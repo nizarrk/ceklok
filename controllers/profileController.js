@@ -312,7 +312,7 @@ exports.updateProfilePhoto = (APP, req, callback) => {
               });
             }
 
-            APP.fileCheck(req.files.image.data, 'image').then(res => {
+            APP.fileCheck(req.files.image.tempFilePath, 'image').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -337,6 +337,32 @@ exports.updateProfilePhoto = (APP, req, callback) => {
             });
           }
         );
+      },
+
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.image) {
+            APP.uploadCDN(req.files.image, data).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
       },
 
       function updateProfileData(data, callback) {
@@ -365,18 +391,6 @@ exports.updateProfilePhoto = (APP, req, callback) => {
             }
           )
           .then(res => {
-            if (req.files.image) {
-              req.files.image.mv(data, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR',
-                    id: 'ETP01',
-                    message: 'Terjadi Kesalahan, mohon coba kembali',
-                    data: err
-                  });
-              });
-            }
-
             callback(null, {
               code: 'UPDATE_SUCCESS',
               id: 'ETP00',

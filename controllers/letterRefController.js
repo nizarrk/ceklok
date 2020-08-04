@@ -215,7 +215,7 @@ exports.insert = (APP, req, callback) => {
               });
             }
 
-            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+            APP.fileCheck(req.files.upload.tempFilePath, 'doc').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -244,6 +244,32 @@ exports.insert = (APP, req, callback) => {
         );
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function insertLetterRef(data, callback) {
         letter_ref
           .create({
@@ -255,15 +281,6 @@ exports.insert = (APP, req, callback) => {
             created_by: req.user.id
           })
           .then(res => {
-            if (req.files.upload) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
             callback(null, {
               code: 'INSERT_SUCCESS',
               message: 'Nomor Surat Berhasil ditambahkan!',

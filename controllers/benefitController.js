@@ -163,7 +163,7 @@ exports.customInsert = function(APP, req, callback) {
               });
             }
 
-            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+            APP.fileCheck(req.files.upload.tempFilePath, 'doc').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -190,6 +190,32 @@ exports.customInsert = function(APP, req, callback) {
         );
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function insertCustomBenefit(data, callback) {
         APP.models.company[req.user.db].mysql.benefit_custom
           .build({
@@ -200,15 +226,6 @@ exports.customInsert = function(APP, req, callback) {
           })
           .save()
           .then(result => {
-            // upload file
-            if (req.files.upload) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
               code: 'INSERT_SUCCESS',

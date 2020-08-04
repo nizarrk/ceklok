@@ -555,7 +555,7 @@ exports.insert = function(APP, req, callback) {
               });
             }
 
-            APP.fileCheck(req.files.doc_upload.data, 'all').then(res => {
+            APP.fileCheck(req.files.doc_upload.tempFilePath, 'all').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -587,6 +587,32 @@ exports.insert = function(APP, req, callback) {
         );
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.doc_upload) {
+            APP.cdn.uploadCDN(req.files.doc_upload, data.doc).then(res => {
+              if (res == false) {
+                callback({
+                  code: 'ERR',
+                  message: 'Error upload CDN!'
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function insertAbsentCuti(data, callback) {
         absent_cuti
           .build({
@@ -606,15 +632,6 @@ exports.insert = function(APP, req, callback) {
           })
           .save()
           .then(result => {
-            // upload file
-            if (req.files.doc_upload) {
-              req.files.doc_upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
             let params = 'Insert Success'; //This is only example, Object can also be used
             return callback(null, {
               data: data,
@@ -1092,8 +1109,6 @@ exports.update = function(APP, req, callback) {
       function uploadPath(data, callback) {
         trycatch(
           () => {
-            console.log('uploadPath');
-
             if (data.result.absent_cuti_type_code == codeid) {
               console.log('gausah upload');
 
@@ -1114,16 +1129,25 @@ exports.update = function(APP, req, callback) {
                 });
               }
 
-              let fileName = new Date().toISOString().replace(/:|\./g, '');
-              let docPath = `./public/uploads/company_${req.user.code}/employee/absen & cuti/`;
+              APP.fileCheck(req.files.doc_upload.tempFilePath, 'all').then(res => {
+                if (res == null) {
+                  callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'File yang diunggah tidak sesuai!'
+                  });
+                } else {
+                  let fileName = new Date().toISOString().replace(/:|\./g, '');
+                  let docPath = `./public/uploads/company_${req.user.code}/employee/absen & cuti/`;
 
-              callback(null, {
-                days: data.days,
-                typeid: data.typeid,
-                time: data.time,
-                dateend: data.dateend,
-                doc: docPath + fileName + path.extname(req.files.doc_upload.name),
-                upload: true
+                  callback(null, {
+                    days: data.days,
+                    typeid: data.typeid,
+                    time: data.time,
+                    dateend: data.dateend,
+                    doc: docPath + fileName + path.extname(req.files.doc_upload.name),
+                    upload: true
+                  });
+                }
               });
             }
           },
@@ -1136,6 +1160,32 @@ exports.update = function(APP, req, callback) {
             });
           }
         );
+      },
+
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.doc_upload) {
+            APP.cdn.uploadCDN(req.files.doc_upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
       },
 
       function updateAbsentCuti(data, callback) {
@@ -1163,23 +1213,11 @@ exports.update = function(APP, req, callback) {
             }
           )
           .then(result => {
-            if (data.upload) {
-              // upload file
-              if (req.files.doc_upload) {
-                req.files.doc_upload.mv(data.doc, function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
-                });
-              }
-            } else {
-              callback(null, {
-                code: 'UPDATE_SUCCESS',
-                data: data,
-                row: result.dataValues
-              });
-            }
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: data,
+              row: result.dataValues
+            });
           })
           .catch(err => {
             console.log('Error updateAbsentCuti', err);

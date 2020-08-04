@@ -453,7 +453,7 @@ exports.addPaymentMethod = (APP, req, callback) => {
 
       function uploadPath(result, callback) {
         try {
-          APP.fileCheck(req.files.file.data, 'image').then(res => {
+          APP.fileCheck(req.files.file.tempFilePath, 'image').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -462,8 +462,9 @@ exports.addPaymentMethod = (APP, req, callback) => {
             } else {
               let { mv, name } = req.files.file;
               let fileName = 'payment_method' + req.randomString + path.extname(name);
+              let docPath = './public/uploads/payment_method/';
 
-              callback(null, { mv, fileName });
+              callback(null, docPath + fileName + path.extname(req.files.file.name));
             }
           });
         } catch (err) {
@@ -471,6 +472,32 @@ exports.addPaymentMethod = (APP, req, callback) => {
             code: 'INVALID_REQUEST',
             id: 'APQ96',
             message: 'File tidak ada'
+          });
+        }
+      },
+
+      function uploadProcess(result, callback) {
+        try {
+          // upload file
+          if (req.files.file) {
+            APP.cdn.uploadCDN(req.files.file, result).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, result);
+              }
+            });
+          } else {
+            callback(null, result);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
           });
         }
       },
@@ -515,10 +542,14 @@ exports.addPaymentMethod = (APP, req, callback) => {
             to_rek_name: rek_name,
             limit: limit,
             action_by: req.user.id,
-            icon: `/uploads/payment_method/${result.fileName}`
+            icon: result.slice(8) // slice 8 buat ngilangin './public'
           })
           .then(() => {
-            callback(null, result);
+            callback(null, {
+              code: 'INSERT_SUCCESS',
+              id: 'APP00',
+              message: 'Success'
+            });
           })
           .catch(err => {
             console.log(err);
@@ -530,16 +561,6 @@ exports.addPaymentMethod = (APP, req, callback) => {
               data: err
             });
           });
-      },
-      function uploadFile(result, callback) {
-        let { fileName, mv } = result;
-        mv(path.join(__dirname, '../public/uploads/payment_method/', fileName));
-
-        callback(null, {
-          code: 'INSERT_SUCCESS',
-          id: 'APP00',
-          message: 'Success'
-        });
       }
     ],
     (err, result) => {
@@ -570,7 +591,7 @@ exports.editPaymentMethod = (APP, req, callback) => {
 
       function checkUpload(result, callback) {
         try {
-          APP.fileCheck(req.files.file.data, 'image').then(res => {
+          APP.fileCheck(req.files.file.tempFilePath, 'image').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -579,8 +600,9 @@ exports.editPaymentMethod = (APP, req, callback) => {
             } else {
               let { mv, name } = req.files.file;
               let fileName = 'payment_method' + req.randomString + path.extname(name);
+              let docPath = './public/uploads/payment_method/';
 
-              callback(null, { mv, fileName, cek: true });
+              callback(null, { icon: docPath + fileName + path.extname(req.files.file.name), cek: true });
             }
           });
         } catch (err) {
@@ -614,6 +636,33 @@ exports.editPaymentMethod = (APP, req, callback) => {
             });
         }
       },
+
+      function uploadProcess(result, callback) {
+        try {
+          // upload file
+          if (result.cek) {
+            APP.cdn.uploadCDN(req.files.file, result.icon).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, result);
+              }
+            });
+          } else {
+            callback(null, result);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function updatePaymentMethod(result, callback) {
         payment_method
           .update(
@@ -625,13 +674,19 @@ exports.editPaymentMethod = (APP, req, callback) => {
               to_rek_name: rek_name,
               limit: limit,
               action_by: req.user.id,
-              icon: result.cek ? `/uploads/payment_method/${result.fileName}` : result.icon
+              icon: result.cek ? result.icon.slice(8) : result.icon
             },
             {
               where: { id: id }
             }
           )
           .then(() => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              id: 'APP00',
+              message: 'Success'
+            });
+
             callback(null, result);
           })
           .catch(err => {
@@ -643,18 +698,6 @@ exports.editPaymentMethod = (APP, req, callback) => {
               data: err
             });
           });
-      },
-      function uploadFile(result, callback) {
-        if (result.cek) {
-          let { fileName, mv } = result;
-          mv(path.join(__dirname, '../public/uploads/payment_method/', fileName));
-        }
-
-        callback(null, {
-          code: 'UPDATE_SUCCESS',
-          id: 'APP00',
-          message: 'Success'
-        });
       }
     ],
     (err, result) => {

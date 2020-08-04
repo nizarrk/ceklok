@@ -267,16 +267,51 @@ exports.redeactivateCompany = (APP, req, callback) => {
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let doc = `./public/uploads/company_${data.company_code}/status/`;
+            APP.fileCheck(req.files.upload.tempFilePath, 'all').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let doc = `./public/uploads/company_${data.company_code}/status/`;
 
-            callback(null, {
-              upload: doc + fileName + path.extname(req.files.upload.name),
-              status: data.status,
-              company_code: data.company_code
+                callback(null, {
+                  upload: doc + fileName + path.extname(req.files.upload.name),
+                  status: data.status,
+                  company_code: data.company_code
+                });
+              }
             });
           } catch (err) {
             console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          }
+        },
+
+        function uploadProcess(data, callback) {
+          try {
+            // upload file
+            if (req.files.upload) {
+              APP.cdn.uploadCDN(req.files.upload, data.upload).then(res => {
+                if (res.error == true) {
+                  callback({
+                    code: 'ERR',
+                    data: res.data
+                  });
+                } else {
+                  callback(null, data);
+                }
+              });
+            } else {
+              callback(null, data);
+            }
+          } catch (err) {
+            console.log('Error uploadProcess', err);
             callback({
               code: 'ERR',
               data: err
@@ -352,15 +387,6 @@ exports.redeactivateCompany = (APP, req, callback) => {
               company_code: data.company_code
             })
             .then(deleted => {
-              //upload file
-              if (req.files.upload) {
-                req.files.upload.mv(data.upload, function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
-                });
-              }
               callback(null, {
                 code: 'UPDATE_SUCCESS',
                 message: 'Re/deactivate company Berhasil!',
@@ -446,20 +472,55 @@ exports.redeactivateEmployee = (APP, req, callback) => {
               return callback({
                 code: 'INVALID_REQUEST',
                 id: '?',
-                message: 'Kesalahan pada parameter upload'
+                message: 'Kesalahan pada parameter upload!'
               });
             }
 
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let doc = `./public/uploads/company_${data.company_code}/employee/status/`;
+            APP.fileCheck(req.files.upload.tempFilePath, 'all').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let doc = `./public/uploads/company_${data.company_code}/employee/status/`;
 
-            callback(null, {
-              upload: doc + fileName + path.extname(req.files.upload.name),
-              status: data.status,
-              company_code: data.company_code
+                callback(null, {
+                  upload: doc + fileName + path.extname(req.files.upload.name),
+                  status: data.status,
+                  company_code: data.company_code
+                });
+              }
             });
           } catch (err) {
             console.log(err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          }
+        },
+
+        function uploadProcess(data, callback) {
+          try {
+            // upload file
+            if (req.files.upload) {
+              APP.cdn.uploadCDN(req.files.upload, data.upload).then(res => {
+                if (res.error == true) {
+                  callback({
+                    code: 'ERR',
+                    data: res.data
+                  });
+                } else {
+                  callback(null, data);
+                }
+              });
+            } else {
+              callback(null, data);
+            }
+          } catch (err) {
+            console.log('Error uploadProcess', err);
             callback({
               code: 'ERR',
               data: err
@@ -507,15 +568,6 @@ exports.redeactivateEmployee = (APP, req, callback) => {
               user_id: req.body.id
             })
             .then(deleted => {
-              //upload file
-              if (req.files.upload) {
-                req.files.upload.mv(data.upload, function(err) {
-                  if (err)
-                    return callback({
-                      code: 'ERR'
-                    });
-                });
-              }
               callback(null, {
                 code: 'UPDATE_SUCCESS',
                 message: 'Re/deactivate employee Berhasil!',

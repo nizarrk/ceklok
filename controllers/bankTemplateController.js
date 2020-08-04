@@ -209,8 +209,6 @@ exports.insert = (APP, req, callback) => {
       function uploadPath(data, callback) {
         trycatch(
           () => {
-            console.log(req.files);
-
             if (!req.files || Object.keys(req.files).length === 0) {
               return callback({
                 code: 'INVALID_REQUEST',
@@ -218,7 +216,7 @@ exports.insert = (APP, req, callback) => {
               });
             }
 
-            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+            APP.fileCheck(req.files.upload.tempFilePath, 'doc').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -246,6 +244,32 @@ exports.insert = (APP, req, callback) => {
         );
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function insertBankTemplate(data, callback) {
         bank_template
           .create({
@@ -259,15 +283,6 @@ exports.insert = (APP, req, callback) => {
             created_by: req.user.id
           })
           .then(res => {
-            if (req.files.upload) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
-
             callback(null, {
               code: 'INSERT_SUCCESS',
               message: 'Bank Template Berhasil ditambahkan',
@@ -370,7 +385,7 @@ exports.update = (APP, req, callback) => {
       function checkUpload(data, callback) {
         trycatch(
           () => {
-            APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+            APP.fileCheck(req.files.upload.tempFilePath, 'doc').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -396,6 +411,32 @@ exports.update = (APP, req, callback) => {
         );
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (data.status) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function updateBankTemplate(data, callback) {
         bank_template
           .update(
@@ -415,14 +456,6 @@ exports.update = (APP, req, callback) => {
             }
           )
           .then(updated => {
-            if (data.status) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR'
-                  });
-              });
-            }
             callback(null, {
               code: 'UPDATE_SUCCESS',
               message: 'Berhasil melakukan update bank template',

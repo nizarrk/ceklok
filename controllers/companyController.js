@@ -160,40 +160,7 @@ exports.editCompanyProfile = (APP, req, callback) => {
 exports.editCompanyStatus = (APP, req, callback) => {
   async.waterfall(
     [
-      function uploadPath(callback) {
-        trycatch(
-          () => {
-            if (!req.files || Object.keys(req.files).length === 0) {
-              return callback({
-                code: 'ERR',
-                message: 'No files were uploaded.'
-              });
-            }
-
-            let fileName = new Date().toISOString().replace(/:|\./g, '');
-            let docPath = `./public/uploads/company_${req.user.code}/status/`;
-
-            // if (!fs.existsSync(docPath)) {
-            //   mkdirp.sync(docPath);
-            // }
-
-            callback(null, docPath + fileName + path.extname(req.files.upload.name));
-          },
-          err => {
-            console.log(err);
-
-            callback({
-              code: 'ERR',
-              message: 'Error upload data',
-              data: err
-            });
-          }
-        );
-      },
-
-      function updateStatus(result, callback) {
-        let mysql = APP.models.mysql;
-
+      function checkBody(callback) {
         if (!req.body.status) {
           return callback({
             code: 'MISSING_KEY',
@@ -207,6 +174,78 @@ exports.editCompanyStatus = (APP, req, callback) => {
             message: 'Missing parameter id'
           });
         }
+
+        callback(null, true);
+      },
+
+      function uploadPath(result, callback) {
+        trycatch(
+          () => {
+            if (!req.files || Object.keys(req.files).length === 0) {
+              return callback({
+                code: 'INVALID_REQUEST',
+                message: 'No files were uploaded.'
+              });
+            }
+
+            APP.fileCheck(req.files.upload.tempFilePath, 'all').then(res => {
+              if (res == null) {
+                callback({
+                  code: 'INVALID_REQUEST',
+                  message: 'File yang diunggah tidak sesuai!'
+                });
+              } else {
+                let fileName = new Date().toISOString().replace(/:|\./g, '');
+                let docPath = `./public/uploads/company_${req.user.code}/status/`;
+
+                // if (!fs.existsSync(docPath)) {
+                //   mkdirp.sync(docPath);
+                // }
+
+                callback(null, docPath + fileName + path.extname(req.files.upload.name));
+              }
+            });
+          },
+          err => {
+            console.log(err);
+
+            callback({
+              code: 'ERR',
+              message: 'Error upload data',
+              data: err
+            });
+          }
+        );
+      },
+
+      function uploadProcess(result, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, result).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, result);
+              }
+            });
+          } else {
+            callback(null, result);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
+      function updateStatus(result, callback) {
+        let mysql = APP.models.mysql;
 
         mysql.company
           .findOne({
@@ -228,18 +267,6 @@ exports.editCompanyStatus = (APP, req, callback) => {
                 status_upload: result.slice(8) // slice 8 untuk hilangin ./public
               })
               .then(updated => {
-                // Use the mv() method to place the file somewhere on your server
-                req.files.upload.mv(result, function(err) {
-                  if (err) {
-                    console.log(err);
-
-                    return callback({
-                      code: 'ERR',
-                      id: 'PVS01',
-                      message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
-                    });
-                  }
-                });
                 callback(null, {
                   code: 'UPDATE_SUCCESS',
                   data: updated

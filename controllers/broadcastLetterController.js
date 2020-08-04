@@ -84,7 +84,7 @@ exports.broadcastLetter = (APP, req, callback) => {
             });
           }
 
-          APP.fileCheck(req.files.upload.data, 'doc').then(res => {
+          APP.fileCheck(req.files.upload.tempFilePath, 'doc').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -112,6 +112,32 @@ exports.broadcastLetter = (APP, req, callback) => {
         }
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function createNewBroadcast(data, callback) {
         let email = [];
         Promise.all(
@@ -134,21 +160,6 @@ exports.broadcastLetter = (APP, req, callback) => {
             letter_broadcast
               .bulkCreate(arr)
               .then(res => {
-                // upload file
-                if (req.files.upload) {
-                  req.files.upload.mv(data.doc, function(err) {
-                    if (err) {
-                      console.log(err);
-                      return callback({
-                        code: 'ERR',
-                        id: 'BSP01',
-                        message: 'Terjadi Kesalahan upload, mohon coba kembali',
-                        data: err
-                      });
-                    }
-                  });
-                }
-
                 callback(null, {
                   inserted: res,
                   email: email,

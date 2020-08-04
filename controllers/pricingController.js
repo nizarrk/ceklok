@@ -179,7 +179,7 @@ exports.insert = function(APP, req, callback) {
             });
           }
 
-          APP.fileCheck(req.files.image.data, 'image').then(res => {
+          APP.fileCheck(req.files.image.tempFilePath, 'image').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -195,6 +195,32 @@ exports.insert = function(APP, req, callback) {
               });
             }
           });
+        },
+
+        function uploadProcess(result, callback) {
+          try {
+            // upload file
+            if (req.files.image) {
+              APP.cdn.uploadCDN(req.files.image, result.path).then(res => {
+                if (res.error == true) {
+                  callback({
+                    code: 'ERR',
+                    data: res.data
+                  });
+                } else {
+                  callback(null, result);
+                }
+              });
+            } else {
+              callback(null, result);
+            }
+          } catch (err) {
+            console.log('Error uploadProcess', err);
+            callback({
+              code: 'ERR',
+              data: err
+            });
+          }
         },
 
         function insertPricing(result, callback) {
@@ -265,18 +291,6 @@ exports.insert = function(APP, req, callback) {
           pricing_feature
             .bulkCreate(arr, { transaction: t })
             .then(res => {
-              // Use the mv() method to place the file somewhere on your server
-              req.files.image.mv(result.path, function(err) {
-                if (err) {
-                  console.log(err);
-
-                  return callback({
-                    code: 'ERR',
-                    id: 'PVS01',
-                    message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
-                  });
-                }
-              });
               callback(null, {
                 code: 'INSERT_SUCCESS',
                 data: {
@@ -377,7 +391,7 @@ exports.update = function(APP, req, callback) {
             let imagePath = './public/uploads/pricing/';
             // let path = imagePath + fileName + path.extname(req.files.image.name)
 
-            APP.fileCheck(req.files.image.data, 'image').then(res => {
+            APP.fileCheck(req.files.image.tempFilePath, 'image').then(res => {
               if (res == null) {
                 callback({
                   code: 'INVALID_REQUEST',
@@ -394,6 +408,32 @@ exports.update = function(APP, req, callback) {
             callback(null, {
               old: result.image,
               upload: false
+            });
+          }
+        },
+
+        function uploadProcess(result, callback) {
+          try {
+            // upload file
+            if (result.upload) {
+              APP.cdn.uploadCDN(req.files.image, result.path).then(res => {
+                if (res.error == true) {
+                  callback({
+                    code: 'ERR',
+                    data: res.data
+                  });
+                } else {
+                  callback(null, result);
+                }
+              });
+            } else {
+              callback(null, result);
+            }
+          } catch (err) {
+            console.log('Error uploadProcess', err);
+            callback({
+              code: 'ERR',
+              data: err
             });
           }
         },
@@ -463,21 +503,6 @@ exports.update = function(APP, req, callback) {
 
         function updatePricingFeature(data, callback) {
           if (feature === null) {
-            // Use the mv() method to place the file somewhere on your server
-            if (data.upload) {
-              req.files.image.mv(data.path, function(err) {
-                if (err) {
-                  console.log(err);
-
-                  return callback({
-                    code: 'ERR',
-                    id: 'PVS01',
-                    message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
-                  });
-                }
-              });
-            }
-
             callback(null, {
               code: 'UPDATE_SUCCESS',
               data: data.result
@@ -522,21 +547,6 @@ exports.update = function(APP, req, callback) {
                   });
               })
             ).then(() => {
-              // Use the mv() method to place the file somewhere on your server
-              if (data.upload) {
-                req.files.image.mv(data.path, function(err) {
-                  if (err) {
-                    console.log(err);
-
-                    return callback({
-                      code: 'ERR',
-                      id: 'PVS01',
-                      message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
-                    });
-                  }
-                });
-              }
-
               callback(null, {
                 code: 'UPDATE_SUCCESS',
                 data: {

@@ -390,10 +390,13 @@ exports.updateStatus = (APP, req, callback) => {
       function uploadPath(data, callback) {
         try {
           if (!req.files || Object.keys(req.files).length === 0) {
-            return callback(null, data);
+            return callback({
+              code: 'INVALID_REQUEST',
+              message: 'No files were uploaded.'
+            });
           }
 
-          APP.fileCheck(req.files.upload.data, 'all').then(res => {
+          APP.fileCheck(req.files.upload.tempFilePath, 'all').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -419,6 +422,32 @@ exports.updateStatus = (APP, req, callback) => {
         }
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function updateApproval(data, callback) {
         schedule_request
           .update(
@@ -437,17 +466,6 @@ exports.updateStatus = (APP, req, callback) => {
             }
           )
           .then(updated => {
-            // upload file
-            if (req.files.upload) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR',
-                    data: err
-                  });
-              });
-            }
-
             callback(null, {
               email: data.email,
               details: data.details,

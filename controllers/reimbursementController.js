@@ -110,7 +110,7 @@ exports.insert = (APP, req, callback) => {
             });
           }
 
-          APP.fileCheck(req.files.upload.data, 'all').then(res => {
+          APP.fileCheck(req.files.upload.tempFilePath, 'all').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -136,6 +136,32 @@ exports.insert = (APP, req, callback) => {
         }
       },
 
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
       function requestReimbursement(data, callback) {
         reimbursement
           .create({
@@ -148,17 +174,6 @@ exports.insert = (APP, req, callback) => {
             created_by: req.user.id
           })
           .then(created => {
-            // upload file
-            if (req.files.upload) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR',
-                    data: err
-                  });
-              });
-            }
-
             callback(null, {
               code: 'INSERT_SUCCESS',
               data: created
@@ -209,7 +224,7 @@ exports.updateStatus = (APP, req, callback) => {
         callback(null, true);
       },
 
-      function getCurretData(data, callback) {
+      function getCurrentData(data, callback) {
         reimbursement
           .findOne({
             where: {
@@ -437,7 +452,7 @@ exports.finishingRequest = (APP, req, callback) => {
             return callback(null, data);
           }
 
-          APP.fileCheck(req.files.upload.data, 'all').then(res => {
+          APP.fileCheck(req.files.upload.tempFilePath, 'all').then(res => {
             if (res == null) {
               callback({
                 code: 'INVALID_REQUEST',
@@ -456,6 +471,32 @@ exports.finishingRequest = (APP, req, callback) => {
           });
         } catch (err) {
           console.log('Error uploadPath', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
+      function uploadProcess(data, callback) {
+        try {
+          // upload file
+          if (data.doc) {
+            APP.cdn.uploadCDN(req.files.upload, data.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, data);
+              }
+            });
+          } else {
+            callback(null, data);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
           callback({
             code: 'ERR',
             data: err
@@ -486,17 +527,6 @@ exports.finishingRequest = (APP, req, callback) => {
             }
           )
           .then(updated => {
-            // upload file
-            if (data.doc) {
-              req.files.upload.mv(data.doc, function(err) {
-                if (err)
-                  return callback({
-                    code: 'ERR',
-                    data: err
-                  });
-              });
-            }
-
             callback(null, {
               email: data.email,
               details: data.details,

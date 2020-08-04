@@ -1,1838 +1,1853 @@
 {
-    "/csrf/get": {
-        "method": "post",
-        "controller": "csrfController",
-        "function": "get",
-        "level": 0,
-        "auth": false
-    },
-    "/csrf/generate": {
-        "method": "post",
-        "controller": "csrfController",
-        "function": "getById",
-        "level": 0,
-        "csrf": false,
-        "auth": false
-    },
-    "/test/connection": {
-        "method": "post",
-        "controller": "exampleController",
-        "function": "test",
-        "level": 0,
-        "csrf": false,
-        "auth": false
-    },
-    "/test/tes": {
-        "method": "post",
-        "controller": "exampleController",
-        "function": "testing",
-        "level": 0,
-        "auth": true
-    },
-    "/auth/admin/register": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "register",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/checktelp": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "checkExistingTelp",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/checktelpcompany": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "checkExistingTelpCompany",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/checkusername": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "checkExistingUsername",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/checkemail": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "checkExistingEmailAdmin",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/checkemailcompany": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "checkExistingEmailCompany",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/payment/list": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "paymentList",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/payment/detail": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "paymentDetail",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/payment": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "paymentCompany",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/admin/login": {
-        "method": "post",
-        "controller": "authAdminController",
-        "function": "login",
-        "level": 0,
-        "auth": false
-    },
-    "/employee/verifyuser": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "verifyEmployee",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/getlist": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "listEmployee",
-        "level": 4,
-        "auth": true
-    },
-    "/employee/viewinfo": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "viewEmployeeInfo",
-        "level": 4,
-        "auth": true
-    },
-    "/employee/add": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "addEmployee",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/import": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "importEmployeeData",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/updateinfo": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "updateEmployeeInfo",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/updatestatus": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "updateEmployeeStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/updaterotasi": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "updateEmployeeRotasi",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/violation/get": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "getSuratPeringatan",
-        "level": 4,
-        "auth": true
-    },
-    "/employee/violation/add": {
-        "method": "post",
-        "controller": "employeeController",
-        "function": "addSuratPeringatan",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/status/get": {
-        "method": "post",
-        "controller": "employeeStatusController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/employee/status/getbyid": {
-        "method": "post",
-        "controller": "employeeStatusController",
-        "function": "getById",
-        "level": 4,
-        "auth": true
-    },
-    "/employee/status/insert": {
-        "method": "post",
-        "controller": "employeeStatusController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/status/update": {
-        "method": "post",
-        "controller": "employeeStatusController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/employee/status/delete": {
-        "method": "post",
-        "controller": "employeeStatusController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/checklist/get": {
-        "method": "post",
-        "controller": "checklistController",
-        "function": "get",
-        "level": 2,
-        "auth": true
-    },
-    "/checklist/insert": {
-        "method": "post",
-        "controller": "checklistController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/checklist/update": {
-        "method": "post",
-        "controller": "checklistController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/checklist/updatestatus": {
-        "method": "post",
-        "controller": "checklistController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/checklist/delete": {
-        "method": "post",
-        "controller": "checklistController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/auth/employee/register": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "register",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/employee/checktelp": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "checkExistingTelp",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/employee/checkusername": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "checkExistingUsername",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/employee/checkemail": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "checkExistingEmail",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/employee/login": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "login",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/logout": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "logout",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/checkcompany": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "checkExistingCompany",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/checkcredentials": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "checkExistingCredentials",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/forgotpassword": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "forgotPassword",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/checkotp": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "checkOTP",
-        "level": 0,
-        "auth": false
-    },
-    "/auth/resetpassword": {
-        "method": "post",
-        "controller": "authEmployeeController",
-        "function": "resetPassword",
-        "level": 0,
-        "auth": false
-    },
-    "/pricing/get": {
-        "method": "post",
-        "controller": "pricingController",
-        "function": "get",
-        "level": 0,
-        "auth": false
-    },
-    "/pricing/getbyid": {
-        "method": "post",
-        "controller": "pricingController",
-        "function": "getPricingDetails",
-        "level": 1,
-        "auth": true
-    },
-    "/pricing/insert": {
-        "method": "post",
-        "controller": "pricingController",
-        "function": "insert",
-        "level": 1,
-        "auth": true
-    },
-    "/pricing/update": {
-        "method": "post",
-        "controller": "pricingController",
-        "function": "update",
-        "level": 1,
-        "auth": true
-    },
-    "/pricing/updatefeature": {
-        "method": "post",
-        "controller": "pricingController",
-        "function": "updatePricingFeature",
-        "level": 1,
-        "auth": true
-    },
-    "/pricing/delete": {
-        "method": "post",
-        "controller": "pricingController",
-        "function": "delete",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/get": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "paymentTypeList",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/getbyid": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "paymentTypeDetail",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/insert": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "addPayment",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/update": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "editPayment",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/delete": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "delete",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/activate": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "paymentActivation",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/settings/add": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "paymentSettings",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/type/settings": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "paymentSettingsCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/payment/method/get": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "paymentMethodList",
-        "level": 5,
-        "auth": true
-    },
-    "/payment/method/insert": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "addPaymentMethod",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/method/update": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "editPaymentMethod",
-        "level": 1,
-        "auth": true
-    },
-    "/payment/method/delete": {
-        "method": "post",
-        "controller": "paymentController",
-        "function": "delete",
-        "level": 1,
-        "auth": true
-    },
-    "/transaction/get": {
-        "method": "post",
-        "controller": "transactionController",
-        "function": "listAllTransaction",
-        "level": 5,
-        "auth": true
-    },
-    "/transaction/getbyid": {
-        "method": "post",
-        "controller": "transactionController",
-        "function": "transactionDetail",
-        "level": 5,
-        "auth": true
-    },
-    "/grade/get": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/grade/getbyid": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/grade/insert": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/grade/update": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/grade/updatebenefit": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "updateGradeBenefit",
-        "level": 2,
-        "auth": true
-    },
-    "/grade/updatestatus": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/grade/delete": {
-        "method": "post",
-        "controller": "gradeController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/department/get": {
-        "method": "post",
-        "controller": "departmentController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/department/getbyid": {
-        "method": "post",
-        "controller": "departmentController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/department/insert": {
-        "method": "post",
-        "controller": "departmentController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/department/update": {
-        "method": "post",
-        "controller": "departmentController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/department/updatestatus": {
-        "method": "post",
-        "controller": "departmentController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/department/delete": {
-        "method": "post",
-        "controller": "departmentController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/get": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/benefit/insert": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/update": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/updatestatus": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/delete": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/custom/insert": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "customInsert",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/custom/update": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "customUpdate",
-        "level": 2,
-        "auth": true
-    },
-    "/benefit/custom/delete": {
-        "method": "post",
-        "controller": "benefitController",
-        "function": "customDelete",
-        "level": 2,
-        "auth": true
-    },
-    "/jobtitle/get": {
-        "method": "post",
-        "controller": "jobTitleController",
-        "function": "get",
-        "level": 2,
-        "auth": true
-    },
-    "/jobtitle/getbyid": {
-        "method": "post",
-        "controller": "jobTitleController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/jobtitle/insert": {
-        "method": "post",
-        "controller": "jobTitleController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/jobtitle/update": {
-        "method": "post",
-        "controller": "jobTitleController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/jobtitle/updatestatus": {
-        "method": "post",
-        "controller": "jobTitleController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/jobtitle/delete": {
-        "method": "post",
-        "controller": "jobTitleController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/absent/type/get": {
-        "method": "post",
-        "controller": "absentTypeController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/absent/type/getbyid": {
-        "method": "post",
-        "controller": "absentTypeController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/absent/type/insert": {
-        "method": "post",
-        "controller": "absentTypeController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/absent/type/update": {
-        "method": "post",
-        "controller": "absentTypeController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/absent/type/updatestatus": {
-        "method": "post",
-        "controller": "absentTypeController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/absent/type/delete": {
-        "method": "post",
-        "controller": "absentTypeController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/absentcuti/insert": {
-        "method": "post",
-        "controller": "absentCutiController",
-        "function": "insert",
-        "level": 3,
-        "auth": true
-    },
-    "/absentcuti/update": {
-        "method": "post",
-        "controller": "absentCutiController",
-        "function": "update",
-        "level": 3,
-        "auth": true
-    },
-    "/absentcuti/updatestatus": {
-        "method": "post",
-        "controller": "absentCutiController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/absentcuti/delete": {
-        "method": "post",
-        "controller": "absentCutiController",
-        "function": "delete",
-        "level": 4,
-        "auth": true
-    },
-    "/absentcuti/get": {
-        "method": "post",
-        "controller": "absentCutiController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/absentcuti/getbyid": {
-        "method": "post",
-        "controller": "absentCutiController",
-        "function": "getById",
-        "level": 4,
-        "auth": true
-    },
-    "/cuti/type/get": {
-        "method": "post",
-        "controller": "cutiKhususController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/cuti/type/getbyid": {
-        "method": "post",
-        "controller": "cutiKhususController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/cuti/type/insert": {
-        "method": "post",
-        "controller": "cutiKhususController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/cuti/type/update": {
-        "method": "post",
-        "controller": "cutiKhususController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/cuti/type/updatestatus": {
-        "method": "post",
-        "controller": "cutiKhususController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/cuti/type/delete": {
-        "method": "post",
-        "controller": "cutiKhususController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/get": {
-        "method": "post",
-        "controller": "scheduleController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/schedule/employee/get": {
-        "method": "post",
-        "controller": "scheduleController",
-        "function": "getEmployeeSchedule",
-        "level": 4,
-        "auth": true
-    },
-    "/schedule/getbyid": {
-        "method": "post",
-        "controller": "scheduleController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/insert": {
-        "method": "post",
-        "controller": "scheduleController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/update": {
-        "method": "post",
-        "controller": "scheduleController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/delete": {
-        "method": "post",
-        "controller": "scheduleController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/request/change": {
-        "method": "post",
-        "controller": "scheduleRequestController",
-        "function": "insert",
-        "level": 3,
-        "auth": true
-    },
-    "/schedule/request/get": {
-        "method": "post",
-        "controller": "scheduleRequestController",
-        "function": "get",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/request/getbyid": {
-        "method": "post",
-        "controller": "scheduleRequestController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/request/updatestatus": {
-        "method": "post",
-        "controller": "scheduleRequestController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/schedule/request/switch/get": {
-        "method": "post",
-        "controller": "scheduleSwitchController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/schedule/request/switch/getbyid": {
-        "method": "post",
-        "controller": "scheduleSwitchController",
-        "function": "getById",
-        "level": 4,
-        "auth": true
-    },
-    "/schedule/request/switch/updatestatus": {
-        "method": "post",
-        "controller": "scheduleSwitchController",
-        "function": "updateStatus",
-        "level": 4,
-        "auth": true
-    },
-    "/schedule/request/switch": {
-        "method": "post",
-        "controller": "scheduleSwitchController",
-        "function": "insert",
-        "level": 3,
-        "auth": true
-    },
-    "/branch/insert": {
-        "method": "post",
-        "controller": "branchLocationController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/branch/update": {
-        "method": "post",
-        "controller": "branchLocationController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/branch/delete": {
-        "method": "post",
-        "controller": "branchLocationController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/device/get": {
-        "method": "post",
-        "controller": "deviceController",
-        "function": "get",
-        "level": 2,
-        "auth": true
-    },
-    "/device/insert": {
-        "method": "post",
-        "controller": "deviceController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/device/update": {
-        "method": "post",
-        "controller": "deviceController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/device/delete": {
-        "method": "post",
-        "controller": "deviceController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/presence/generatepresence": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "generateDailyPresence",
-        "level": 0,
-        "auth": false
-    },
-    "/presence/checkinout": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "checkInOutProcess",
-        "level": 3,
-        "auth": true
-    },
-    "/presence/history": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "getHistoryCheckInOut",
-        "level": 4,
-        "auth": true
-    },
-    "/presence/detail": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "getDetailCheckInOut",
-        "level": 4,
-        "auth": true
-    },
-    "/presence/checkstatus": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "checkStatus",
-        "level": 3,
-        "auth": true
-    },
-    "/presence/setting/add": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "presenceSettings",
-        "level": 1,
-        "auth": true
-    },
-    "/presence/setting": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "presenceSettingsCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/presence/setting/get": {
-        "method": "post",
-        "controller": "presenceController",
-        "function": "getSettingsCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/presence/setting/insert": {
-        "method": "post",
-        "controller": "presenceSettingController",
-        "function": "insert",
-        "level": 1,
-        "auth": true
-    },
-    "/presence/setting/update": {
-        "method": "post",
-        "controller": "presenceSettingController",
-        "function": "update",
-        "level": 1,
-        "auth": true
-    },
-    "/presence/setting/delete": {
-        "method": "post",
-        "controller": "presenceSettingController",
-        "function": "delete",
-        "level": 1,
-        "auth": true
-    },
-    "/timezone/setting/get": {
-        "method": "post",
-        "controller": "timezoneSettingController",
-        "function": "get",
-        "level": 1,
-        "auth": true
-    },
-    "/timezone/setting/insert": {
-        "method": "post",
-        "controller": "timezoneSettingController",
-        "function": "insert",
-        "level": 1,
-        "auth": true
-    },
-    "/timezone/setting/update": {
-        "method": "post",
-        "controller": "timezoneSettingController",
-        "function": "update",
-        "level": 1,
-        "auth": true
-    },
-    "/timezone/setting/delete": {
-        "method": "post",
-        "controller": "timezoneSettingController",
-        "function": "delete",
-        "level": 1,
-        "auth": true
-    },
-    "/auth/ceklok/add": {
-        "method": "post",
-        "controller": "authCeklokController",
-        "function": "addSuperAdmin",
-        "level": 1,
-        "auth": false
-    },
-    "/auth/ceklok/login": {
-        "method": "post",
-        "controller": "authCeklokController",
-        "function": "login",
-        "auth": false
-    },
-    "/verify/company": {
-        "method": "post",
-        "controller": "verifyController",
-        "function": "verifyCompany",
-        "level": 1,
-        "auth": true
-    },
-    "/verify/feature": {
-        "method": "post",
-        "controller": "verifyController",
-        "function": "verifyFeature",
-        "level": 1,
-        "auth": true
-    },
-    "/verify/payment": {
-        "method": "post",
-        "controller": "verifyController",
-        "function": "verifyPayment",
-        "level": 1,
-        "auth": true
-    },
-    "/company/get": {
-        "method": "post",
-        "controller": "companyController",
-        "function": "getListCompany",
-        "level": 1,
-        "auth": true
-    },
-    "/company/getbyid": {
-        "method": "post",
-        "controller": "companyController",
-        "function": "getCompanyDetails",
-        "level": 5,
-        "auth": true
-    },
-    "/company/update": {
-        "method": "post",
-        "controller": "companyController",
-        "function": "editCompanyProfile",
-        "level": 2,
-        "auth": true
-    },
-    "/company/updatestatus": {
-        "method": "post",
-        "controller": "companyController",
-        "function": "editCompanyStatus",
-        "level": 1,
-        "auth": true
-    },
-    "/user/type/get": {
-        "method": "post",
-        "controller": "userTypeController",
-        "function": "get",
-        "level": 5,
-        "auth": true
-    },
-    "/user/type/getbyid": {
-        "method": "post",
-        "controller": "userTypeController",
-        "function": "getById",
-        "level": 5,
-        "auth": true
-    },
-    "/user/type/insert": {
-        "method": "post",
-        "controller": "userTypeController",
-        "function": "createUserType",
-        "level": 5,
-        "auth": true
-    },
-    "/user/type/update": {
-        "method": "post",
-        "controller": "userTypeController",
-        "function": "updateUserType",
-        "level": 5,
-        "auth": true
-    },
-    "/user/type/delete": {
-        "method": "post",
-        "controller": "userTypeController",
-        "function": "delete",
-        "level": 5,
-        "auth": true
-    },
-    "/user/type/updatefeature": {
-        "method": "post",
-        "controller": "userTypeController",
-        "function": "updateUserTypeFeature",
-        "level": 5,
-        "auth": true
-    },
-    "/user/add": {
-        "method": "post",
-        "controller": "userController",
-        "function": "createUserAdmin",
-        "level": 2,
-        "auth": true
-    },
-    "/user/get": {
-        "method": "post",
-        "controller": "userController",
-        "function": "getAllListUser",
-        "level": 5,
-        "auth": true
-    },
-    "/user/getbyid": {
-        "method": "post",
-        "controller": "userController",
-        "function": "getDetailsUser",
-        "level": 5,
-        "auth": true
-    },
-    "/user/update": {
-        "method": "post",
-        "controller": "userController",
-        "function": "editUserAdminCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/user/ceklok/add": {
-        "method": "post",
-        "controller": "userController",
-        "function": "createUserAdminCeklok",
-        "level": 1,
-        "auth": true
-    },
-    "/user/ceklok/update": {
-        "method": "post",
-        "controller": "userController",
-        "function": "editUserAdminCeklok",
-        "level": 1,
-        "auth": true
-    },
-    "/user/ceklok/updatestatus": {
-        "method": "post",
-        "controller": "userController",
-        "function": "editCompanyStatus",
-        "level": 1,
-        "auth": true
-    },
-    "/feature/ceklok/get": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "displayAllFeature",
-        "level": 1,
-        "auth": true
-    },
-    "/feature/get": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "displayFeatureCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/feature/connect": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "connectNewFeatureCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/feature/sub/setting": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "subfeatureSettingsCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/feature/ceklok/add": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "addNewFeature",
-        "level": 1,
-        "auth": true
-    },
-    "/feature/ceklok/endpoint/add": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "addEndpoint",
-        "level": 1,
-        "auth": true
-    },
-    "/feature/ceklok/sub/add": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "addSubFeature",
-        "level": 1,
-        "auth": true
-    },
-    "/feature/ceklok/sub/setting/add": {
-        "method": "post",
-        "controller": "featureController",
-        "function": "addSubFeatureSettings",
-        "level": 1,
-        "auth": true
-    },
-    "/dashboard/employee/get": {
-        "method": "post",
-        "controller": "dashboardController",
-        "function": "dashboardEmployee",
-        "level": 3,
-        "auth": true
-    },
-    "/dashboard/employee/presencedetail": {
-        "method": "post",
-        "controller": "dashboardController",
-        "function": "dashboardEmployeePresenceDetail",
-        "level": 3,
-        "auth": true
-    },
-    "/dashboard/company/get": {
-        "method": "post",
-        "controller": "dashboardController",
-        "function": "dashboardAdminCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/dashboard/ceklok/get": {
-        "method": "post",
-        "controller": "dashboardController",
-        "function": "dashboardAdminCeklok",
-        "level": 1,
-        "auth": true
-    },
-    "/dashboard/ceklok/get/feature": {
-        "method": "post",
-        "controller": "dashboardController",
-        "function": "dashboardAdminCeklokFeature",
-        "level": 1,
-        "auth": true
-    },
-    "/profile/getbyid": {
-        "method": "post",
-        "controller": "profileController",
-        "function": "getProfileDetail",
-        "level": 0,
-        "auth": true
-    },
-    "/profile/update": {
-        "method": "post",
-        "controller": "profileController",
-        "function": "updateProfile",
-        "level": 0,
-        "auth": true
-    },
-    "/profile/update/photo": {
-        "method": "post",
-        "controller": "profileController",
-        "function": "updateProfilePhoto",
-        "level": 0,
-        "auth": true
-    },
-    "/profile/update/password": {
-        "method": "post",
-        "controller": "profileController",
-        "function": "changePassword",
-        "level": 0,
-        "auth": true
-    },
-    "/letter/insert": {
-        "method": "post",
-        "controller": "letterController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/get": {
-        "method": "post",
-        "controller": "letterController",
-        "function": "get",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/getById": {
-        "method": "post",
-        "controller": "letterController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/update": {
-        "method": "post",
-        "controller": "letterController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/ref/get": {
-        "method": "post",
-        "controller": "letterRefController",
-        "function": "get",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/ref/getbyid": {
-        "method": "post",
-        "controller": "letterRefController",
-        "function": "getById",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/ref/add": {
-        "method": "post",
-        "controller": "letterRefController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/letter/ref/updatestatus": {
-        "method": "post",
-        "controller": "letterRefController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/template/get": {
-        "method": "post",
-        "controller": "bankTemplateController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/template/getbyid": {
-        "method": "post",
-        "controller": "bankTemplateController",
-        "function": "getById",
-        "level": 4,
-        "auth": true
-    },
-    "/template/insert": {
-        "method": "post",
-        "controller": "bankTemplateController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/template/update": {
-        "method": "post",
-        "controller": "bankTemplateController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/template/update/downloadcount": {
-        "method": "post",
-        "controller": "bankTemplateController",
-        "function": "updateDownloadCount",
-        "level": 0,
-        "auth": true
-    },
-    "/broadcast/letter/get": {
-        "method": "post",
-        "controller": "broadcastLetterController",
-        "function": "broadcastList",
-        "level": 4,
-        "auth": true
-    },
-    "/broadcast/letter/getbyid": {
-        "method": "post",
-        "controller": "broadcastLetterController",
-        "function": "broadcastDetail",
-        "level": 4,
-        "auth": true
-    },
-    "/broadcast/letter/add": {
-        "method": "post",
-        "controller": "broadcastLetterController",
-        "function": "broadcastLetter",
-        "level": 2,
-        "auth": true
-    },
-    "/broadcast/letter/resend": {
-        "method": "post",
-        "controller": "broadcastLetterController",
-        "function": "resendBroadcastLetter",
-        "level": 2,
-        "auth": true
-    },
-    "/overtime/add": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "overtimeRequest",
-        "level": 3,
-        "auth": true
-    },
-    "/overtime/updatestatus": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "overtimeApproval",
-        "level": 2,
-        "auth": true
-    },
-    "/overtime/finish": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "finishingOvertime",
-        "level": 3,
-        "auth": true
-    },
-    "/overtime/get": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "viewOvertimeData",
-        "level": 4,
-        "auth": true
-    },
-    "/overtime/getbyid": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "viewDetailOvertimeData",
-        "level": 4,
-        "auth": true
-    },
-    "/overtime/setting/get": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "getOvertimeSetting",
-        "level": 5,
-        "auth": true
-    },
-    "/overtime/setting/add": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "overtimeSettings",
-        "level": 1,
-        "auth": true
-    },
-    "/overtime/setting": {
-        "method": "post",
-        "controller": "overtimeController",
-        "function": "overtimeSettingsCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/inbox/get": {
-        "method": "post",
-        "controller": "inboxController",
-        "function": "messageList",
-        "level": 0,
-        "auth": true
-    },
-    "/inbox/detail": {
-        "method": "post",
-        "controller": "inboxController",
-        "function": "messageDetail",
-        "level": 0,
-        "auth": true
-    },
-    "/inbox/send": {
-        "method": "post",
-        "controller": "inboxController",
-        "function": "sendMessage",
-        "level": 5,
-        "auth": true
-    },
-    "/inbox/updatestatus": {
-        "method": "post",
-        "controller": "inboxController",
-        "function": "changeMessageStatus",
-        "level": 0,
-        "auth": true
-    },
-    "/inbox/delete": {
-        "method": "post",
-        "controller": "inboxController",
-        "function": "deleteMessage",
-        "level": 0,
-        "auth": true
-    },
-    "/notification/get/company": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "companyList",
-        "level": 1,
-        "auth": true
-    },
-    "/notification/get/recipient": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "recipientList",
-        "level": 1,
-        "auth": true
-    },
-    "/notification/get": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "notificationList",
-        "level": 0,
-        "auth": true
-    },
-    "/notification/detail": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "notificationDetail",
-        "level": 0,
-        "auth": true
-    },
-    "/notification/send": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "sendNotification",
-        "level": 5,
-        "auth": true
-    },
-    "/notification/setting/add": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "notificationSettings",
-        "level": 1,
-        "auth": true
-    },
-    "/notification/setting": {
-        "method": "post",
-        "controller": "notificationController",
-        "function": "notificationSettingsCompany",
-        "level": 2,
-        "auth": true
-    },
-    "/facerecog/training": {
-        "method": "post",
-        "controller": "faceRecognitionController",
-        "function": "uploadAndTraining",
-        "level": 3,
-        "auth": true
-    },
-    "/operational/company/get": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "getSpecificCompany",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/employee/get": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "getSpecificEmployee",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/company/activity/get": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "getCompanyActivityLog",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/employee/activity/get": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "getEmployeeActivityLog",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/company/redeactivate": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "redeactivateCompany",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/employee/redeactivate": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "redeactivateEmployee",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/sendotp": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "generateOTP",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/resetpassword": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "forceResetPassword",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/resetfailedattempt": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "resetFailedAttempt",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/knowledge/get": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "listKnowledge",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/knowledge/add": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "addKnowledge",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/knowledge/update": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "editKnowledge",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/knowledge/delete": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "deleteKnowledge",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/email/get": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "listSentEmail",
-        "level": 1,
-        "auth": true
-    },
-    "/operational/email/resend": {
-        "method": "post",
-        "controller": "operationalSupportSystemController",
-        "function": "resendEmail",
-        "level": 1,
-        "auth": true
-    },
-    "/services/get": {
-        "method": "post",
-        "controller": "servicesController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/services/getbyid": {
-        "method": "post",
-        "controller": "servicesController",
-        "function": "getById",
-        "level": 4,
-        "auth": true
-    },
-    "/services/insert": {
-        "method": "post",
-        "controller": "servicesController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/services/update": {
-        "method": "post",
-        "controller": "servicesController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/services/delete": {
-        "method": "post",
-        "controller": "servicesController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/services/request/get": {
-        "method": "post",
-        "controller": "servicesRequestController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/services/request/getbyid": {
-        "method": "post",
-        "controller": "servicesRequestController",
-        "function": "getById",
-        "level": 4,
-        "auth": true
-    },
-    "/services/request/insert": {
-        "method": "post",
-        "controller": "servicesRequestController",
-        "function": "insert",
-        "level": 3,
-        "auth": true
-    },
-    "/services/request/updatestatus": {
-        "method": "post",
-        "controller": "servicesRequestController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/services/request/finish": {
-        "method": "post",
-        "controller": "servicesRequestController",
-        "function": "finishingRequest",
-        "level": 2,
-        "auth": true
-    },
-    "/reimbursement/type/get": {
-        "method": "post",
-        "controller": "reimbursementTypeController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/reimbursement/type/insert": {
-        "method": "post",
-        "controller": "reimbursementTypeController",
-        "function": "insert",
-        "level": 2,
-        "auth": true
-    },
-    "/reimbursement/type/update": {
-        "method": "post",
-        "controller": "reimbursementTypeController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
-    "/reimbursement/type/delete": {
-        "method": "post",
-        "controller": "reimbursementTypeController",
-        "function": "delete",
-        "level": 2,
-        "auth": true
-    },
-    "/reimbursement/request/get": {
-        "method": "post",
-        "controller": "reimbursementController",
-        "function": "get",
-        "level": 4,
-        "auth": true
-    },
-    "/reimbursement/request/insert": {
-        "method": "post",
-        "controller": "reimbursementController",
-        "function": "insert",
-        "level": 3,
-        "auth": true
-    },
-    "/reimbursement/request/updatestatus": {
-        "method": "post",
-        "controller": "reimbursementController",
-        "function": "updateStatus",
-        "level": 2,
-        "auth": true
-    },
-    "/reimbursement/request/finish": {
-        "method": "post",
-        "controller": "reimbursementController",
-        "function": "finishingRequest",
-        "level": 2,
-        "auth": true
-    },
-    "/payroll/payment/get": {
-        "method": "post",
-        "controller": "payrollPaymentController",
-        "function": "get",
-        "level": 5,
-        "auth": true
-    },
-    "/payroll/payment/getbyid": {
-        "method": "post",
-        "controller": "payrollPaymentController",
-        "function": "getById",
-        "level": 5,
-        "auth": true
-    },
-    "/payroll/payment/insert": {
-        "method": "post",
-        "controller": "payrollPaymentController",
-        "function": "insert",
-        "level": 1,
-        "auth": true
-    },
-    "/payroll/payment/update": {
-        "method": "post",
-        "controller": "payrollPaymentController",
-        "function": "update",
-        "level": 1,
-        "auth": true
-    },
-    "/payroll/payment/delete": {
-        "method": "post",
-        "controller": "payrollPaymentController",
-        "function": "delete",
-        "level": 1,
-        "auth": true
-    },
-    "/cdn/upload": {
-        "method": "post",
-        "controller": "cdnController",
-        "function": "uploadCDN",
-        "level": null,
-        "csrf": false,
-        "auth": null
-    }
+  "/csrf/get": {
+    "method": "post",
+    "controller": "csrfController",
+    "function": "get",
+    "level": 0,
+    "auth": false
+  },
+  "/csrf/generate": {
+    "method": "post",
+    "controller": "csrfController",
+    "function": "getById",
+    "level": 0,
+    "csrf": false,
+    "auth": false
+  },
+  "/test/connection": {
+    "method": "post",
+    "controller": "exampleController",
+    "function": "test",
+    "level": 0,
+    "csrf": false,
+    "auth": false
+  },
+  "/test/tes": {
+    "method": "post",
+    "controller": "exampleController",
+    "function": "testing",
+    "level": 0,
+    "auth": true
+  },
+  "/auth/admin/register": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "register",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checktelp": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingTelp",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checktelpcompany": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingTelpCompany",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checkusername": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingUsername",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checkemail": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingEmailAdmin",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/checkemailcompany": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "checkExistingEmailCompany",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/payment/list": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "paymentList",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/payment/detail": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "paymentDetail",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/payment": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "paymentCompany",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/admin/login": {
+    "method": "post",
+    "controller": "authAdminController",
+    "function": "login",
+    "level": 0,
+    "auth": false
+  },
+  "/employee/verifyuser": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "verifyEmployee",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/getlist": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "listEmployee",
+    "level": 4,
+    "auth": true
+  },
+  "/employee/viewinfo": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "viewEmployeeInfo",
+    "level": 4,
+    "auth": true
+  },
+  "/employee/add": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "addEmployee",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/import": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "importEmployeeData",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/updateinfo": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "updateEmployeeInfo",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/updatestatus": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "updateEmployeeStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/updaterotasi": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "updateEmployeeRotasi",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/violation/get": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "getSuratPeringatan",
+    "level": 4,
+    "auth": true
+  },
+  "/employee/violation/add": {
+    "method": "post",
+    "controller": "employeeController",
+    "function": "addSuratPeringatan",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/status/get": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/employee/status/getbyid": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "getById",
+    "level": 4,
+    "auth": true
+  },
+  "/employee/status/insert": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/status/update": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/employee/status/delete": {
+    "method": "post",
+    "controller": "employeeStatusController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/checklist/get": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/checklist/insert": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/checklist/update": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/checklist/updatestatus": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/checklist/delete": {
+    "method": "post",
+    "controller": "checklistController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/auth/employee/register": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "register",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/checktelp": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingTelp",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/checkusername": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingUsername",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/checkemail": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingEmail",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/employee/login": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "login",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/logout": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "logout",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/checkcompany": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingCompany",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/checkcredentials": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkExistingCredentials",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/forgotpassword": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "forgotPassword",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/checkotp": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "checkOTP",
+    "level": 0,
+    "auth": false
+  },
+  "/auth/resetpassword": {
+    "method": "post",
+    "controller": "authEmployeeController",
+    "function": "resetPassword",
+    "level": 0,
+    "auth": false
+  },
+  "/pricing/get": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "get",
+    "level": 0,
+    "auth": false
+  },
+  "/pricing/getbyid": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "getPricingDetails",
+    "level": 1,
+    "auth": true
+  },
+  "/pricing/insert": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "insert",
+    "level": 1,
+    "auth": true
+  },
+  "/pricing/update": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "update",
+    "level": 1,
+    "auth": true
+  },
+  "/pricing/updatefeature": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "updatePricingFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/pricing/delete": {
+    "method": "post",
+    "controller": "pricingController",
+    "function": "delete",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/get": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentTypeList",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/getbyid": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentTypeDetail",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/insert": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "addPayment",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/update": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "editPayment",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/delete": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "delete",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/activate": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentActivation",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/settings/add": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentSettings",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/type/settings": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentSettingsCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/payment/method/get": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "paymentMethodList",
+    "level": 5,
+    "auth": true
+  },
+  "/payment/method/insert": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "addPaymentMethod",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/method/update": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "editPaymentMethod",
+    "level": 1,
+    "auth": true
+  },
+  "/payment/method/delete": {
+    "method": "post",
+    "controller": "paymentController",
+    "function": "delete",
+    "level": 1,
+    "auth": true
+  },
+  "/transaction/get": {
+    "method": "post",
+    "controller": "transactionController",
+    "function": "listAllTransaction",
+    "level": 5,
+    "auth": true
+  },
+  "/transaction/getbyid": {
+    "method": "post",
+    "controller": "transactionController",
+    "function": "transactionDetail",
+    "level": 5,
+    "auth": true
+  },
+  "/grade/get": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/grade/getbyid": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/grade/insert": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/grade/update": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/grade/updatebenefit": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "updateGradeBenefit",
+    "level": 2,
+    "auth": true
+  },
+  "/grade/updatestatus": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/grade/delete": {
+    "method": "post",
+    "controller": "gradeController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/department/get": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/department/getbyid": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/department/insert": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/department/update": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/department/updatestatus": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/department/delete": {
+    "method": "post",
+    "controller": "departmentController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/get": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/benefit/insert": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/update": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/updatestatus": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/delete": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/custom/insert": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "customInsert",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/custom/update": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "customUpdate",
+    "level": 2,
+    "auth": true
+  },
+  "/benefit/custom/delete": {
+    "method": "post",
+    "controller": "benefitController",
+    "function": "customDelete",
+    "level": 2,
+    "auth": true
+  },
+  "/jobtitle/get": {
+    "method": "post",
+    "controller": "jobTitleController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/jobtitle/getbyid": {
+    "method": "post",
+    "controller": "jobTitleController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/jobtitle/insert": {
+    "method": "post",
+    "controller": "jobTitleController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/jobtitle/update": {
+    "method": "post",
+    "controller": "jobTitleController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/jobtitle/updatestatus": {
+    "method": "post",
+    "controller": "jobTitleController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/jobtitle/delete": {
+    "method": "post",
+    "controller": "jobTitleController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/absent/type/get": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/absent/type/getbyid": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/absent/type/insert": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/absent/type/update": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/absent/type/updatestatus": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/absent/type/delete": {
+    "method": "post",
+    "controller": "absentTypeController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/absentcuti/insert": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/absentcuti/update": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "update",
+    "level": 3,
+    "auth": true
+  },
+  "/absentcuti/updatestatus": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/absentcuti/delete": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "delete",
+    "level": 4,
+    "auth": true
+  },
+  "/absentcuti/get": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/absentcuti/getbyid": {
+    "method": "post",
+    "controller": "absentCutiController",
+    "function": "getById",
+    "level": 4,
+    "auth": true
+  },
+  "/cuti/type/get": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/cuti/type/getbyid": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/cuti/type/insert": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/cuti/type/update": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/cuti/type/updatestatus": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/cuti/type/delete": {
+    "method": "post",
+    "controller": "cutiKhususController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/get": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/employee/get": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "getEmployeeSchedule",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/getbyid": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/insert": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/update": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/delete": {
+    "method": "post",
+    "controller": "scheduleController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/request/change": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/schedule/request/get": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/request/getbyid": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/request/updatestatus": {
+    "method": "post",
+    "controller": "scheduleRequestController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/schedule/request/switch/get": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/request/switch/getbyid": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "getById",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/request/switch/updatestatus": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "updateStatus",
+    "level": 4,
+    "auth": true
+  },
+  "/schedule/request/switch": {
+    "method": "post",
+    "controller": "scheduleSwitchController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/branch/insert": {
+    "method": "post",
+    "controller": "branchLocationController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/branch/update": {
+    "method": "post",
+    "controller": "branchLocationController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/branch/delete": {
+    "method": "post",
+    "controller": "branchLocationController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/device/get": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/device/insert": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/device/update": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/device/delete": {
+    "method": "post",
+    "controller": "deviceController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/presence/generatepresence": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "generateDailyPresence",
+    "level": 0,
+    "auth": false
+  },
+  "/presence/checkinout": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "checkInOutProcess",
+    "level": 3,
+    "auth": true
+  },
+  "/presence/history": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "getHistoryCheckInOut",
+    "level": 4,
+    "auth": true
+  },
+  "/presence/detail": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "getDetailCheckInOut",
+    "level": 4,
+    "auth": true
+  },
+  "/presence/checkstatus": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "checkStatus",
+    "level": 3,
+    "auth": true
+  },
+  "/presence/setting/add": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "presenceSettings",
+    "level": 1,
+    "auth": true
+  },
+  "/presence/setting": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "presenceSettingsCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/presence/setting/get": {
+    "method": "post",
+    "controller": "presenceController",
+    "function": "getSettingsCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/presence/setting/insert": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "insert",
+    "level": 1,
+    "auth": true
+  },
+  "/presence/setting/update": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "update",
+    "level": 1,
+    "auth": true
+  },
+  "/presence/setting/delete": {
+    "method": "post",
+    "controller": "presenceSettingController",
+    "function": "delete",
+    "level": 1,
+    "auth": true
+  },
+  "/timezone/setting/get": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "get",
+    "level": 1,
+    "auth": true
+  },
+  "/timezone/setting/insert": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "insert",
+    "level": 1,
+    "auth": true
+  },
+  "/timezone/setting/update": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "update",
+    "level": 1,
+    "auth": true
+  },
+  "/timezone/setting/delete": {
+    "method": "post",
+    "controller": "timezoneSettingController",
+    "function": "delete",
+    "level": 1,
+    "auth": true
+  },
+  "/auth/ceklok/add": {
+    "method": "post",
+    "controller": "authCeklokController",
+    "function": "addSuperAdmin",
+    "level": 1,
+    "auth": false
+  },
+  "/auth/ceklok/login": {
+    "method": "post",
+    "controller": "authCeklokController",
+    "function": "login",
+    "auth": false
+  },
+  "/verify/company": {
+    "method": "post",
+    "controller": "verifyController",
+    "function": "verifyCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/verify/feature": {
+    "method": "post",
+    "controller": "verifyController",
+    "function": "verifyFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/verify/payment": {
+    "method": "post",
+    "controller": "verifyController",
+    "function": "verifyPayment",
+    "level": 1,
+    "auth": true
+  },
+  "/company/get": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "getListCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/company/getbyid": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "getCompanyDetails",
+    "level": 5,
+    "auth": true
+  },
+  "/company/update": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "editCompanyProfile",
+    "level": 2,
+    "auth": true
+  },
+  "/company/updatestatus": {
+    "method": "post",
+    "controller": "companyController",
+    "function": "editCompanyStatus",
+    "level": 1,
+    "auth": true
+  },
+  "/user/type/get": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "get",
+    "level": 5,
+    "auth": true
+  },
+  "/user/type/getbyid": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "getById",
+    "level": 5,
+    "auth": true
+  },
+  "/user/type/insert": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "createUserType",
+    "level": 5,
+    "auth": true
+  },
+  "/user/type/update": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "updateUserType",
+    "level": 5,
+    "auth": true
+  },
+  "/user/type/delete": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "delete",
+    "level": 5,
+    "auth": true
+  },
+  "/user/type/updatefeature": {
+    "method": "post",
+    "controller": "userTypeController",
+    "function": "updateUserTypeFeature",
+    "level": 5,
+    "auth": true
+  },
+  "/user/add": {
+    "method": "post",
+    "controller": "userController",
+    "function": "createUserAdmin",
+    "level": 2,
+    "auth": true
+  },
+  "/user/get": {
+    "method": "post",
+    "controller": "userController",
+    "function": "getAllListUser",
+    "level": 5,
+    "auth": true
+  },
+  "/user/getbyid": {
+    "method": "post",
+    "controller": "userController",
+    "function": "getDetailsUser",
+    "level": 5,
+    "auth": true
+  },
+  "/user/update": {
+    "method": "post",
+    "controller": "userController",
+    "function": "editUserAdminCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/user/ceklok/add": {
+    "method": "post",
+    "controller": "userController",
+    "function": "createUserAdminCeklok",
+    "level": 1,
+    "auth": true
+  },
+  "/user/ceklok/update": {
+    "method": "post",
+    "controller": "userController",
+    "function": "editUserAdminCeklok",
+    "level": 1,
+    "auth": true
+  },
+  "/user/ceklok/updatestatus": {
+    "method": "post",
+    "controller": "userController",
+    "function": "editCompanyStatus",
+    "level": 1,
+    "auth": true
+  },
+  "/feature/ceklok/get": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "displayAllFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/feature/get": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "displayFeatureCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/feature/connect": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "connectNewFeatureCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/feature/sub/setting": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "subfeatureSettingsCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/feature/ceklok/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addNewFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/feature/ceklok/endpoint/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addEndpoint",
+    "level": 1,
+    "auth": true
+  },
+  "/feature/ceklok/sub/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addSubFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/feature/ceklok/sub/setting/add": {
+    "method": "post",
+    "controller": "featureController",
+    "function": "addSubFeatureSettings",
+    "level": 1,
+    "auth": true
+  },
+  "/dashboard/employee/get": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardEmployee",
+    "level": 3,
+    "auth": true
+  },
+  "/dashboard/employee/presencedetail": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardEmployeePresenceDetail",
+    "level": 3,
+    "auth": true
+  },
+  "/dashboard/company/get": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardAdminCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/dashboard/ceklok/get": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardAdminCeklok",
+    "level": 1,
+    "auth": true
+  },
+  "/dashboard/ceklok/get/feature": {
+    "method": "post",
+    "controller": "dashboardController",
+    "function": "dashboardAdminCeklokFeature",
+    "level": 1,
+    "auth": true
+  },
+  "/profile/getbyid": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "getProfileDetail",
+    "level": 0,
+    "auth": true
+  },
+  "/profile/update": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "updateProfile",
+    "level": 0,
+    "auth": true
+  },
+  "/profile/update/photo": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "updateProfilePhoto",
+    "level": 0,
+    "auth": true
+  },
+  "/profile/update/password": {
+    "method": "post",
+    "controller": "profileController",
+    "function": "changePassword",
+    "level": 0,
+    "auth": true
+  },
+  "/letter/insert": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/get": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/getById": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/update": {
+    "method": "post",
+    "controller": "letterController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/ref/get": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/ref/getbyid": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/ref/add": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/letter/ref/updatestatus": {
+    "method": "post",
+    "controller": "letterRefController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/template/get": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/template/getbyid": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "getById",
+    "level": 4,
+    "auth": true
+  },
+  "/template/insert": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/template/update": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/template/update/downloadcount": {
+    "method": "post",
+    "controller": "bankTemplateController",
+    "function": "updateDownloadCount",
+    "level": 0,
+    "auth": true
+  },
+  "/broadcast/letter/get": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "broadcastList",
+    "level": 4,
+    "auth": true
+  },
+  "/broadcast/letter/getbyid": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "broadcastDetail",
+    "level": 4,
+    "auth": true
+  },
+  "/broadcast/letter/add": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "broadcastLetter",
+    "level": 2,
+    "auth": true
+  },
+  "/broadcast/letter/resend": {
+    "method": "post",
+    "controller": "broadcastLetterController",
+    "function": "resendBroadcastLetter",
+    "level": 2,
+    "auth": true
+  },
+  "/overtime/add": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeRequest",
+    "level": 3,
+    "auth": true
+  },
+  "/overtime/updatestatus": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeApproval",
+    "level": 2,
+    "auth": true
+  },
+  "/overtime/finish": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "finishingOvertime",
+    "level": 3,
+    "auth": true
+  },
+  "/overtime/get": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "viewOvertimeData",
+    "level": 4,
+    "auth": true
+  },
+  "/overtime/getbyid": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "viewDetailOvertimeData",
+    "level": 4,
+    "auth": true
+  },
+  "/overtime/setting/get": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "getOvertimeSetting",
+    "level": 5,
+    "auth": true
+  },
+  "/overtime/setting/add": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeSettings",
+    "level": 1,
+    "auth": true
+  },
+  "/overtime/setting": {
+    "method": "post",
+    "controller": "overtimeController",
+    "function": "overtimeSettingsCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/inbox/get": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "messageList",
+    "level": 0,
+    "auth": true
+  },
+  "/inbox/detail": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "messageDetail",
+    "level": 0,
+    "auth": true
+  },
+  "/inbox/send": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "sendMessage",
+    "level": 5,
+    "auth": true
+  },
+  "/inbox/updatestatus": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "changeMessageStatus",
+    "level": 0,
+    "auth": true
+  },
+  "/inbox/delete": {
+    "method": "post",
+    "controller": "inboxController",
+    "function": "deleteMessage",
+    "level": 0,
+    "auth": true
+  },
+  "/notification/get/company": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "companyList",
+    "level": 1,
+    "auth": true
+  },
+  "/notification/get/recipient": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "recipientList",
+    "level": 1,
+    "auth": true
+  },
+  "/notification/get": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationList",
+    "level": 0,
+    "auth": true
+  },
+  "/notification/detail": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationDetail",
+    "level": 0,
+    "auth": true
+  },
+  "/notification/send": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "sendNotification",
+    "level": 5,
+    "auth": true
+  },
+  "/notification/setting/add": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationSettings",
+    "level": 1,
+    "auth": true
+  },
+  "/notification/setting": {
+    "method": "post",
+    "controller": "notificationController",
+    "function": "notificationSettingsCompany",
+    "level": 2,
+    "auth": true
+  },
+  "/facerecog/training": {
+    "method": "post",
+    "controller": "faceRecognitionController",
+    "function": "uploadAndTraining",
+    "level": 3,
+    "auth": true
+  },
+  "/operational/company/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getSpecificCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/employee/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getSpecificEmployee",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/company/activity/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getCompanyActivityLog",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/employee/activity/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "getEmployeeActivityLog",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/company/redeactivate": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "redeactivateCompany",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/employee/redeactivate": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "redeactivateEmployee",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/sendotp": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "generateOTP",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/resetpassword": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "forceResetPassword",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/resetfailedattempt": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "resetFailedAttempt",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "listKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/add": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "addKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/update": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "editKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/knowledge/delete": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "deleteKnowledge",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/email/get": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "listSentEmail",
+    "level": 1,
+    "auth": true
+  },
+  "/operational/email/resend": {
+    "method": "post",
+    "controller": "operationalSupportSystemController",
+    "function": "resendEmail",
+    "level": 1,
+    "auth": true
+  },
+  "/services/get": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/services/getbyid": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "getById",
+    "level": 4,
+    "auth": true
+  },
+  "/services/insert": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/services/update": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/services/delete": {
+    "method": "post",
+    "controller": "servicesController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/services/request/get": {
+    "method": "post",
+    "controller": "servicesRequestController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/services/request/getbyid": {
+    "method": "post",
+    "controller": "servicesRequestController",
+    "function": "getById",
+    "level": 4,
+    "auth": true
+  },
+  "/services/request/insert": {
+    "method": "post",
+    "controller": "servicesRequestController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/services/request/updatestatus": {
+    "method": "post",
+    "controller": "servicesRequestController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/services/request/finish": {
+    "method": "post",
+    "controller": "servicesRequestController",
+    "function": "finishingRequest",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/type/get": {
+    "method": "post",
+    "controller": "reimbursementTypeController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/reimbursement/type/insert": {
+    "method": "post",
+    "controller": "reimbursementTypeController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/type/update": {
+    "method": "post",
+    "controller": "reimbursementTypeController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/type/delete": {
+    "method": "post",
+    "controller": "reimbursementTypeController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/request/get": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "get",
+    "level": 4,
+    "auth": true
+  },
+  "/reimbursement/request/insert": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "insert",
+    "level": 3,
+    "auth": true
+  },
+  "/reimbursement/request/updatestatus": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "updateStatus",
+    "level": 2,
+    "auth": true
+  },
+  "/reimbursement/request/finish": {
+    "method": "post",
+    "controller": "reimbursementController",
+    "function": "finishingRequest",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/payment/get": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "get",
+    "level": 5,
+    "auth": true
+  },
+  "/payroll/payment/getbyid": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "getById",
+    "level": 5,
+    "auth": true
+  },
+  "/payroll/payment/insert": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "insert",
+    "level": 1,
+    "auth": true
+  },
+  "/payroll/payment/update": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "update",
+    "level": 1,
+    "auth": true
+  },
+  "/payroll/payment/delete": {
+    "method": "post",
+    "controller": "payrollPaymentController",
+    "function": "delete",
+    "level": 1,
+    "auth": true
+  },
+  "/report/absence": {
+    "method": "post",
+    "controller": "reportController",
+    "function": "absenceMonthlyReport",
+    "level": 2,
+    "auth": true
+  },
+  "/cdn/upload": {
+    "method": "post",
+    "controller": "cdnController",
+    "function": "uploadCDN",
+    "level": null,
+    "csrf": false,
+    "auth": null
+  },
+  "/cdn/write/": {
+    "method": "post",
+    "controller": "cdnController",
+    "function": "writeFileCDN",
+    "level": null,
+    "csrf": false,
+    "auth": null
+  }
 }

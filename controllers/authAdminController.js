@@ -814,14 +814,23 @@ exports.paymentCompany = (APP, req, callback) => {
             });
           }
 
-          let fileName = new Date().toISOString().replace(/:|\./g, '');
-          let imagePath = './public/uploads/payment/company/';
+          APP.fileCheck(req.files.image.tempFilePath, 'image').then(res => {
+            if (res == null) {
+              callback({
+                code: 'INVALID_REQUEST',
+                message: 'File yang diunggah tidak sesuai!'
+              });
+            } else {
+              let fileName = new Date().toISOString().replace(/:|\./g, '');
+              let imagePath = './public/uploads/payment/company/';
 
-          // if (!fs.existsSync(imagePath)) {
-          //   mkdirp.sync(imagePath);
-          // }
+              // if (!fs.existsSync(imagePath)) {
+              //   mkdirp.sync(imagePath);
+              // }
 
-          callback(null, imagePath + fileName + path.extname(req.files.image.name));
+              callback(null, imagePath + fileName + path.extname(req.files.image.name));
+            }
+          });
         } catch (err) {
           console.log(err);
 
@@ -829,6 +838,32 @@ exports.paymentCompany = (APP, req, callback) => {
             code: 'ERR',
             id: 'PVP03',
             message: 'Terjadi kesalahan, mohon ulangi kembali.',
+            data: err
+          });
+        }
+      },
+
+      function uploadProcess(result, callback) {
+        try {
+          // upload file
+          if (req.files.image) {
+            APP.cdn.uploadCDN(req.files.image, result).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, result);
+              }
+            });
+          } else {
+            callback(null, result);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
             data: err
           });
         }
@@ -850,19 +885,6 @@ exports.paymentCompany = (APP, req, callback) => {
             }
           )
           .then(res => {
-            // Use the mv() method to place the file somewhere on your server
-            req.files.image.mv(result, function(err) {
-              if (err) {
-                console.log(err);
-
-                return callback({
-                  code: 'ERR',
-                  id: 'PVS01',
-                  message: 'Mohon maaf terjadi kesalahan, pilih gambar sekali lagi'
-                });
-              }
-            });
-
             callback(null, {
               code: 'UPDATE_SUCCESS',
               id: 'PVP00',

@@ -933,7 +933,7 @@ exports.editCompanyStatus = (APP, req, callback) => {
         callback(null, true);
       },
 
-      function updateStatus(result, callback) {
+      function checkCurrentData(result, callback) {
         APP.models.mysql.company
           .findOne({
             where: {
@@ -947,47 +947,7 @@ exports.editCompanyStatus = (APP, req, callback) => {
                 message: 'Company tidak ditemukan!'
               });
             } else {
-              APP.fileCheck(req.files.upload.data, 'doc').then(file => {
-                if (file == null) {
-                  callback({
-                    code: 'INVALID_REQUEST',
-                    message: 'File yang diunggah tidak sesuai!'
-                  });
-                } else {
-                  let fileName = new Date().toISOString().replace(/:|\./g, '');
-                  let statusPath = `./public/uploads/company_${res.company_code}/status/`;
-
-                  res
-                    .update({
-                      status: req.body.status,
-                      status_upload: statusPath.slice(8) + fileName + path.extname(req.files.upload.name)
-                    })
-                    .then(updated => {
-                      // upload file
-                      if (req.files.upload) {
-                        req.files.upload.mv(statusPath + fileName + path.extname(req.files.upload.name), function(err) {
-                          if (err)
-                            return callback({
-                              code: 'ERR'
-                            });
-                        });
-                      }
-
-                      callback(null, {
-                        code: 'UPDATE_SUCCESS',
-                        data: updated
-                      });
-                    })
-                    .catch(err => {
-                      console.log('Error findOne updateEmployeeStatus', err);
-                      callback({
-                        code: 'ERR_DATABASE',
-                        message: 'Error findOne updateEmployeeStatus',
-                        data: err
-                      });
-                    });
-                }
-              });
+              callback(null, res);
             }
           })
           .catch(err => {
@@ -995,6 +955,73 @@ exports.editCompanyStatus = (APP, req, callback) => {
             callback({
               code: 'ERR_DATABASE',
               message: 'Error update updateEmployeeStatus',
+              data: err
+            });
+          });
+      },
+
+      function uploadPath(result, callback) {
+        APP.fileCheck(req.files.upload.tempFilePath, 'doc').then(file => {
+          if (file == null) {
+            callback({
+              code: 'INVALID_REQUEST',
+              message: 'File yang diunggah tidak sesuai!'
+            });
+          } else {
+            let fileName = new Date().toISOString().replace(/:|\./g, '');
+            let statusPath = `./public/uploads/company_${result.company_code}/status/`;
+
+            callback(null, {
+              res: result,
+              doc: statusPath + fileName + path.extname(req.files.upload.name)
+            });
+          }
+        });
+      },
+
+      function uploadProcess(result, callback) {
+        try {
+          // upload file
+          if (req.files.upload) {
+            APP.cdn.uploadCDN(req.files.upload, result.doc).then(res => {
+              if (res.error == true) {
+                callback({
+                  code: 'ERR',
+                  data: res.data
+                });
+              } else {
+                callback(null, result);
+              }
+            });
+          } else {
+            callback(null, result);
+          }
+        } catch (err) {
+          console.log('Error uploadProcess', err);
+          callback({
+            code: 'ERR',
+            data: err
+          });
+        }
+      },
+
+      function updateStatus(result, callback) {
+        result.res
+          .update({
+            status: req.body.status,
+            status_upload: result.doc.slice(8)
+          })
+          .then(updated => {
+            callback(null, {
+              code: 'UPDATE_SUCCESS',
+              data: updated
+            });
+          })
+          .catch(err => {
+            console.log('Error findOne updateEmployeeStatus', err);
+            callback({
+              code: 'ERR_DATABASE',
+              message: 'Error findOne updateEmployeeStatus',
               data: err
             });
           });
