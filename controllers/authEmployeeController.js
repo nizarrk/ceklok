@@ -209,7 +209,20 @@ exports.checkExistingCredentials = (APP, req, callback) => {
 exports.register = (APP, req, callback) => {
   async.waterfall(
     [
-      function checkCredentials(callback) {
+      function checkDB(callback) {
+        APP.checkDB(req.body.company).then(res => {
+          if (res.length == 0) {
+            return callback({
+              code: 'NOT_FOUND',
+              message: 'Company not found!'
+            });
+          }
+
+          callback(null, true);
+        });
+      },
+
+      function checkCredentials(result, callback) {
         module.exports.checkExistingCredentials(APP, req, callback);
       },
 
@@ -463,6 +476,19 @@ exports.login = (APP, req, callback) => {
         callback(null, true);
       },
 
+      function checkDB(data, callback) {
+        APP.checkDB(req.body.company).then(res => {
+          if (res.length == 0) {
+            return callback({
+              code: 'NOT_FOUND',
+              message: 'Company not found!'
+            });
+          }
+
+          callback(null, true);
+        });
+      },
+
       function checkUser(index, callback) {
         employee.hasMany(employee_face, {
           sourceKey: 'id',
@@ -490,6 +516,7 @@ exports.login = (APP, req, callback) => {
               'id',
               'support_pal_id',
               'company_code',
+              'grade_id',
               'name',
               'password',
               'photo',
@@ -564,6 +591,7 @@ exports.login = (APP, req, callback) => {
                     id: rows[0].id,
                     support_pal_id: rows[0].support_pal_id,
                     company: rows[0].company.id,
+                    grade: rows[0].grade_id,
                     company_code: rows[0].company_code,
                     name: rows[0].name,
                     photo: rows[0].photo,
@@ -749,8 +777,17 @@ exports.forgotPassword = (APP, req, callback) => {
           query = APP.models.mysql.admin;
           callback(null, true);
         } else if (req.body.level == 3) {
-          query = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee;
-          callback(null, true);
+          APP.checkDB(req.body.company).then(res => {
+            if (res.length == 0) {
+              return callback({
+                code: 'NOT_FOUND',
+                message: 'Company not found!'
+              });
+            }
+
+            query = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql.employee;
+            callback(null, true);
+          });
         } else {
           callback({
             code: 'INVALID_REQUEST',
