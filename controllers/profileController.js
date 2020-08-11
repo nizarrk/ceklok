@@ -343,7 +343,7 @@ exports.updateProfilePhoto = (APP, req, callback) => {
         try {
           // upload file
           if (req.files.image) {
-            APP.uploadCDN(req.files.image, data).then(res => {
+            APP.cdn.uploadCDN(req.files.image, data).then(res => {
               if (res.error == true) {
                 callback({
                   code: 'ERR',
