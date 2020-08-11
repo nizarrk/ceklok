@@ -666,13 +666,14 @@ exports.login = (APP, req, callback) => {
       },
 
       function setToken(rows, callback) {
+        console.log(rows);
         let token = jwt.sign(
           {
             id: rows.id,
             company: rows.company,
+            grade: rows.grade,
             code: rows.company_code,
             db: `${process.env.MYSQL_NAME}_${rows.company_code}`,
-            grade: rows.grade_id,
             level: 3,
             admin: false
           },
