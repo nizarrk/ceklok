@@ -4,7 +4,7 @@ const db = require('../db');
 
 module.exports = input => {
   return db.sequelize
-    .query(`SHOW DATABASES LIKE '${process.env.MYSQL_NAME}_${input}'`)
+    .query(`SHOW DATABASES LIKE '${process.env.MYSQL_NAME}_${input.toUpperCase()}'`)
     .then(res => {
       return res[0];
     })
