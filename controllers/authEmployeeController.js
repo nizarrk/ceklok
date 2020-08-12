@@ -430,7 +430,7 @@ exports.register = (APP, req, callback) => {
 };
 
 exports.login = (APP, req, callback) => {
-  let { employee, employee_face } = APP.models.company[
+  let { employee, employee_face, overtime_setting } = APP.models.company[
     process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()
   ].mysql;
   let { company } = APP.models.mysql;
@@ -549,7 +549,7 @@ exports.login = (APP, req, callback) => {
                 // console.log(rows[0].login_attempt >= 3 && now > updated);
 
                 if (rows[0].login_attempt < 3) {
-                  callback(null, rows);
+                  callback(null, rows[0]);
                 } else {
                   callback({
                     code: 'INVALID_REQUEST',
@@ -568,9 +568,27 @@ exports.login = (APP, req, callback) => {
           });
       },
 
+      function checkOvertimeRequestPermission(rows, callback) {
+        overtime_setting
+          .findOne({
+            where: {
+              overtime_setting_id: 1
+            }
+          })
+          .then(res => {
+            if (res.value == rows.grade_id) {
+              rows.overtime_request = 1;
+              callback(null, rows);
+            } else {
+              rows.overtime_request = 0;
+              callback(null, rows);
+            }
+          });
+      },
+
       function commparePassword(rows, callback) {
         bcrypt
-          .compare(req.body.pass, rows[0].password)
+          .compare(req.body.pass, rows.password)
           .then(res => {
             if (res === true) {
               // reset failed attempt counter
@@ -582,21 +600,22 @@ exports.login = (APP, req, callback) => {
                   },
                   {
                     where: {
-                      id: rows[0].id
+                      id: rows.id
                     }
                   }
                 )
                 .then(() => {
                   callback(null, {
-                    id: rows[0].id,
-                    support_pal_id: rows[0].support_pal_id,
-                    company: rows[0].company.id,
-                    grade: rows[0].grade_id,
-                    company_code: rows[0].company_code,
-                    name: rows[0].name,
-                    photo: rows[0].photo,
-                    initial_login: rows[0].initial_login,
-                    employee_faces: rows[0].employee_faces
+                    id: rows.id,
+                    support_pal_id: rows.support_pal_id,
+                    company: rows.company.id,
+                    grade: rows.grade_id,
+                    overtime_request: rows.overtime_request,
+                    company_code: rows.company_code,
+                    name: rows.name,
+                    photo: rows.photo,
+                    initial_login: rows.initial_login,
+                    employee_faces: rows.employee_faces
                   });
                 })
                 .catch(err => {
@@ -610,12 +629,12 @@ exports.login = (APP, req, callback) => {
               employee
                 .update(
                   {
-                    login_attempt: rows[0].login_attempt + 1,
+                    login_attempt: rows.login_attempt + 1,
                     updated_at: new Date()
                   },
                   {
                     where: {
-                      id: rows[0].id
+                      id: rows.id
                     }
                   }
                 )
