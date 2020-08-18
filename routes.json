@@ -1827,6 +1827,41 @@
     "level": 1,
     "auth": true
   },
+  "/payroll/income/setting/get": {
+    "method": "post",
+    "controller": "incomeDeductionController",
+    "function": "get",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/income/setting/getbyid": {
+    "method": "post",
+    "controller": "incomeDeductionController",
+    "function": "getById",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/income/setting/insert": {
+    "method": "post",
+    "controller": "incomeDeductionController",
+    "function": "insert",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/income/setting/update": {
+    "method": "post",
+    "controller": "incomeDeductionController",
+    "function": "update",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/income/setting/delete": {
+    "method": "post",
+    "controller": "incomeDeductionController",
+    "function": "delete",
+    "level": 2,
+    "auth": true
+  },
   "/report/absence": {
     "method": "post",
     "controller": "reportController",
