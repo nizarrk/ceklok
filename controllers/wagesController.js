@@ -3,8 +3,6 @@
 const branchController = require('../controllers/branchLocationController');
 const gradeController = require('../controllers/gradeController');
 const jobtitleController = require('../controllers/jobTitleController');
-const incomeDeduction = require('../controllers/incomeDeductionController');
-const { parse } = require('mustache');
 
 exports.listWages = ( APP, req, callback ) => {
     let { id, db } = req.user;
@@ -343,7 +341,7 @@ exports.calulatorWages = ( APP, req, callback ) => {
                     income.map( x => {
                         return income_deduction
                             .findAll({
-                                attributes: ['id','code','name','description','percentage','nominal'],
+                                attributes: ['id','code','name','description','denomination','nominal'],
                                 where: {
                                     id: x.id || 0,
                                     type: 1
@@ -352,7 +350,7 @@ exports.calulatorWages = ( APP, req, callback ) => {
                             .then(res => {
                                 if ( res.length == 0 ) throw new Error('Kesalahan parameter ( value income )');
 
-                                data.income += parseInt( res[0].nominal );
+                                data.income += denomination == 1 ? parseInt( res[0].nominal ) : ( res[0].nominal * data.middle_value ) / 100;
                                 data.data_income.push( res );
 
                                 return true;
@@ -376,7 +374,7 @@ exports.calulatorWages = ( APP, req, callback ) => {
                     deduction.map( x => {
                         return income_deduction
                             .findAll({
-                                attributes: ['id','code','name','description','percentage','nominal'],
+                                attributes: ['id','code','name','description','denomination','nominal'],
                                 where: {
                                     id: x.id || 0,
                                     type: 2
@@ -385,7 +383,7 @@ exports.calulatorWages = ( APP, req, callback ) => {
                             .then(res => {
                                 if ( res.length == 0 ) throw new Error('Kesalahan parameter ( value deduction )');
 
-                                data.deduction += parseInt( res[0].nominal );
+                                data.deduction += denomination == 1 ? parseInt( res[0].nominal ) : ( res[0].nominal * data.middle_value ) / 100;
                                 data.data_deduction.push( res );
 
                                 return true;
