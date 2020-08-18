@@ -3,6 +3,8 @@
 const branchController = require('../controllers/branchLocationController');
 const gradeController = require('../controllers/gradeController');
 const jobtitleController = require('../controllers/jobTitleController');
+const incomeDeduction = require('../controllers/incomeDeductionController');
+const { parse } = require('mustache');
 
 exports.listWages = ( APP, req, callback ) => {
     let { id, db } = req.user;
@@ -279,22 +281,139 @@ exports.editWages = ( APP, req, callback ) => {
 
 exports.calulatorWages = ( APP, req, callback ) => {
     let { id, db } = req.user;
-    let { wages }  = APP.models.company[db].mysql;
-    let { grade_id, job_title_id, branch_id } = req.body;
+    let { wages, income_deduction }  = APP.models.company[db].mysql;
+    let { grade_id, job_title_id, branch_id, income, deduction } = req.body;
 
     async.waterfall(
         [
             function validationRequest( callback ) {
-                
+                if ( !grade_id || !job_title_id || !branch_id ) return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Kesalahan parameter ( All )'
+                });
+
+                if ( !income || !Array.isArray( income ) || income.length == 0 ) return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Kesalahan parameter ( income )'
+                });
+
+                if ( !deduction || !Array.isArray( deduction ) || deduction.length == 0 ) return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Kesalahan parameter ( deduction )'
+                });
+
+                callback( null, {} );
             },
             function requestWages( data, callback ) {
-                
+                wages
+                    .findAll({
+                        attributes: ['minimum_nominal','maximum_nominal'],
+                        where: {
+                            grade_id: grade_id,
+                            job_title_id: job_title_id,
+                            branch_id: branch_id
+                        }
+                    })
+                    .then(res => {
+                        if ( res.length == 0 ) return callback({
+                            code: 'NOT_FOUND',
+                            message: 'Data tidak ditemukan'
+                        });
+
+                        data.minimum_nominal = parseInt( res[0].minimum_nominal );
+                        data.maximum_nominal = parseInt( res[0].maximum_nominal );
+                        data.middle_value = ( data.minimum_nominal * data.maximum_nominal ) / 2;
+                        data.income = 0;
+                        data.deduction = 0;
+                        data.data_income = [];
+                        data.data_deduction = [];
+
+                        callback( null, data );
+                    })  
+                    .catch(err => {
+                        callback({
+                            code: 'ERR_DATABASE',
+                            message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( update )',
+                            data: err
+                        });
+                    });
             },
             function calculateIncome( data, callback ) {
-                
+                Promise.all(
+                    income.map( x => {
+                        return income_deduction
+                            .findAll({
+                                attributes: ['id','code','name','description','percentage','nominal'],
+                                where: {
+                                    id: x.id || 0,
+                                    type: 1
+                                }
+                            })
+                            .then(res => {
+                                if ( res.length == 0 ) throw new Error('Kesalahan parameter ( value income )');
+
+                                data.income += parseInt( res[0].nominal );
+                                data.data_income.push( res );
+
+                                return true;
+
+                            });
+                    })
+                )
+                .then(res => {
+                    callback( null, data );
+                })
+                .catch(err => {
+                    callback({
+                        code: 'ERR_DATABASE',
+                        message: err,
+                        data: err
+                    });
+                });
             },
             function calculateDeduction ( data, callback ) {
-                
+                Promise.all(
+                    deduction.map( x => {
+                        return income_deduction
+                            .findAll({
+                                attributes: ['id','code','name','description','percentage','nominal'],
+                                where: {
+                                    id: x.id || 0,
+                                    type: 2
+                                }
+                            })
+                            .then(res => {
+                                if ( res.length == 0 ) throw new Error('Kesalahan parameter ( value deduction )');
+
+                                data.deduction += parseInt( res[0].nominal );
+                                data.data_deduction.push( res );
+
+                                return true;
+
+                            });
+                    })
+                )
+                .then(res => {
+                    data.result = {
+                        nominal_thp: data.middle_value + data.income - data.deduction,
+                        nominal_gapok: data.middle_value,
+                        detil_income: data.data_income,
+                        detail_deduction: data.data_deduction
+                    };
+
+                    callback( null, {
+                        code: 'OK',
+                        message: 'Data ditemukan',
+                        data: data.result
+                    });
+                })
+                .catch(err => {
+                    callback({
+                        code: 'ERR_DATABASE',
+                        message: err,
+                        data: err
+                    });
+                });
             },
         ],
         function ( err, result ) {
