@@ -26,6 +26,30 @@ exports.get = function(APP, req, callback) {
     });
 };
 
+exports.getById = function(APP, req, callback) {
+  APP.models.company[req.user.db].mysql.branch
+    .findAll({
+      where: {
+        id: req.body.id
+      }
+    })
+    .then(rows => {
+      return callback(null, {
+        code: rows && rows.length > 0 ? 'FOUND' : 'NOT_FOUND',
+        data: rows,
+        info: {
+          dataCount: rows.length
+        }
+      });
+    })
+    .catch(err => {
+      return callback({
+        code: 'ERR_DATABASE',
+        data: JSON.stringify(err)
+      });
+    });
+};
+
 exports.insert = function(APP, req, callback) {
   async.waterfall(
     [
