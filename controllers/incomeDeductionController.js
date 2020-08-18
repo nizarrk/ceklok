@@ -9,7 +9,8 @@ exports.get = (APP, req, callback) => {
   income_deduction
     .findAll({
       where: {
-        status: 1
+        status: 1,
+        type: req.body.type
       }
     })
     .then(res => {

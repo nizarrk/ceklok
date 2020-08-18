@@ -20,8 +20,8 @@ module.exports = function(sequelize, Sequelize) {
       description: {
         type: Sequelize.STRING(255)
       },
-      percentage: {
-        type: Sequelize.INTEGER
+      denomination: {
+        type: Sequelize.INTEGER // 1 = rupiah, 2 = percent
       },
       nominal: {
         type: Sequelize.INTEGER
