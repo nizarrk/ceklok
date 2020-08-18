@@ -43,6 +43,7 @@ exports.getById = function(APP, req, callback) {
       });
     })
     .catch(err => {
+      console.log( err );
       return callback({
         code: 'ERR_DATABASE',
         data: JSON.stringify(err)

@@ -1862,6 +1862,34 @@
     "level": 2,
     "auth": true
   },
+  "/payroll/wages/list": {
+    "method": "post",
+    "controller": "wagesController",
+    "function": "listWages",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/wages/add": {
+    "method": "post",
+    "controller": "wagesController",
+    "function": "addWages",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/wages/edit": {
+    "method": "post",
+    "controller": "wagesController",
+    "function": "editWages",
+    "level": 2,
+    "auth": true
+  },
+  "/payroll/wages/calculator": {
+    "method": "post",
+    "controller": "wagesController",
+    "function": "calulatorWages",
+    "level": 2,
+    "auth": true
+  },
   "/report/absence": {
     "method": "post",
     "controller": "reportController",

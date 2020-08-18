@@ -1,5 +1,7 @@
 'use strict';
 
+const async = require('async');
+
 const branchController = require('../controllers/branchLocationController');
 const gradeController = require('../controllers/gradeController');
 const jobtitleController = require('../controllers/jobTitleController');
@@ -31,13 +33,13 @@ exports.listWages = ( APP, req, callback ) => {
                     param_where: {}
                 }
 
-                if ( grade_id && grade_id != null ) data.where.grade_id = grade_id;
+                if ( grade_id && grade_id != null ) data.param_where.grade_id = grade_id;
 
-                if ( job_title_id && job_title_id != null ) data.where.job_title_id = job_title_id;
+                if ( job_title_id && job_title_id != null ) data.param_where.job_title_id = job_title_id;
 
-                if ( branch_id && branch_id != null ) data.where.branch_id = branch_id;
+                if ( branch_id && branch_id != null ) data.param_where.branch_id = branch_id;
 
-                if ( wages_id && wages_id != null ) data.where.id = wages_id;
+                if ( wages_id && wages_id != null ) data.param_where.id = wages_id;
 
                 callback( null, data );
             },
@@ -52,19 +54,19 @@ exports.listWages = ( APP, req, callback ) => {
                                 required: true
                             },
                             {
-                                model: grade,
+                                model: job_title,
                                 attributes: ['id','code','name','description'],
                                 required: true
                             },
                             {
-                                model: grade,
+                                model: branch,
                                 attributes: ['id','code','name','description','address'],
                                 required: true
                             }
                         ],
                         where: data.param_where,
                         order: [
-                            ['created_at','DSC']
+                            ['created_at','DESC']
                         ]
                     })
                     .then(res => {
@@ -79,7 +81,7 @@ exports.listWages = ( APP, req, callback ) => {
                             data: res
                         });
                     })
-                    .cath(err => {
+                    .catch(err => {
                         callback({
                             code: 'ERR_DATABASE',
                             message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami',
@@ -91,7 +93,7 @@ exports.listWages = ( APP, req, callback ) => {
         function ( err, result ) {
             if ( err ) return callback( err );
 
-            return callback( null, resul );
+            return callback( null, result );
         }
     );
 };
@@ -174,7 +176,7 @@ exports.addWages = ( APP, req, callback ) => {
                 });
             },
             function insert( data, callback ) {
-                delete req.bod.id;
+                delete req.body.id;
 
                 wages
                     .create( req.body )
@@ -185,7 +187,7 @@ exports.addWages = ( APP, req, callback ) => {
                             data: res
                         });
                     })
-                    .cath(err => {
+                    .catch(err => {
                         callback({
                             code: 'ERR_DATABASE',
                             message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( insert )',
@@ -232,10 +234,10 @@ exports.editWages = ( APP, req, callback ) => {
                 minimum_nominal  = parseInt( minimum_nominal );
                 maximum_nominal = parseInt ( maximum_nominal );
 
-                if ( minimum_nominal && minimum_nominal > 0 ) data.param_update.minimum_nominal = minimum_nominal;
+                if ( minimum_nominal && minimum_nominal > 0 ) data.param_update[0].minimum_nominal = minimum_nominal;
 
-                if ( maximum_nominal && maximum_nominal > 0 ) data.param_update.maximum_nominal = maximum_nominal;
-            
+                if ( maximum_nominal && maximum_nominal > 0 ) data.param_update[0].maximum_nominal = maximum_nominal;
+          
                 callback( null, data );
                 
             },
@@ -260,7 +262,7 @@ exports.editWages = ( APP, req, callback ) => {
                             data: req.body
                         });
                     })
-                    .cath(err => {
+                    .catch(err => {
                         callback({
                             code: 'ERR_DATABASE',
                             message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( update )',
@@ -320,7 +322,7 @@ exports.calulatorWages = ( APP, req, callback ) => {
 
                         data.minimum_nominal = parseInt( res[0].minimum_nominal );
                         data.maximum_nominal = parseInt( res[0].maximum_nominal );
-                        data.middle_value = ( data.minimum_nominal * data.maximum_nominal ) / 2;
+                        data.middle_value = ( data.minimum_nominal + data.maximum_nominal ) / 2;
                         data.income = 0;
                         data.deduction = 0;
                         data.data_income = [];
@@ -337,21 +339,25 @@ exports.calulatorWages = ( APP, req, callback ) => {
                     });
             },
             function calculateIncome( data, callback ) {
+                let count = [];
+
                 Promise.all(
                     income.map( x => {
                         return income_deduction
                             .findAll({
-                                attributes: ['id','code','name','description','denomination','nominal'],
+                                attributes: ['id','name','description','denomination','nominal'],
                                 where: {
-                                    id: x.id || 0,
+                                    id: x,
                                     type: 1
                                 }
                             })
                             .then(res => {
-                                if ( res.length == 0 ) throw new Error('Kesalahan parameter ( value income )');
+                                if ( res.length == 0 ) count.push( x );
 
-                                data.income += denomination == 1 ? parseInt( res[0].nominal ) : ( res[0].nominal * data.middle_value ) / 100;
-                                data.data_income.push( res );
+                                if ( res.length > 0 ) {
+                                    data.income += res[0].denomination == 1 ? parseInt( res[0].nominal ) : ( res[0].nominal * data.middle_value ) / 100;
+                                    data.data_income.push( res );
+                                }
 
                                 return true;
 
@@ -359,32 +365,42 @@ exports.calulatorWages = ( APP, req, callback ) => {
                     })
                 )
                 .then(res => {
+                    if ( count.length > 0 ) return callback({
+                        code: 'INVALID_REQUEST',
+                        message: 'Kesalahan parameter ( income value )',
+                        data: count
+                    });
+
                     callback( null, data );
                 })
                 .catch(err => {
                     callback({
                         code: 'ERR_DATABASE',
-                        message: err,
+                        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( promise income )',
                         data: err
                     });
                 });
             },
             function calculateDeduction ( data, callback ) {
+                let count = [];
+
                 Promise.all(
                     deduction.map( x => {
                         return income_deduction
                             .findAll({
-                                attributes: ['id','code','name','description','denomination','nominal'],
+                                attributes: ['id','name','description','denomination','nominal'],
                                 where: {
-                                    id: x.id || 0,
+                                    id: x,
                                     type: 2
                                 }
                             })
                             .then(res => {
-                                if ( res.length == 0 ) throw new Error('Kesalahan parameter ( value deduction )');
+                                if ( res.length == 0 ) count.push( x );
 
-                                data.deduction += denomination == 1 ? parseInt( res[0].nominal ) : ( res[0].nominal * data.middle_value ) / 100;
-                                data.data_deduction.push( res );
+                                if ( res.length > 0 ) {
+                                    data.deduction += res[0].denomination == 1 ? parseInt( res[0].nominal ) : ( res[0].nominal * data.middle_value ) / 100;
+                                    data.data_deduction.push( res );
+                                }
 
                                 return true;
 
@@ -392,6 +408,12 @@ exports.calulatorWages = ( APP, req, callback ) => {
                     })
                 )
                 .then(res => {
+                    if ( count.length > 0 ) return callback({
+                        code: 'INVALID_REQUEST',
+                        message: 'Kesalahan parameter ( deduction value )',
+                        data: count
+                    });
+
                     data.result = {
                         nominal_thp: data.middle_value + data.income - data.deduction,
                         nominal_gapok: data.middle_value,
@@ -406,9 +428,10 @@ exports.calulatorWages = ( APP, req, callback ) => {
                     });
                 })
                 .catch(err => {
+                    console.log( err );
                     callback({
                         code: 'ERR_DATABASE',
-                        message: err,
+                        message: 'Database bermasalah, mohon coba kembali atau hubungi tim operasional kami ( promise deduction )',
                         data: err
                     });
                 });
@@ -417,7 +440,7 @@ exports.calulatorWages = ( APP, req, callback ) => {
         function ( err, result ) {
             if ( err ) return callback( err );
 
-            return callback( null, resul );
+            return callback( null, result );
         }
     );
 };
