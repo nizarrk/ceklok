@@ -62,7 +62,7 @@ exports.getById = (APP, req, callback) => {
 
 exports.insert = (APP, req, callback) => {
   let { income_deduction } = APP.models.company[req.user.db].mysql;
-  let { name, desc, percentage, nominal, type } = req.body;
+  let { name, desc, denomination, nominal, type } = req.body;
 
   async.waterfall(
     [
@@ -79,10 +79,10 @@ exports.insert = (APP, req, callback) => {
             message: 'Kesalahan pada parameter desc!'
           });
 
-        if (!percentage)
+        if (!denomination)
           return callback({
             code: 'INVALID_REQUEST',
-            message: 'Kesalahan pada parameter percentage!'
+            message: 'Kesalahan pada parameter denomination!'
           });
 
         if (!nominal)
@@ -125,7 +125,7 @@ exports.insert = (APP, req, callback) => {
             code: data.code,
             name: name,
             description: desc,
-            percentage: percentage,
+            denomination: denomination,
             nominal: nominal,
             type: type,
             created_by: req.user.id
@@ -159,7 +159,7 @@ exports.insert = (APP, req, callback) => {
 
 exports.update = (APP, req, callback) => {
   let { income_deduction } = APP.models.company[req.user.db].mysql;
-  let { id, name, desc, percentage, nominal, type, status } = req.body;
+  let { id, name, desc, denomination, nominal, type, status } = req.body;
 
   async.waterfall(
     [
@@ -182,10 +182,10 @@ exports.update = (APP, req, callback) => {
             message: 'Kesalahan pada parameter desc!'
           });
 
-        if (!percentage)
+        if (!denomination)
           return callback({
             code: 'INVALID_REQUEST',
-            message: 'Kesalahan pada parameter percentage!'
+            message: 'Kesalahan pada parameter denomination!'
           });
 
         if (!nominal)
@@ -215,7 +215,7 @@ exports.update = (APP, req, callback) => {
             {
               name: name,
               description: desc,
-              percentage: percentage,
+              denomination: denomination,
               nominal: nominal,
               type: type,
               status: status,
