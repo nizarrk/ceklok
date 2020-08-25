@@ -5,6 +5,42 @@ const path = require('path');
 const moment = require('moment');
 const bcrypt = require('bcrypt');
 
+exports.getListCompany = (APP, req, callback) => {
+  let { admin, company } = APP.models.mysql;
+
+  company.hasMany(admin, {
+    sourceKey: 'id',
+    foreignKey: 'company_id'
+  });
+  company
+    .findAll({
+      attributes: ['id', 'company_code', 'name', 'description'],
+      include: [
+        {
+          model: admin,
+          attributes: ['id', 'name', 'user_name', 'address'],
+          limit: 1,
+          order: [['id', 'ASC']]
+        }
+      ]
+    })
+    .then(res => {
+      if (res.length == 0) return callback({ code: 'NOT_FOUND', message: 'List company tidak ditemukan!' });
+
+      callback(null, {
+        code: 'FOUND',
+        data: res
+      });
+    })
+    .catch(err => {
+      console.log(err);
+      callback({
+        code: 'ERR_DATABASE',
+        data: err
+      });
+    });
+};
+
 exports.getSpecificCompany = (APP, req, callback) => {
   let { admin, company } = APP.models.mysql;
   let { _logs } = APP.models.mongo;
@@ -71,6 +107,75 @@ exports.getSpecificCompany = (APP, req, callback) => {
   );
 };
 
+exports.getListEmployee = (APP, req, callback) => {
+  let { company } = APP.models.mysql;
+  let { employee } = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql;
+  let { _logs } = APP.models.mongo;
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (req.body.company) {
+          callback(null, true);
+        } else {
+          callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter company!'
+          });
+        }
+      },
+
+      function checkDB(data, callback) {
+        APP.checkDB(req.body.company).then(res => {
+          if (res.length == 0) {
+            return callback({
+              code: 'NOT_FOUND',
+              message: 'Company not found!'
+            });
+          }
+
+          callback(null, true);
+        });
+      },
+
+      function getEmployeeInfo(data, callback) {
+        employee.belongsTo(company, {
+          targetKey: 'company_code',
+          foreignKey: 'company_code'
+        });
+        employee
+          .findAll({
+            include: [
+              {
+                model: company,
+                attributes: ['id', 'name', 'company_code']
+              }
+            ]
+          })
+          .then(res => {
+            if (res.length == 0) return callback({ code: 'NOT_FOUND', message: 'Employee tidak ditemukan!' });
+
+            callback(null, {
+              code: 'FOUND',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.getSpecificEmployee = (APP, req, callback) => {
   let { company } = APP.models.mysql;
   let { employee } = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql;
@@ -88,7 +193,20 @@ exports.getSpecificEmployee = (APP, req, callback) => {
         }
       },
 
-      function getCompanyInfo(data, callback) {
+      function checkDB(data, callback) {
+        APP.checkDB(req.body.company).then(res => {
+          if (res.length == 0) {
+            return callback({
+              code: 'NOT_FOUND',
+              message: 'Company not found!'
+            });
+          }
+
+          callback(null, true);
+        });
+      },
+
+      function getEmployeeInfo(data, callback) {
         employee.belongsTo(company, {
           targetKey: 'company_code',
           foreignKey: 'company_code'
@@ -151,16 +269,14 @@ exports.getSpecificEmployee = (APP, req, callback) => {
   );
 };
 
-exports.getCompanyActivityLog = (APP, req, callback) => {
-  let { _logs } = APP.models.mongo;
-  let startDate = ` ${req.body.datestart} 00:00:00.000Z`;
-  let endDate = ` ${req.body.dateend} 23:59:59.999Z`;
-  _logs
-    .find({
-      company: req.body.company,
-      date: { $gte: startDate, $lt: endDate }
-    })
+exports.getEndpoint = (APP, req, callback) => {
+  let { endpoint } = APP.models.mysql;
+
+  endpoint
+    .findAll()
     .then(res => {
+      if (res.length == 0) return callback({ code: 'NOT_FOUND', message: 'Endpoint tidak ditemukan!' });
+
       callback(null, {
         code: 'FOUND',
         data: res
@@ -175,36 +291,166 @@ exports.getCompanyActivityLog = (APP, req, callback) => {
     });
 };
 
+exports.getCompanyActivityLog = (APP, req, callback) => {
+  let { _logs } = APP.models.mongo;
+  let { company, datestart, dateend, endpoint } = req.body;
+
+  let where = {
+    company: company,
+    date: { $gte: ` ${datestart} 00:00:00.000Z`, $lt: ` ${dateend} 23:59:59.999Z` }
+  };
+
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (!company)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter company!'
+          });
+
+        if (!datestart)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter datestart!'
+          });
+
+        if (!dateend)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter dateend!'
+          });
+
+        if (endpoint) where.endpoint = endpoint;
+
+        callback(null, true);
+      },
+
+      function checkDB(data, callback) {
+        APP.checkDB(company).then(res => {
+          if (res.length == 0) {
+            return callback({
+              code: 'NOT_FOUND',
+              message: 'Company not found!'
+            });
+          }
+
+          callback(null, true);
+        });
+      },
+
+      function getLogs(data, callback) {
+        _logs
+          .find(where)
+          .then(res => {
+            callback(null, {
+              code: 'FOUND',
+              data: res
+            });
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
+      }
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
+};
+
 exports.getEmployeeActivityLog = (APP, req, callback) => {
   let { _logs } = APP.models.mongo;
-  let startDate = ` ${req.body.datestart} 00:00:00.000Z`;
-  let endDate = ` ${req.body.dateend} 23:59:59.999Z`;
-  _logs
-    .find({
-      company: req.body.company,
-      level: 3,
-      user_id: req.body.id,
-      date: { $gte: startDate, $lt: endDate }
-    })
-    .then(res => {
-      if (res == null) {
-        callback({
-          code: 'NOT_FOUND'
+  let { company, datestart, dateend, endpoint, id } = req.body;
+
+  let where = {
+    company: company,
+    level: 3,
+    user_id: id,
+    date: { $gte: ` ${datestart} 00:00:00.000Z`, $lt: ` ${dateend} 23:59:59.999Z` }
+  };
+
+  async.waterfall(
+    [
+      function checkBody(callback) {
+        if (!company)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter company!'
+          });
+
+        if (!datestart)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter datestart!'
+          });
+
+        if (!dateend)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter dateend!'
+          });
+
+        if (!id)
+          return callback({
+            code: 'INVALID_REQUEST',
+            message: 'Kesalahan pada parameter id!'
+          });
+
+        if (endpoint) where.endpoint = endpoint;
+
+        callback(null, true);
+      },
+
+      function checkDB(data, callback) {
+        APP.checkDB(company).then(res => {
+          if (res.length == 0) {
+            return callback({
+              code: 'NOT_FOUND',
+              message: 'Company not found!'
+            });
+          }
+
+          callback(null, true);
         });
-      } else {
-        callback(null, {
-          code: 'FOUND',
-          data: res
-        });
+      },
+
+      function getLogs(data, callback) {
+        _logs
+          .find(where)
+          .then(res => {
+            if (res == null) {
+              callback({
+                code: 'NOT_FOUND'
+              });
+            } else {
+              callback(null, {
+                code: 'FOUND',
+                data: res
+              });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            callback({
+              code: 'ERR_DATABASE',
+              data: err
+            });
+          });
       }
-    })
-    .catch(err => {
-      console.log(err);
-      callback({
-        code: 'ERR_DATABASE',
-        data: err
-      });
-    });
+    ],
+    (err, result) => {
+      if (err) return callback(err);
+
+      callback(null, result);
+    }
+  );
 };
 
 exports.redeactivateCompany = (APP, req, callback) => {
