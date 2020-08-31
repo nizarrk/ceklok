@@ -868,21 +868,24 @@ exports.forgotPassword = (APP, req, callback) => {
                         ? {
                               email: req.body.email,
                               // date: req.currentDate,
-                              endpoint: req.originalUrl
+                              endpoint: req.originalUrl,
+                              level: req.body.level
                           }
                         : req.body.level == 2
                         ? {
                               email: req.body.email,
                               // date: req.currentDate,
                               company: result.company_code,
-                              endpoint: req.originalUrl
+                              endpoint: req.originalUrl,
+                              level: req.body.level
                           }
                         : req.body.level == 3
                         ? {
                               email: req.body.email,
                               // date: req.currentDate,
                               company: result.company_code,
-                              endpoint: req.originalUrl
+                              endpoint: req.originalUrl,
+                              level: req.body.level
                           }
                         : callback({
                               code: 'INVALID_REQUEST',
@@ -932,6 +935,7 @@ exports.forgotPassword = (APP, req, callback) => {
                                 count: 1,
                                 failed: 0,
                                 endpoint: req.originalUrl,
+                                level: req.body.level,
                                 expired_time: moment()
                                     .add(1, 'days')
                                     .format('YYYY-MM-DD HH:mm:ss'),
@@ -992,12 +996,31 @@ exports.forgotPassword = (APP, req, callback) => {
 };
 
 exports.checkOTP = (APP, req, callback) => {
-    let { email, company, otp } = req.body;
+    let { email, company, otp, level } = req.body;
     async.waterfall(
         [
             function checkBody(callback) {
-                if (email && otp) {
-                    callback(null, true);
+                if (email && otp && level) {
+                    if (level == 1) {
+                        let params = {
+                            email: email,
+                            level: level,
+                            endpoint: '/auth/forgotpassword',
+                            expired: false
+                        };
+
+                        callback(null, params);
+                    } else {
+                        let params = {
+                            email: email,
+                            company: company,
+                            level: level,
+                            endpoint: '/auth/forgotpassword',
+                            expired: false
+                        };
+
+                        callback(null, params);
+                    }
                 } else {
                     callback({
                         code: 'INVALID_REQUEST',
@@ -1008,12 +1031,7 @@ exports.checkOTP = (APP, req, callback) => {
 
             function checkOTP(data, callback) {
                 APP.models.mongo.otp
-                    .findOne({
-                        email: email,
-                        company: company,
-                        endpoint: '/auth/forgotpassword',
-                        expired: false
-                    })
+                    .findOne(data)
                     .then(res => {
                         if (res == null) {
                             callback({
@@ -1118,12 +1136,12 @@ exports.resetPassword = (APP, req, callback) => {
                 if (level == 1) {
                     query = APP.models.mysql.admin_app;
                     callback(null, true);
-                } else if (level == 2) {
-                    query = APP.models.mysql.admin;
-                    callback(null, true);
-                } else if (level == 3) {
+                } else if (level == 2 || level == 3) {
                     if (company) {
-                        query = APP.models.company[`${process.env.MYSQL_NAME}_${company}`].mysql.employee;
+                        query =
+                            level == 3
+                                ? APP.models.company[`${process.env.MYSQL_NAME}_${company}`].mysql.employee
+                                : APP.models.mysql.admin;
                         callback(null, true);
                     } else {
                         callback({
