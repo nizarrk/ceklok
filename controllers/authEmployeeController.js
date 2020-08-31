@@ -1001,9 +1001,13 @@ exports.checkOTP = (APP, req, callback) => {
         [
             function checkBody(callback) {
                 if (email && otp && level) {
-                    if (level == 1) {
+                    if (level == 3) {
+                        if (!company)
+                            return callback({ code: 'INVALID_REQUEST', message: 'Kesalahan pada parameter company!' });
+
                         let params = {
                             email: email,
+                            company: company,
                             level: level,
                             endpoint: '/auth/forgotpassword',
                             expired: false
@@ -1013,7 +1017,6 @@ exports.checkOTP = (APP, req, callback) => {
                     } else {
                         let params = {
                             email: email,
-                            company: company,
                             level: level,
                             endpoint: '/auth/forgotpassword',
                             expired: false
