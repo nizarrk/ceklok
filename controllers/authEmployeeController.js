@@ -1136,15 +1136,12 @@ exports.resetPassword = (APP, req, callback) => {
             },
 
             function checkLevel(data, callback) {
-                if (level == 1) {
-                    query = APP.models.mysql.admin_app;
+                if (level == 1 || level == 2) {
+                    query = level == 1 ? APP.models.mysql.admin_app : APP.models.mysql.admin;
                     callback(null, true);
-                } else if (level == 2 || level == 3) {
+                } else if (level == 3) {
                     if (company) {
-                        query =
-                            level == 3
-                                ? APP.models.company[`${process.env.MYSQL_NAME}_${company}`].mysql.employee
-                                : APP.models.mysql.admin;
+                        query = APP.models.company[`${process.env.MYSQL_NAME}_${company}`].mysql.employee;
                         callback(null, true);
                     } else {
                         callback({
