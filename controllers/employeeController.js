@@ -1630,7 +1630,12 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
                             console.log(req.files);
                             Promise.all(
                                 result.checklist.map((x, i) => {
-                                    return APP.fileCheck(req.files.status_upload[i].tempFilePath, 'doc').then(res => {
+                                    let uploads =
+                                        result.checklist.length > 1
+                                            ? req.files.status_upload[i]
+                                            : req.files.status_upload;
+
+                                    return APP.fileCheck(uploads.tempFilePath, 'doc').then(res => {
                                         if (res == null) {
                                             return callback({
                                                 code: 'INVALID_REQUEST',
@@ -1644,18 +1649,10 @@ exports.updateEmployeeStatus = (APP, req, callback) => {
                                             obj.checklist_id = x.id;
                                             obj.employee_id = id;
                                             obj.description = desc;
-                                            obj.upload =
-                                                statusPath.slice(8) +
-                                                fileName +
-                                                path.extname(req.files.status_upload[i].name);
+                                            obj.upload = statusPath.slice(8) + fileName + path.extname(uploads.name);
 
                                             return APP.cdn
-                                                .uploadCDN(
-                                                    req.files.status_upload[i],
-                                                    statusPath +
-                                                        fileName +
-                                                        path.extname(req.files.status_upload[i].name)
-                                                )
+                                                .uploadCDN(uploads, statusPath + fileName + path.extname(uploads.name))
                                                 .then(res => {
                                                     if (res.error == true) {
                                                         throw new Error();
