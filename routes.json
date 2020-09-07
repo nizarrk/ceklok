@@ -1372,18 +1372,18 @@
         "level": 2,
         "auth": true
     },
-    "/template/update": {
-        "method": "post",
-        "controller": "bankTemplateController",
-        "function": "update",
-        "level": 2,
-        "auth": true
-    },
     "/template/update/downloadcount": {
         "method": "post",
         "controller": "bankTemplateController",
         "function": "updateDownloadCount",
         "level": 0,
+        "auth": true
+    },
+    "/template/update": {
+        "method": "post",
+        "controller": "bankTemplateController",
+        "function": "update",
+        "level": 2,
         "auth": true
     },
     "/broadcast/letter/get": {

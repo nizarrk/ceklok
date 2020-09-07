@@ -428,9 +428,7 @@ exports.register = (APP, req, callback) => {
 };
 
 exports.login = (APP, req, callback) => {
-    let { employee, employee_face, overtime_setting } = APP.models.company[
-        process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()
-    ].mysql;
+    let employee, employee_face, overtime_setting;
     let { company } = APP.models.mysql;
 
     async.waterfall(
@@ -482,6 +480,16 @@ exports.login = (APP, req, callback) => {
                             message: 'Company not found!'
                         });
                     }
+
+                    employee =
+                        APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql
+                            .employee;
+                    employee_face =
+                        APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql
+                            .employee_face;
+                    overtime_setting =
+                        APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql
+                            .overtime_setting;
 
                     callback(null, true);
                 });
