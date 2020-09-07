@@ -544,7 +544,7 @@ async.series(
 
     let rule = new schedule.RecurrenceRule();
     // rule.dayOfWeek = [0, 6];
-    rule.hour = [1, 2, 3, 4, 5];
+    rule.hour = [ 1, 2, 3, 4, 5 ];
     rule.minute = 5;
 
     schedule.scheduleJob(rule, function() {
