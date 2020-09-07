@@ -1170,7 +1170,7 @@ exports.update = function(APP, req, callback) {
             function uploadProcess(data, callback) {
                 try {
                     // upload file
-                    if (req.files.doc_upload) {
+                    if (data.upload) {
                         APP.cdn.uploadCDN(req.files.doc_upload, data.doc).then(res => {
                             if (res.error == true) {
                                 callback({
