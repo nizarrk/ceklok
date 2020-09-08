@@ -193,7 +193,7 @@ exports.getListEmployee = (APP, req, callback) => {
                         callback(null, true);
                     })
                     .catch(err => {
-                        console.log(err);
+                        console.log('Error checkDB', err);
                         callback({
                             code: 'ERR',
                             data: err
@@ -243,7 +243,7 @@ exports.getListEmployee = (APP, req, callback) => {
 
 exports.getSpecificEmployee = (APP, req, callback) => {
     let { company } = APP.models.mysql;
-    let { employee } = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql;
+    let employee;
     let { _logs } = APP.models.mongo;
     async.waterfall(
         [
@@ -259,16 +259,27 @@ exports.getSpecificEmployee = (APP, req, callback) => {
             },
 
             function checkDB(data, callback) {
-                APP.checkDB(req.body.company).then(res => {
-                    if (res.length == 0) {
-                        return callback({
-                            code: 'NOT_FOUND',
-                            message: 'Company not found!'
-                        });
-                    }
+                APP.checkDB(req.body.company)
+                    .then(res => {
+                        if (res.length == 0) {
+                            return callback({
+                                code: 'NOT_FOUND',
+                                message: 'Company not found!'
+                            });
+                        }
+                        employee =
+                            APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql
+                                .employee;
 
-                    callback(null, true);
-                });
+                        callback(null, true);
+                    })
+                    .catch(err => {
+                        console.log('Error checkDB', err);
+                        callback({
+                            code: 'ERR',
+                            data: err
+                        });
+                    });
             },
 
             function getEmployeeInfo(data, callback) {
@@ -291,7 +302,9 @@ exports.getSpecificEmployee = (APP, req, callback) => {
                         }
                     })
                     .then(res => {
-                        callback(null, res.dataValues);
+                        if (res == null) return callback({ code: 'NOT_FOUND', message: 'Employee tidak ditemukan!' });
+
+                        callback(null, res);
                     })
                     .catch(err => {
                         console.log(err);
