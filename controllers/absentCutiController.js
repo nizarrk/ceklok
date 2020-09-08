@@ -1077,17 +1077,26 @@ exports.update = function(APP, req, callback) {
                 } else {
                     APP.db.sequelize
                         .query(
-                            `SELECT * FROM ${req.user.db}.absent_cuti
-              WHERE
-                user_id = ${req.user.id} 
-              AND
-                '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${customDateend}' <= date_format(date_end, '%Y-%m-%d')
-              OR
-                '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${datestart}' <= date_format(date_end, '%Y-%m-%d')
-              OR
-                '${result.dateend ? result.dateend : customDateend}' >= date_format(date_start, '%Y-%m-%d') AND '${
+                            `SELECT 
+                                * 
+                            FROM 
+                                ${req.user.db}.absent_cuti
+                            WHERE
+                                user_id = ${req.user.id} 
+                            AND
+                                id != ${id}
+                            AND
+                                (
+                                        '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${customDateend}' <= date_format(date_end, '%Y-%m-%d')
+                                    OR
+                                        '${datestart}' >= date_format(date_start, '%Y-%m-%d') AND '${datestart}' <= date_format(date_end, '%Y-%m-%d')
+                                    OR
+                                        '${
+                                            result.dateend ? result.dateend : customDateend
+                                        }' >= date_format(date_start, '%Y-%m-%d') AND '${
                                 result.dateend ? result.dateend : customDateend
-                            }' <= date_format(date_end, '%Y-%m-%d')`
+                            }' <= date_format(date_end, '%Y-%m-%d')
+                                )`
                         )
                         .then(res => {
                             if (res[0].length > 0) {
@@ -1213,7 +1222,7 @@ exports.update = function(APP, req, callback) {
                         },
                         {
                             where: {
-                                id: req.body.id
+                                id: id
                             }
                         }
                     )
