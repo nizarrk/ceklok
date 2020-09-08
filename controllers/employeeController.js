@@ -705,11 +705,13 @@ exports.addEmployee = (APP, req, callback) => {
             function registerUser(data, callback) {
                 let username =
                     data.kode.replace(req.user.code + '-', '') + '_' + req.body.name.split(' ')[0].toLowerCase();
+
+                let cuti = data.status.leave_permission == null ? 0 : data.status.leave_permission;
+
                 let totalCuti =
                     data.status.type === 1 && data.status.leave_setting === 1
-                        ? data.status.leave_permission -
-                          (data.status.leave_permission - (12 - (new Date().getMonth() + 1)))
-                        : 0;
+                        ? cuti - (cuti - (12 - (new Date().getMonth() + 1)))
+                        : cuti;
 
                 // validate input
                 let validateEmail = APP.validation.email(req.body.email);
@@ -2607,6 +2609,16 @@ exports.verifyEmployee = (APP, req, callback) => {
                                         message: 'Akun sudah di verify'
                                     });
                                 } else {
+                                    let cuti =
+                                        result.contract.leave_permission == null ? 0 : result.contract.leave_permission;
+
+                                    let totalCuti =
+                                        result.contract.leave_setting === 1
+                                            ? cuti - (cuti - (12 - (new Date().getMonth() + 1)))
+                                            : cuti;
+
+                                    console.log(totalCuti);
+
                                     res.update({
                                         grade_id: grade_id,
                                         department_id: department_id,
@@ -2614,6 +2626,7 @@ exports.verifyEmployee = (APP, req, callback) => {
                                         status: 1,
                                         status_contract_id: status_contract_id,
                                         status_contract_upload: result.doc.slice(8),
+                                        total_cuti: totalCuti,
                                         schedule_id: schedule_id
                                     })
                                         .then(updated => {
@@ -2736,4 +2749,31 @@ exports.verifyEmployee = (APP, req, callback) => {
             }
         );
     });
+};
+
+exports.addCutiManualAll = (APP, req, callback) => {
+    let { employee } = APP.models.company[req.user.db].mysql;
+
+    employee
+        .update(
+            {
+                total_cuti: req.body.total
+            },
+            {
+                where: {}
+            }
+        )
+        .then(res => {
+            callback(null, {
+                code: 'OK',
+                data: res
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            callback({
+                code: 'ERR_DATABASE',
+                data: err
+            });
+        });
 };
