@@ -721,7 +721,7 @@ exports.addEmployee = (APP, req, callback) => {
                     APP.models.company[req.user.db].mysql.employee
                         .build({
                             // priviledge_id: req.body.priviledge,
-                            support_pal_id: data.support.id,
+                            support_pal_id: data.support ? data.support.id : null,
                             grade_id: req.body.grade,
                             department_id: req.body.department,
                             job_title_id: req.body.job,
