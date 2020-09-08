@@ -778,7 +778,7 @@ exports.update = function(APP, req, callback) {
     async.waterfall(
         [
             function checkBody(callback) {
-                if (type && typeid && codeid && datestart && dateend && timestart && timeend) {
+                if (type && typeid && codeid && datestart && dateend) {
                     callback(null, true);
                 } else {
                     callback({
