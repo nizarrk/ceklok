@@ -795,69 +795,59 @@ exports.generateDailyPresence = (APP, req, callback) => {
           });
       },
 
-      function updateMonthlyPresence(result, callback) {
-        if (result.type == 'insert') {
-          return callback(null, {
-            code: 'INSERT_SUCCESS',
-            data: result.data
+      function updateMonthlyPresence( result, callback ) {
+          if (result.type == 'insert') return callback(null, {
+              code: 'INSERT_SUCCESS',
+              data: result.data
           });
-        } else {
+           
           Promise.all(
-            result.data.map((x, i) => {
-              return presence_monthly
-                .update(
-                  {
-                    date: moment().format('YYYY-MM-DD'),
-                    total_time: x.total_time,
-                    total_minus: x.total_minus,
-                    total_over: x.total_over,
-                    total_present: x.total_present,
-                    total_absent: x.total_absent,
-                    total_permission: x.total_permission,
-                    total_cuti: x.total_cuti,
-                    total_day: x.total_day,
-                    percentage: x.percentage
-                  },
-                  {
-                    where: {
-                      presence_period_id: result.period.id,
-                      user_id: x.user_id
-                    }
-                  }
-                )
-                .then(updated => {
-                  return updated;
+              result.data.map( x => {
+                  return presence_monthly
+                      .update(
+                          {
+                              date: moment().format('YYYY-MM-DD'),
+                              total_time: x.total_time,
+                              total_minus: x.total_minus,
+                              total_over: x.total_over,
+                              total_present: x.total_present,
+                              total_absent: x.total_absent,
+                              total_permission: x.total_permission,
+                              total_cuti: x.total_cuti,
+                              total_day: x.total_day,
+                              percentage: x.percentage
+                          },
+                          {
+                              where: {
+                                  presence_period_id: result.period.id,
+                                  user_id: x.user_id
+                              }
+                          }
+                      )
+                      .then(updated => {
+                          return true;
+                      })
                 })
-                .catch(err => {
-                  console.log('Error update updateMonthlyPresence', err);
-                  callback({
-                    code: 'ERR_DATABASE',
-                    message: '',
-                    data: err
-                  });
-                });
-            })
           )
-            .then(arr => {
-              callback(null, {
-                code: 'UPDATE_SUCCESS',
-                data: arr
+          .then(arr => {
+              callback( null, {
+                  code: 'UPDATE_SUCCESS',
+                  data: arr
               });
-            })
-            .catch(err => {
-              console.log('Error Promise.all updateMonthlyPresence');
+          })
+          .catch(err => {
+              console.log('Error Promise.all updateMonthlyPresence', err);
               callback({
-                code: 'ERR',
-                data: err
+                  code: 'ERR',
+                  data: err
               });
-            });
-        }
+          });
       }
     ],
-    (err, result) => {
-      if (err) return callback(err);
+    function ( err, result ) {
+        if ( err ) return callback( err );
 
-      callback(null, result);
+        callback( null, result );
     }
   );
 };

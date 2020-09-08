@@ -4,6 +4,7 @@ const async = require('async');
 const trycatch = require('trycatch');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const { stat } = require('fs');
 
 exports.get = (APP, req, callback) => {
   let query = '';
@@ -305,139 +306,161 @@ exports.insert = (APP, req, callback) => {
   );
 };
 
-exports.updateStatus = (APP, req, callback) => {
-  let { letter_ref, letter } = APP.models.company[req.user.db].mysql;
-  let { admin } = APP.models.mysql;
-  let { id, status, notes, pass } = req.body;
-  async.waterfall(
-    [
-      function checkParams(callback) {
-        if (id && status && pass) {
-          callback(null, true);
-        } else {
-          callback({
-            code: 'INVALID_REQUEST',
-            message: 'Kesalahan pada parameter'
-          });
-        }
-      },
+exports.updateStatus = ( APP, req, callback ) => {
+    let { db } = req.user;
+    let { letter_ref, letter } = APP.models.company[db].mysql;
+    let { admin } = APP.models.mysql;
+    let { id, status, notes, pass } = req.body;
 
-      function verifyCredentials(data, callback) {
-        admin
-          .findOne({
-            where: {
-              id: req.user.id
-            }
-          })
-          .then(res => {
-            if (bcrypt.compareSync(pass, res.password)) {
-              callback(null, true);
-            } else {
-              callback({
-                code: 'INVALID_REQUEST',
-                message: 'Invalid Password!'
-              });
-            }
-          })
-          .catch(err => {
-            console.log('Error function verifyCredentials', err);
-            callback({
-              code: 'ERR_DATABASE',
-              message: 'Error function verifyCredentials',
-              data: err
-            });
-          });
-      },
+    letter_ref.belongsTo( letter, {
+        foreignKey: 'letter_id'
+    });
+    
+    async.waterfall(
+        [
+            function checkParams( callback ) {
+                if ( !id || !status || !pass ) return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Kesalahan pada parameter'
+                });
+                
+                if ( status != 1 && status != 2 ) return callback({
+                    code: 'INVALID_REQUEST',
+                    message: 'Kesalahan pada parameter ( status )'
+                });
 
-      function createReferenceNumber(data, callback) {
-        let ref;
+                let data = {
+                    param_update: [
+                        {
+                            status: status,
+                            notes: notes,
+                            approved_by: req.user.id,
+                            approved_at: new Date()
+                        },
+                        {
+                            where: {
+                                id: id
+                            }
+                        }
+                    ]
+                };
 
-        letter_ref.belongsTo(letter, {
-          targetKey: 'id',
-          foreignKey: 'letter_id'
-        });
-
-        letter_ref
-          .findAll({
-            include: [
-              {
-                model: letter,
-                attributes: ['id', 'name', 'description', 'letter_code']
-              }
-            ],
-            limit: 2,
-            order: [['id', 'DESC']]
-          })
-          .then(res => {
-            let letter_code =
-              res[0].letter.letter_code.charAt(res[0].letter.letter_code.length - 1) == '/'
-                ? res[0].letter.letter_code
-                : res[0].letter.letter_code + '/';
-            let pad = `${letter_code}000`;
-
-            if (res[1].reference == null) {
-              console.log('oi');
-
-              let str = '' + 1;
-              ref = pad.substring(0, pad.length - str.length) + str;
-
-              callback(null, ref);
-            } else {
-              console.log('oi2');
-
-              let lastID = res[1].reference;
-              let replace = lastID.replace(letter_code, '');
-
-              let str = parseInt(replace) + 1;
-              ref = pad.substring(0, pad.length - str.toString().length) + str;
-
-              callback(null, ref);
-            }
-          })
-          .catch(err => {
-            console.log(err);
-            callback({
-              code: 'ERR_DATABASE',
-              data: err
-            });
-          });
-      },
-
-      function updateStatus(data, callback) {
-        letter_ref
-          .update(
-            {
-              status: status,
-              reference: status == 1 ? data : null,
-              notes: notes,
-              approved_by: req.user.id,
-              approved_at: new Date()
+                callback( null, data );
             },
-            {
-              where: {
-                id: id
-              }
-            }
-          )
-          .then(updated => {
-            callback(null, {
-              code: 'UPDATE_SUCCESS',
-              data: updated
-            });
-          })
-          .catch(err => {
-            console.log(err);
-            callback({
-              code: 'ERR_DATABASE',
-              data: err
-            });
-          });
-      }
-    ],
-    (err, result) => {
-      if (err) return callback(err);
+            function verifyCredentials( data, callback ) {
+                admin
+                    .findOne({
+                        where: {
+                            id: req.user.id
+                        }
+                    })
+                    .then(res => {
+                        data.validation_password = bcrypt.compareSync ( pass, res.password );
 
-      callback(null, result);
-    }
-  );
+                        if ( !data.validation_password ) return callback({
+                            code: 'INVALID_REQUEST',
+                            message: 'Invalid Password!'
+                        });
+
+                        callback( null, data );
+                    })
+                    .catch(err => {
+                        callback({
+                            code: 'ERR_DATABASE',
+                            message: 'Error function verifyCredentials',
+                            data: err
+                        });
+                    });
+            },
+            function validationId( data, callback ) {
+                letter_ref
+                    .findAll({
+                        attributes: ['id'],
+                        include: [
+                            {
+                                model: letter,
+                                attributes: ['id', 'name', 'description', 'letter_code']
+                            }
+                        ],
+                        where: {
+                            id: id
+                        }
+                    })
+                    .then(res => {
+                        if ( res.length == 0 ) return callback({
+                            code: 'INVALID_REQUEST',
+                            message: 'Kesalahan pada parameter ( id )'
+                        });
+
+                        data.letter_code = res[0].letter.letter_code.charAt( res[0].letter.letter_code.length - 1 ) == '/' ? res[0].letter.letter_code : res[0].letter.letter_code + '/';
+                        data.pad = `${data.letter_code}000`;
+
+                        callback( null, data );
+                    })
+                    .catch(err => {
+                        callback({
+                            code: 'ERR_DATABASE',
+                            data: err
+                        });
+                    });
+            },
+            function createReferenceNumber( data, callback ) {
+                letter_ref
+                    .findAll({
+                        attributes: ['reference'],
+                        limit: 1,
+                        order: [
+                            ['reference', 'DESC']
+                        ],
+                        where: {
+                          status: 1
+                        }
+                    })
+                    .then(res => {
+                        if ( res.length == 0 ) {
+                            let str = '' + 1;
+                            data.ref = data.pad.substring( 0, data.pad.length - str.length ) + str;
+                        } else {
+                            let lastID = res[0].reference;
+                            let replace = lastID.replace( data.letter_code, '' );
+
+                            let str = parseInt( replace ) + 1;
+                            data.ref = data.pad.substring( 0, data.pad.length - str.toString().length ) + str;
+                        }
+
+                        data.param_update[0].reference = status == 1 ? data.ref : null;
+
+                        callback( null, data );
+                    })
+                    .catch(err => {
+                        callback({
+                            code: 'ERR_DATABASE',
+                            data: err
+                        });
+                    });
+            },
+
+            function updateStatus( data, callback ) {
+                letter_ref
+                    .update( data.param_update[0], data.param_update[1] )
+                    .then(updated => {
+                        callback(null, {
+                            code: 'UPDATE_SUCCESS',
+                            data: updated
+                        });
+                    })
+                    .catch(err => {
+                        callback({
+                            code: 'ERR_DATABASE',
+                            data: err
+                        });
+                    });
+            }
+        ],
+        function ( err, result ) {
+            if ( err ) return callback( err );
+
+            callback( null, result );
+        }
+    );
 };
