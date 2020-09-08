@@ -106,6 +106,13 @@
         "level": 2,
         "auth": true
     },
+    "/employee/paidleave/add/all": {
+        "method": "post",
+        "controller": "employeeController",
+        "function": "addCutiManualAll",
+        "level": 2,
+        "auth": true
+    },
     "/employee/getlist": {
         "method": "post",
         "controller": "employeeController",
