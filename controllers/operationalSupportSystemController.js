@@ -160,7 +160,7 @@ exports.getSpecificCompany = (APP, req, callback) => {
 
 exports.getListEmployee = (APP, req, callback) => {
     let { company } = APP.models.mysql;
-    let { employee } = APP.models.company[`${process.env.MYSQL_NAME}_${req.body.company}`].mysql;
+    let employee;
     let { _logs } = APP.models.mongo;
     async.waterfall(
         [
@@ -176,16 +176,29 @@ exports.getListEmployee = (APP, req, callback) => {
             },
 
             function checkDB(data, callback) {
-                APP.checkDB(req.body.company).then(res => {
-                    if (res.length == 0) {
-                        return callback({
-                            code: 'NOT_FOUND',
-                            message: 'Company not found!'
-                        });
-                    }
+                APP.checkDB(req.body.company)
+                    .then(res => {
+                        console.log(res);
+                        if (res.length == 0) {
+                            return callback({
+                                code: 'NOT_FOUND',
+                                message: 'Company not found!'
+                            });
+                        }
 
-                    callback(null, true);
-                });
+                        employee =
+                            APP.models.company[process.env.MYSQL_NAME + '_' + req.body.company.toUpperCase()].mysql
+                                .employee;
+
+                        callback(null, true);
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        callback({
+                            code: 'ERR',
+                            data: err
+                        });
+                    });
             },
 
             function getEmployeeInfo(data, callback) {
