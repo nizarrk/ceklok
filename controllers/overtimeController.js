@@ -799,9 +799,10 @@ exports.getOvertimeSetting = (APP, req, callback) => {
             },
 
             function checkData(data, callback) {
+                console.log(data);
                 Promise.all(
                     data.map(x => {
-                        if (x.data == null && x.data_model !== null) {
+                        if (x.data == null && (x.data_model !== null && x.data_model !== '')) {
                             return APP.models.company[req.user.db].mysql[x.data_model]
                                 .findAll({
                                     attributes: ['id', 'name', 'description']
