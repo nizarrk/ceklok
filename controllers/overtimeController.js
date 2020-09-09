@@ -508,7 +508,7 @@ exports.finishingOvertime = (APP, req, callback) => {
 
 exports.viewOvertimeData = (APP, req, callback) => {
     let { overtime, employee, department, overtime_setting } = APP.models.company[req.user.db].mysql;
-    let { datestart, dateend, department_id, status } = req.body;
+    let { datestart, dateend, department_id, status, limit, offset } = req.body;
 
     async.waterfall(
         [
@@ -635,6 +635,8 @@ exports.viewOvertimeData = (APP, req, callback) => {
                             }
                         ],
                         where: where,
+                        limit: limit && offset ? limit : null,
+                        offset: limit && offset ? offset : null,
                         order: [['id', 'DESC']]
                     })
                     .then(res => {
