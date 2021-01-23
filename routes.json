@@ -15,7 +15,7 @@
         "auth": false
     },
     "/test/connection": {
-        "method": "post",
+        "method": "get",
         "controller": "exampleController",
         "function": "test",
         "level": 0,
@@ -1929,6 +1929,27 @@
         "method": "post",
         "controller": "wagesController",
         "function": "calulatorWages",
+        "level": 2,
+        "auth": true
+    },
+    "/payroll/generate": {
+        "method": "post",
+        "controller": "payrollController",
+        "function": "generatePayroll",
+        "level": 0,
+        "auth": false
+    },
+    "/payroll/setting/add": {
+        "method": "post",
+        "controller": "payrollController",
+        "function": "payrollSettings",
+        "level": 1,
+        "auth": true
+    },
+    "/payroll/setting": {
+        "method": "post",
+        "controller": "payrollController",
+        "function": "payrollSettingsCompany",
         "level": 2,
         "auth": true
     },

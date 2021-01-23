@@ -860,6 +860,10 @@ exports.overtimeSettings = (APP, req, callback) => {
 
                     obj.name = settings[index].name;
                     obj.description = settings[index].desc;
+                    obj.type = settings[index].type;
+                    obj.html = settings[index].html;
+                    obj.data = settings[index].data;
+                    obj.data_model = settings[index].data_model;
 
                     return obj;
                 })
